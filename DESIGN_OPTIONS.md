@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines four distinct implementation strategies for SimCiv, a multiplayer civilization simulation game. Each option addresses the core architectural challenge: running a persistent server-side simulation while providing responsive, modern clients for iOS, Android, and desktop platforms.
+This document outlines six distinct implementation strategies for SimCiv, a multiplayer civilization simulation game. Each option addresses the core architectural challenge: running a persistent server-side simulation while providing responsive, modern clients for iOS, Android, and desktop platforms.
 
 **Key Requirements:**
 - **Primary Platforms**: iOS and Android for casual, on-the-go gameplay
@@ -333,45 +333,225 @@ Large organizations with multiple teams, expecting massive scale, and with signi
 
 ---
 
+## Option 5: Svelte/Threlte Frontend with Node.js Backend
+
+### Architecture Overview
+
+**Backend Stack:**
+- **Server**: Node.js with TypeScript
+- **Framework**: NestJS or Fastify for high-performance APIs
+- **Database**: PostgreSQL for game state, Redis for real-time data
+- **Game Loop**: Event-driven architecture with worker threads for simulation
+- **Real-time Communication**: WebSockets or Socket.io
+- **API Design**: REST + GraphQL for flexible data fetching
+
+**Frontend Stack:**
+- **Web Framework**: SvelteKit with TypeScript
+- **3D Graphics**: Threlte (Three.js for Svelte)
+- **State Management**: Svelte stores with context API
+- **Mobile**: Capacitor or Tauri for native mobile builds
+- **Desktop**: Tauri or Electron for lightweight desktop apps
+- **UI Components**: Skeleton UI or custom Svelte components
+
+### Toolchain
+
+**Development:**
+- Vite for fast build and hot module replacement
+- TypeScript compiler across all platforms
+- Vitest for unit testing
+- Playwright for E2E testing
+- ESLint and Prettier for code quality
+- pnpm or npm for package management
+
+**Build & Deployment:**
+- SvelteKit adapter for various deployment targets
+- GitHub Actions for CI/CD
+- Docker for backend containerization
+- Capacitor CLI for mobile builds
+- Tauri for desktop distributions
+- Vercel, Netlify, or Cloudflare Pages for web hosting
+
+**Testing Infrastructure:**
+- Vitest for unit tests (frontend and backend)
+- Testing Library for component tests
+- Playwright for E2E testing across platforms
+- Supertest for API testing
+- k6 for load testing
+- Storybook for component development
+
+### Target Platforms
+
+- **iOS**: Capacitor native build (iOS 13+)
+- **Android**: Capacitor native build (API 21+)
+- **Windows**: Tauri native build (Windows 10+)
+- **Linux**: Tauri native build (Ubuntu 20.04+)
+- **macOS**: Tauri native build (macOS 10.15+)
+- **Web**: Progressive Web App (all modern browsers)
+
+### Pros
+
+1. **Modern Web Stack**: Svelte is lightweight and compiles to vanilla JavaScript
+2. **Excellent Performance**: No virtual DOM, resulting in faster rendering
+3. **3D Graphics**: Threlte provides excellent Three.js integration for game graphics
+4. **Unified Language**: TypeScript everywhere reduces context switching
+5. **Code Sharing**: Share business logic, types, and utilities across all platforms
+6. **Developer Experience**: Svelte's simplicity and reactivity model is intuitive
+7. **Fast Hot Reload**: Vite provides instant feedback during development
+8. **Small Bundle Size**: Svelte generates minimal JavaScript compared to React/Vue
+9. **Cross-Platform**: Single codebase for web, mobile, and desktop via Capacitor/Tauri
+10. **PWA Support**: Can work offline and install as native-like app
+11. **Growing Ecosystem**: Svelte adoption is rapidly increasing
+12. **WebGL/WebGPU Ready**: Threlte enables advanced graphics for visualization
+
+### Cons
+
+1. **Smaller Ecosystem**: Fewer libraries and components than React/Vue
+2. **Mobile Performance**: Capacitor-based apps may not match fully native performance
+3. **3D on Mobile**: Complex Three.js scenes can impact mobile battery and performance
+4. **Learning Curve**: Threlte and Three.js have steep learning curves
+5. **Backend Limitations**: Node.js struggles with CPU-intensive simulation (same as Option 1)
+6. **Memory Usage**: Large 3D scenes can be memory-intensive
+7. **Hiring Pool**: Fewer developers with Svelte experience than React
+8. **Native Features**: Capacitor has limitations compared to fully native development
+9. **Graphics Complexity**: Managing 3D graphics state alongside game state adds complexity
+10. **Platform-Specific Issues**: Web-to-native wrapping can have platform quirks
+
+### Best For
+
+Teams wanting a modern web-first approach with advanced 3D visualization capabilities, prioritizing developer experience and cross-platform reach over raw native performance.
+
+---
+
+## Option 6: Svelte/Threlte Frontend with Go Backend
+
+### Architecture Overview
+
+**Backend Stack:**
+- **Server**: Go with net/http or Gin framework
+- **Simulation Engine**: Go for game logic and simulation
+- **Database**: PostgreSQL with pgx driver, Redis for caching
+- **Real-time Communication**: Gorilla WebSocket or nhooyr.io/websocket
+- **API Design**: REST with potential GraphQL via gqlgen
+- **Concurrency**: Goroutines for parallel simulation processing
+
+**Frontend Stack:**
+- **Web Framework**: SvelteKit with TypeScript
+- **3D Graphics**: Threlte (Three.js for Svelte)
+- **State Management**: Svelte stores with context API
+- **Mobile**: Capacitor for native mobile builds
+- **Desktop**: Tauri (Rust-based) for lightweight desktop apps
+- **UI Components**: Skeleton UI or custom Svelte components
+
+### Toolchain
+
+**Development:**
+- Go toolchain (go build, go fmt, go vet)
+- Vite for frontend with fast HMR
+- golangci-lint for Go code quality
+- TypeScript compiler for frontend
+- Air for Go hot reload during development
+
+**Build & Deployment:**
+- Multi-stage Docker builds for backend
+- SvelteKit adapter for frontend deployment
+- GitHub Actions or GitLab CI for CI/CD
+- Capacitor CLI for mobile builds
+- Tauri for desktop distributions
+- Binary compilation for efficient server deployment
+
+**Testing Infrastructure:**
+- Go testing framework (go test) with testify
+- Vitest for frontend unit tests
+- Playwright for E2E testing
+- gomock for Go mocking
+- httptest for API testing
+- vegeta or k6 for load testing
+- Pact for contract testing between frontend and backend
+
+### Target Platforms
+
+- **iOS**: Capacitor native build (iOS 13+)
+- **Android**: Capacitor native build (API 21+)
+- **Windows**: Tauri native build (Windows 10+)
+- **Linux**: Tauri native build (Ubuntu 20.04+)
+- **macOS**: Tauri native build (macOS 10.15+)
+- **Web**: Progressive Web App (all modern browsers)
+
+### Pros
+
+1. **Go Performance**: Better than Node.js for CPU-intensive simulation
+2. **Simple Concurrency**: Goroutines make parallel simulation straightforward
+3. **Low Resource Usage**: Go uses less memory than Node.js or JVM languages
+4. **Fast Compilation**: Quick build times for rapid iteration
+5. **Modern Frontend**: Svelte provides excellent developer experience
+6. **3D Visualization**: Threlte enables sophisticated game graphics
+7. **Cross-Platform**: One frontend codebase for all platforms
+8. **Static Binary**: Go compiles to single binary for easy deployment
+9. **Strong Typing**: Both Go and TypeScript provide compile-time safety
+10. **Excellent Networking**: Go's standard library is superb for network services
+11. **Cost Effective**: Lower server costs than Node.js due to efficiency
+12. **Growing Popularity**: Both Svelte and Go have strong momentum
+
+### Cons
+
+1. **Split Technology**: Different languages for frontend and backend
+2. **Smaller Communities**: Both Svelte and Go have smaller ecosystems than alternatives
+3. **Mobile Performance**: Capacitor may not match fully native performance
+4. **3D Performance**: Complex graphics can strain mobile devices
+5. **Go Learning Curve**: Different paradigm from JavaScript/TypeScript
+6. **Limited Game Libraries**: Fewer game-specific libraries in Go compared to other languages
+7. **Hiring Challenge**: Need developers with both Svelte and Go expertise
+8. **Graphics Debugging**: Three.js debugging can be difficult
+9. **Platform Quirks**: Capacitor/Tauri may have platform-specific issues
+10. **Integration Overhead**: More work to integrate different technology stacks
+
+### Best For
+
+Teams wanting strong backend performance with modern web-based UI and 3D graphics, willing to adopt newer technologies for long-term benefits.
+
+---
+
 ## Comparative Analysis
 
 ### Performance Comparison
 
-| Aspect | Option 1 (Node.js) | Option 2 (Unity) | Option 3 (Rust/Go) | Option 4 (Microservices) |
-|--------|-------------------|------------------|-------------------|--------------------------|
-| Simulation Speed | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Memory Efficiency | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Network Performance | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Client Responsiveness | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Battery Life (Mobile) | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Aspect | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 | Option 6 |
+|--------|----------|----------|----------|----------|----------|----------|
+| | Node.js/RN | Unity C# | Rust/Go+RN/Flutter | Microservices | Svelte+Node.js | Svelte+Go |
+| Simulation Speed | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ |
+| Memory Efficiency | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ |
+| Network Performance | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Client Responsiveness | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Battery Life (Mobile) | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| 3D Graphics Capability | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 
 ### Development Experience
 
-| Aspect | Option 1 | Option 2 | Option 3 | Option 4 |
-|--------|----------|----------|----------|----------|
-| Learning Curve | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐ |
-| Development Speed | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
-| Code Reusability | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
-| Debugging Ease | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
-| Hot Reload | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Aspect | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 | Option 6 |
+|--------|----------|----------|----------|----------|----------|----------|
+| Learning Curve | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Development Speed | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Code Reusability | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Debugging Ease | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Hot Reload | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
 
 ### Operational Characteristics
 
-| Aspect | Option 1 | Option 2 | Option 3 | Option 4 |
-|--------|----------|----------|----------|----------|
-| Infrastructure Cost | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| Operational Complexity | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐ |
-| Scalability | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Monitoring/Observability | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Aspect | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 | Option 6 |
+|--------|----------|----------|----------|----------|----------|----------|
+| Infrastructure Cost | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Operational Complexity | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Scalability | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Monitoring/Observability | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
 
 ### Team & Business Fit
 
-| Aspect | Option 1 | Option 2 | Option 3 | Option 4 |
-|--------|----------|----------|----------|----------|
-| Hiring Difficulty | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ |
-| Time to Market | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
-| License Costs | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Long-term Maintenance | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Aspect | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 | Option 6 |
+|--------|----------|----------|----------|----------|----------|----------|
+| Hiring Difficulty | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+| Time to Market | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| License Costs | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Long-term Maintenance | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
 
 ---
 
@@ -486,10 +666,16 @@ After careful analysis, **Option 3** emerges as the optimal solution for SimCiv,
 Consider Option 2, but be prepared for higher server costs and complexity of running Unity headless servers at scale.
 
 **If Time-to-Market is Critical (< 6 months to MVP):**
-Consider Option 1 with Node.js, accepting that you'll likely need to rewrite the simulation engine later as you scale.
+Consider Option 1 or Option 5 with Node.js, accepting that you'll likely need to rewrite the simulation engine later as you scale.
 
 **If Building for Massive Scale from Day One (100K+ concurrent users):**
 Consider Option 4, but only if you have dedicated DevOps team and significant infrastructure budget.
+
+**If 3D Graphics and Visualization are Priority:**
+Consider Option 5 or Option 6 with Svelte/Threlte for excellent web-based 3D graphics. Option 6 (with Go backend) provides better server performance than Option 5 (Node.js backend), making it suitable for games that need both sophisticated visualization and decent simulation performance. However, both suffer from mobile performance limitations compared to native or React Native/Flutter solutions.
+
+**If Web-First Strategy is Preferred:**
+Options 5 and 6 excel as Progressive Web Apps with potential mobile wrapping via Capacitor. They offer the best 3D graphics capabilities through Threlte/Three.js, though at the cost of mobile native performance. Choose Option 5 for unified JavaScript/TypeScript stack, or Option 6 for better backend performance with Go.
 
 ### Risks and Mitigations
 
