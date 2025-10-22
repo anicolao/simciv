@@ -128,42 +128,59 @@ test.describe('SimCiv Authentication', () => {
     const alias = `logintest_${timestamp}`;
     const password = 'SecurePass123!';
     
-    // Register
+    // Register the user
     await page.fill('input[id="alias"]', alias);
     await page.fill('input[id="password"]', password);
     await page.fill('input[id="passwordConfirm"]', password);
     await page.locator('form button[type="submit"]').first().click();
     
+    // Wait for registration to complete
     await expect(page.locator('.message.success')).toContainText('Registration successful', {
       timeout: 30000
     });
     
-    // Logout
+    // Verify authenticated
+    await expect(page.locator('.authenticated')).toBeVisible();
+    await expect(page.locator('.authenticated strong')).toContainText(alias);
+    
+    // Logout - this will redirect to a NEW session
     await page.getByRole('button', { name: 'Logout' }).click();
     
-    // Wait for redirect - this clears the session
+    // Wait for redirect to new session
     await page.waitForURL(/\/id=[a-f0-9-]+/);
+    await expect(page.locator('.tabs')).toBeVisible();
     
-    // Try to login in the new session (should fail - no private key)
+    // In this new session, we don't have the private key, so we need to go back
+    // Go back in browser history to return to the previous session
+    await page.goBack();
+    
+    // Wait a moment for the page to load
+    await page.waitForLoadState('networkidle');
+    
+    // We should be back at the original session, but now logged out
+    // Switch to Login tab
     await page.locator('.tabs button').filter({ hasText: 'Login' }).click();
+    
+    // Fill in the login form with the same credentials
     await page.fill('input[id="loginAlias"]', alias);
     await page.fill('input[id="loginPassword"]', password);
     
-    // Take screenshot of login form
+    // Take screenshot of login form filled
     await page.screenshot({ path: 'e2e-screenshots/07-login-form-filled.png', fullPage: true });
     
-    // Submit login
+    // Submit the login form
     await page.locator('form button[type="submit"]').first().click();
     
-    // Should see error about no private key (because we're in a new session)
-    await expect(page.locator('.message.error')).toContainText('No private key found for this session', {
+    // Should successfully login since the private key is stored in this session's localStorage
+    await expect(page.locator('.message.success')).toContainText('Login successful', {
       timeout: 10000
     });
     
-    // Take screenshot of login attempt in different session
-    await page.screenshot({ path: 'e2e-screenshots/08-login-different-session.png', fullPage: true });
+    // Should be authenticated again
+    await expect(page.locator('.authenticated')).toBeVisible();
+    await expect(page.locator('.authenticated strong')).toContainText(alias);
     
-    // Should not be authenticated
-    await expect(page.locator('.authenticated')).not.toBeVisible();
+    // Take screenshot of successful login
+    await page.screenshot({ path: 'e2e-screenshots/08-login-success.png', fullPage: true });
   });
 });
