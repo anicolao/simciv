@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import cookieParser from 'cookie-parser';
@@ -9,7 +10,7 @@ import authRoutes from '../../routes/auth';
 import sessionRoutes from '../../routes/session';
 
 // Mock the database connection module
-jest.mock('../../db/connection');
+vi.mock('../../db/connection');
 
 // Skip these tests due to network restrictions in the environment
 describe.skip('Authentication Integration Tests', () => {
@@ -21,13 +22,13 @@ describe.skip('Authentication Integration Tests', () => {
     const db = await setupTestDatabase();
     
     // Mock database functions to use test database
-    (dbConnection.getUsersCollection as jest.Mock).mockImplementation(() => 
+    vi.mocked(dbConnection.getUsersCollection).mockImplementation(() => 
       db.collection('users')
     );
-    (dbConnection.getSessionsCollection as jest.Mock).mockImplementation(() => 
+    vi.mocked(dbConnection.getSessionsCollection).mockImplementation(() => 
       db.collection('sessions')
     );
-    (dbConnection.getChallengesCollection as jest.Mock).mockImplementation(() => 
+    vi.mocked(dbConnection.getChallengesCollection).mockImplementation(() => 
       db.collection('challenges')
     );
 

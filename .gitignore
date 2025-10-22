@@ -4,14 +4,21 @@ package-lock.json
 
 # Build output
 dist/
+public/
 *.js
 *.js.map
 *.d.ts
 !jest.config.js
+!vite.config.ts
+!vitest.config.ts
+!playwright.config.ts
+!svelte.config.js
 
 # Testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
 
 # Environment
 .env
