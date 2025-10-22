@@ -11,6 +11,9 @@ test.describe('SimCiv Authentication', () => {
     // Should see the authentication form
     await expect(page.locator('h1')).toContainText('SimCiv Authentication');
     
+    // Take screenshot of initial state
+    await page.screenshot({ path: 'e2e-screenshots/01-initial-load.png', fullPage: true });
+    
     // Register a new account
     await page.getByRole('button', { name: 'Register' }).click();
     
@@ -22,6 +25,9 @@ test.describe('SimCiv Authentication', () => {
     await page.fill('input[id="alias"]', alias);
     await page.fill('input[id="password"]', password);
     await page.fill('input[id="passwordConfirm"]', password);
+    
+    // Take screenshot of filled registration form
+    await page.screenshot({ path: 'e2e-screenshots/02-registration-form-filled.png', fullPage: true });
     
     // Submit registration
     await page.getByRole('button', { name: 'Register' }).click();
@@ -35,6 +41,9 @@ test.describe('SimCiv Authentication', () => {
     await expect(page.locator('.authenticated')).toBeVisible();
     await expect(page.locator('.authenticated strong')).toContainText(alias);
     
+    // Take screenshot of authenticated state
+    await page.screenshot({ path: 'e2e-screenshots/03-authenticated.png', fullPage: true });
+    
     // Logout
     await page.getByRole('button', { name: 'Logout' }).click();
     
@@ -43,6 +52,9 @@ test.describe('SimCiv Authentication', () => {
     
     // Should see login/register forms again
     await expect(page.getByRole('button', { name: 'Register' })).toBeVisible();
+    
+    // Take screenshot of logout state
+    await page.screenshot({ path: 'e2e-screenshots/04-after-logout.png', fullPage: true });
   });
 
   test('another user cannot login to an existing account without credentials', async ({ page, context }) => {
@@ -82,12 +94,19 @@ test.describe('SimCiv Authentication', () => {
     await page2.getByRole('button', { name: 'Login' }).click();
     await page2.fill('input[id="loginAlias"]', alias1);
     await page2.fill('input[id="loginPassword"]', 'WrongPassword');
+    
+    // Take screenshot before attempting login
+    await page2.screenshot({ path: 'e2e-screenshots/05-login-attempt-different-session.png', fullPage: true });
+    
     await page2.getByRole('button', { name: 'Login' }).click();
     
     // Should see error about no private key found
     await expect(page2.locator('.message.error')).toContainText('No private key found for this session', {
       timeout: 10000
     });
+    
+    // Take screenshot of error message
+    await page2.screenshot({ path: 'e2e-screenshots/06-login-error-no-key.png', fullPage: true });
     
     // Should not be authenticated
     await expect(page2.locator('.authenticated')).not.toBeVisible();
@@ -127,6 +146,10 @@ test.describe('SimCiv Authentication', () => {
     await page.getByRole('button', { name: 'Login' }).click();
     await page.fill('input[id="loginAlias"]', alias);
     await page.fill('input[id="loginPassword"]', password);
+    
+    // Take screenshot of login form
+    await page.screenshot({ path: 'e2e-screenshots/07-login-form-filled.png', fullPage: true });
+    
     await page.getByRole('button', { name: 'Login' }).click();
     
     // Should successfully login
@@ -137,5 +160,8 @@ test.describe('SimCiv Authentication', () => {
     // Should be authenticated
     await expect(page.locator('.authenticated')).toBeVisible();
     await expect(page.locator('.authenticated strong')).toContainText(alias);
+    
+    // Take screenshot of successful login
+    await page.screenshot({ path: 'e2e-screenshots/08-login-success.png', fullPage: true });
   });
 });

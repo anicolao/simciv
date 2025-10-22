@@ -105,6 +105,18 @@ The current implementation includes:
 - Use `TEST_MONGO_URI` environment variable to run integration tests with external MongoDB when mongodb-memory-server has issues
 - Integration tests must pass before PR completion
 
+**PLAYWRIGHT E2E TESTING REQUIREMENTS:**
+- **ALWAYS run Playwright E2E tests (`npm run test:e2e`) before completing a PR**
+- **E2E tests must validate end-to-end functionality including UI interactions**
+- **Screenshots must be captured at key UI states** to verify layout and prevent visual regressions
+- **All E2E tests must pass** - No skipped or failing tests
+- Screenshots should be taken for:
+  - Initial page load and authentication forms
+  - Form validation states (errors, success messages)
+  - Authenticated user states
+  - Critical user workflows (registration, login, logout)
+- Review screenshots to ensure UI layout is correct and no visual bugs are introduced
+
 ### File Organization
 ```
 src/
