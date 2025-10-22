@@ -8,9 +8,9 @@ SimCiv is a strategy game combining city-building mechanics with grand strategy 
 
 - **Server**: Node.js with TypeScript and Express
 - **Database**: MongoDB (production) / MongoDB Memory Server (tests)
-- **Client**: Vanilla JavaScript with Web Crypto API
+- **Client**: TypeScript + Svelte with Vite
 - **Simulation**: Go (future implementation)
-- **Testing**: Jest with ts-jest
+- **Testing**: Vitest for unit tests, Playwright for E2E tests
 
 ## Architecture Principles
 
@@ -90,7 +90,8 @@ The current implementation includes:
 - Mark challenges as used after validation
 
 ### Testing
-- Write unit tests for utility functions
+- Write unit tests with Vitest for utility functions
+- Write E2E tests with Playwright for user flows
 - Mock database connections in tests
 - Test both success and failure cases
 - Test edge cases (expired challenges, duplicate aliases, etc.)
@@ -158,8 +159,11 @@ NODE_ENV=development
 # Install dependencies
 npm install
 
-# Run tests
+# Run unit tests
 npm test
+
+# Run E2E tests (requires MongoDB)
+npm run test:e2e
 
 # Build TypeScript
 npm run build

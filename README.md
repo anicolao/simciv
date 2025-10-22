@@ -94,6 +94,9 @@ To run the authentication system locally:
 # Install dependencies
 npm install
 
+# Build the client
+npm run build:client
+
 # Start MongoDB (required)
 # Use Docker: docker run -d -p 27017:27017 mongo:latest
 # Or install locally
@@ -103,6 +106,12 @@ npm run dev
 
 # Access the application
 # Navigate to http://localhost:3000
+
+# Run tests
+npm test
+
+# Run E2E tests (requires running server)
+npm run test:e2e
 ```
 
 For more details, see the [Authentication Documentation](docs/AUTHENTICATION.md).

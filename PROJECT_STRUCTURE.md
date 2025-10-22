@@ -14,9 +14,22 @@ simciv/
 │   └── version0.0001.md           # Authentication system design specification
 ├── docs/
 │   └── AUTHENTICATION.md          # Authentication system documentation
-├── public/
-│   ├── index.html                 # Client UI for authentication
-│   └── client.js                  # Client-side crypto and API calls
+├── client/
+│   ├── src/
+│   │   ├── lib/
+│   │   │   ├── Login.svelte       # Login component
+│   │   │   └── Register.svelte    # Registration component
+│   │   ├── utils/
+│   │   │   ├── api.ts             # API client
+│   │   │   ├── crypto.ts          # Cryptographic utilities
+│   │   │   └── storage.ts         # Local storage management
+│   │   ├── App.svelte             # Main application component
+│   │   ├── main.ts                # Application entry point
+│   │   └── app.css                # Global styles
+│   └── index.html                 # HTML template
+├── e2e/
+│   └── auth.spec.ts               # Playwright E2E tests
+├── public/                        # Built client files (generated)
 ├── src/
 │   ├── __tests__/
 │   │   ├── helpers/
@@ -47,10 +60,15 @@ simciv/
 ├── README.md                      # Project overview and getting started
 ├── SECURITY.md                    # Security analysis and recommendations
 ├── VISION.md                      # Long-term project vision
-├── jest.config.js                 # Jest testing configuration
+├── playwright.config.ts           # Playwright configuration
+├── svelte.config.js               # Svelte configuration
+├── vite.config.ts                 # Vite build configuration
+├── vitest.config.ts               # Vitest testing configuration
 ├── package.json                   # Node.js dependencies and scripts
 ├── package-lock.json              # Locked dependency versions
-└── tsconfig.json                  # TypeScript compiler configuration
+├── tsconfig.json                  # TypeScript compiler configuration
+├── tsconfig.client.json           # TypeScript config for client
+└── tsconfig.node.json             # TypeScript config for build tools
 ```
 
 ## Key Files and Their Purpose
@@ -59,9 +77,14 @@ simciv/
 
 - **package.json**: Defines project dependencies and npm scripts
 - **tsconfig.json**: TypeScript compiler settings (strict mode, ES2020 target)
-- **jest.config.js**: Testing framework configuration
+- **tsconfig.client.json**: TypeScript config for Svelte client
+- **tsconfig.node.json**: TypeScript config for build tools
+- **vitest.config.ts**: Vitest testing framework configuration
+- **vite.config.ts**: Vite build configuration for client
+- **playwright.config.ts**: Playwright E2E testing configuration
+- **svelte.config.js**: Svelte preprocessor configuration
 - **.env.example**: Template for environment variables
-- **.gitignore**: Excludes node_modules, dist, coverage, etc.
+- **.gitignore**: Excludes node_modules, dist, public/, coverage, etc.
 
 ### Source Code
 
@@ -76,16 +99,25 @@ simciv/
 - **routes/auth.ts**: Authentication endpoints (register, challenge, respond, logout)
 - **routes/session.ts**: Session status endpoint
 
-#### Client (public/)
+#### Client (client/)
 
-- **index.html**: Authentication UI with registration and login forms
-- **client.js**: Client-side cryptography (key generation, encryption, storage)
+- **src/App.svelte**: Main application component with auth state
+- **src/lib/Register.svelte**: Registration form component
+- **src/lib/Login.svelte**: Login form component
+- **src/utils/crypto.ts**: Client-side cryptography (key generation, encryption, storage)
+- **src/utils/storage.ts**: Local storage utilities with GUID namespacing
+- **src/utils/api.ts**: API client for authentication endpoints
+- **src/main.ts**: Application entry point
+- **index.html**: HTML template for Svelte app
 
-#### Tests (src/__tests__/)
+#### Tests (src/__tests__/ and e2e/)
 
-- **unit/crypto.test.ts**: Tests for cryptographic utilities (15 tests)
+- **unit/crypto.test.ts**: Tests for cryptographic utilities (15 tests with Vitest)
 - **integration/auth.test.ts**: End-to-end API tests (skipped in current environment)
-- **helpers/testDb.ts**: MongoDB Memory Server setup for testing
+- **e2e/auth.spec.ts**: Playwright E2E tests for complete user flows
+  - User registration and login
+  - Cross-user isolation
+  - Login after logout
 
 ### Documentation
 
@@ -136,12 +168,15 @@ The MongoDB database (default name: `simciv`) contains three collections:
 ## NPM Scripts
 
 ```bash
-npm run build         # Compile TypeScript to JavaScript (dist/)
+npm run build         # Compile TypeScript and build client
+npm run build:client  # Build Svelte client with Vite
+npm start             # Production server (requires build first)
 npm run dev           # Development server with auto-reload
-npm start             # Production server (requires npm run build first)
-npm test              # Run all tests
+npm run dev:client    # Development server for client (Vite dev server)
+npm test              # Run unit tests with Vitest
 npm run test:watch    # Run tests in watch mode
 npm run test:coverage # Generate coverage report
+npm run test:e2e      # Run Playwright E2E tests
 ```
 
 ## Technology Stack
@@ -150,8 +185,9 @@ npm run test:coverage # Generate coverage report
 - **Language**: TypeScript (strict mode)
 - **Server**: Express.js
 - **Database**: MongoDB 4.4+
-- **Testing**: Jest with ts-jest
-- **Client**: Vanilla JavaScript with Web Crypto API
+- **Testing**: Vitest (unit tests), Playwright (E2E tests)
+- **Client**: TypeScript + Svelte with Vite
+- **Build Tool**: Vite
 
 ## Security Features
 
