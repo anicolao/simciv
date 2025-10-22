@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimCiv - Authentication</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+      margin-top: 10px;
+    }
+    .info {
+      color: blue;
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+    }
+    .tab.active {
+      background: #4CAF50;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>SimCiv Authentication</h1>
+  
+  <div id="sessionInfo"></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('register')">Register</div>
+    <div class="tab" onclick="showTab('login')">Login</div>
+  </div>
+
+  <!-- Registration Form -->
+  <div id="registerTab" class="tab-content active">
+    <h2>Register New Account</h2>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="regAlias">Alias:</label>
+        <input type="text" id="regAlias" required>
+      </div>
+      <div class="form-group">
+        <label for="regPassword">Password:</label>
+        <input type="password" id="regPassword" required>
+      </div>
+      <div class="form-group">
+        <label for="regPasswordConfirm">Confirm Password:</label>
+        <input type="password" id="regPasswordConfirm" required>
+      </div>
+      <button type="submit">Register</button>
+      <div id="regMessage"></div>
+    </form>
+  </div>
+
+  <!-- Login Form -->
+  <div id="loginTab" class="tab-content">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginAlias">Alias:</label>
+        <input type="text" id="loginAlias" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password:</label>
+        <input type="password" id="loginPassword" required>
+      </div>
+      <button type="submit">Login</button>
+      <div id="loginMessage"></div>
+    </form>
+  </div>
+
+  <!-- Authenticated State -->
+  <div id="authenticatedSection" class="hidden">
+    <h2>Welcome!</h2>
+    <p>You are logged in as: <strong id="userAlias"></strong></p>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script src="/client.js"></script>
+</body>
+</html>

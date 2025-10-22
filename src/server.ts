@@ -1,0 +1,73 @@
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import path from 'path';
+import { connectToDatabase } from './db/connection';
+import { config } from './config';
+import { sessionMiddleware } from './middleware/session';
+import authRoutes from './routes/auth';
+import sessionRoutes from './routes/session';
+
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Connect to database
+    await connectToDatabase(config.mongoUri, config.dbName);
+    console.log('Connected to MongoDB');
+
+    // Session middleware (applies to all routes)
+    app.use(sessionMiddleware);
+
+    // Root path - redirect to session GUID URL
+    app.get('/', (req, res) => {
+      if (req.sessionGuid) {
+        res.redirect(`/id=${req.sessionGuid}`);
+      } else {
+        res.status(500).json({ error: 'Failed to create session' });
+      }
+    });
+
+    // Session-specific path
+    app.get('/id=:guid', (req, res) => {
+      const { guid } = req.params;
+      
+      // Validate GUID matches cookie or update cookie
+      if (req.sessionGuid !== guid) {
+        // Redirect to the cookie's GUID (cookie wins)
+        res.redirect(`/id=${req.sessionGuid}`);
+        return;
+      }
+
+      // Serve the client application
+      res.sendFile(path.join(__dirname, '../public/index.html'));
+    });
+
+    // API routes
+    app.use('/api/auth', authRoutes);
+    app.use('/api/session', sessionRoutes);
+
+    // Error handler
+    app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      console.error('Error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    });
+
+    // Start server
+    app.listen(config.port, () => {
+      console.log(`Server running on port ${config.port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+export default app;
