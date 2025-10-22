@@ -6,8 +6,19 @@ let client: MongoClient | null = null;
 let db: Db | null = null;
 
 export async function setupTestDatabase(): Promise<Db> {
-  mongod = await MongoMemoryServer.create();
-  const uri = mongod.getUri();
+  // Check if we should use external MongoDB for testing
+  const externalMongoUri = process.env.TEST_MONGO_URI;
+  
+  let uri: string;
+  
+  if (externalMongoUri) {
+    // Use external MongoDB instance
+    uri = externalMongoUri;
+  } else {
+    // Use MongoDB Memory Server
+    mongod = await MongoMemoryServer.create();
+    uri = mongod.getUri();
+  }
   
   client = new MongoClient(uri);
   await client.connect();

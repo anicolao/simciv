@@ -12,8 +12,7 @@ import sessionRoutes from '../../routes/session';
 // Mock the database connection module
 vi.mock('../../db/connection');
 
-// Skip these tests due to network restrictions in the environment
-describe.skip('Authentication Integration Tests', () => {
+describe('Authentication Integration Tests', () => {
   let app: express.Application;
   let testKeyPair: crypto.KeyPairSyncResult<string, string>;
 

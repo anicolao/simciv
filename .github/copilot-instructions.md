@@ -97,6 +97,14 @@ The current implementation includes:
 - Test edge cases (expired challenges, duplicate aliases, etc.)
 - Use descriptive test names
 
+**CRITICAL TESTING REQUIREMENTS:**
+- **ALWAYS run all unit and integration tests before completing a PR**
+- **NO SKIPPED TESTS ARE ACCEPTABLE** - All tests must run and pass
+- **NO FAILING TESTS ARE ACCEPTABLE** - Fix all test failures before completion
+- **DELETING TESTS IS GENERALLY UNACCEPTABLE** - Only remove tests if they're truly obsolete
+- Use `TEST_MONGO_URI` environment variable to run integration tests with external MongoDB when mongodb-memory-server has issues
+- Integration tests must pass before PR completion
+
 ### File Organization
 ```
 src/

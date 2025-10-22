@@ -110,6 +110,10 @@ npm run dev
 # Run tests
 npm test
 
+# Run tests with external MongoDB (if mongodb-memory-server has issues)
+# Start MongoDB: docker run -d --name test-mongo -p 27017:27017 mongo:7.0
+TEST_MONGO_URI="mongodb://localhost:27017" npm test
+
 # Run E2E tests (requires running server)
 npm run test:e2e
 ```
