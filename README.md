@@ -71,7 +71,45 @@ SimCiv is designed around several core principles:
 
 ## Current Status
 
-SimCiv is currently in early development. We're building the foundation for simulated citizens, city development, and competitive gameplay. See [VISION.md](VISION.md) for details on the long-term goals and planned features.
+SimCiv is currently in early development. 
+
+### Version 0.0001 - Authentication System ✅
+
+The first implementation milestone has been completed:
+
+- ✅ **User Authentication**: Cryptographic challenge/response authentication system
+- ✅ **Session Management**: GUID-based session tracking with MongoDB
+- ✅ **Client-Side Security**: Private key encryption and local storage management
+- ✅ **API Endpoints**: Complete REST API for authentication and session management
+- ✅ **Testing**: Comprehensive unit tests for cryptographic operations
+- ✅ **Documentation**: Full design specification and implementation guides
+
+See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed documentation and [designs/version0.0001.md](designs/version0.0001.md) for the complete design specification.
+
+### Getting Started
+
+To run the authentication system locally:
+
+```bash
+# Install dependencies
+npm install
+
+# Start MongoDB (required)
+# Use Docker: docker run -d -p 27017:27017 mongo:latest
+# Or install locally
+
+# Run development server
+npm run dev
+
+# Access the application
+# Navigate to http://localhost:3000
+```
+
+For more details, see the [Authentication Documentation](docs/AUTHENTICATION.md).
+
+### Next Steps
+
+We're building the foundation for simulated citizens, city development, and competitive gameplay. See [VISION.md](VISION.md) for details on the long-term goals and planned features.
 
 ## Contributing
 

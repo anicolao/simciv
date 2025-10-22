@@ -98,6 +98,8 @@ describe('Crypto Utils', () => {
     });
 
     it('should reject keys smaller than 2048 bits', () => {
+      // Testing weak key rejection - this 1024-bit key is intentionally weak
+      // to verify our validation logic properly rejects insufficient key sizes
       const weakKeyPair = crypto.generateKeyPairSync('rsa', {
         modulusLength: 1024,
         publicKeyEncoding: {
