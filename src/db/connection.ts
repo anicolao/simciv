@@ -1,5 +1,5 @@
 import { MongoClient, Db, Collection } from 'mongodb';
-import { User, Session, Challenge } from '../models/types';
+import { User, Session, Challenge, Game } from '../models/types';
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -19,6 +19,9 @@ export async function connectToDatabase(uri: string, dbName: string): Promise<Db
   await db.collection<Session>('sessions').createIndex({ expiresAt: 1 });
   await db.collection<Challenge>('challenges').createIndex({ alias: 1 });
   await db.collection<Challenge>('challenges').createIndex({ expiresAt: 1 });
+  await db.collection<Game>('games').createIndex({ gameId: 1 }, { unique: true });
+  await db.collection<Game>('games').createIndex({ state: 1 });
+  await db.collection<Game>('games').createIndex({ createdAt: 1 });
 
   return db;
 }
@@ -40,6 +43,10 @@ export function getSessionsCollection(): Collection<Session> {
 
 export function getChallengesCollection(): Collection<Challenge> {
   return getDatabase().collection<Challenge>('challenges');
+}
+
+export function getGamesCollection(): Collection<Game> {
+  return getDatabase().collection<Game>('games');
 }
 
 export async function closeDatabase(): Promise<void> {

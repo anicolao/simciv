@@ -6,6 +6,7 @@ import { config } from './config';
 import { sessionMiddleware } from './middleware/session';
 import authRoutes from './routes/auth';
 import sessionRoutes from './routes/session';
+import gamesRoutes from './routes/games';
 
 const app = express();
 
@@ -53,6 +54,7 @@ async function startServer() {
     // API routes
     app.use('/api/auth', authRoutes);
     app.use('/api/session', sessionRoutes);
+    app.use('/api/games', gamesRoutes);
 
     // Error handler
     app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

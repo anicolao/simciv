@@ -26,3 +26,16 @@ export interface Challenge {
   expiresAt: Date;
   used: boolean;
 }
+
+export interface Game {
+  gameId: string;
+  creatorUserId: string;
+  maxPlayers: number;
+  currentPlayers: number;
+  playerList: string[];
+  state: 'waiting' | 'started';
+  currentYear: number;
+  createdAt: Date;
+  startedAt?: Date;
+  lastTickAt?: Date;
+}
