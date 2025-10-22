@@ -12,7 +12,6 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, '../public')));
 
 // Initialize database and start server
 async function startServer() {
@@ -47,6 +46,9 @@ async function startServer() {
       // Serve the client application
       res.sendFile(path.join(__dirname, '../public/index.html'));
     });
+    
+    // Static files (after routes to prevent index.html from being served at /)
+    app.use(express.static(path.join(__dirname, '../public')));
 
     // API routes
     app.use('/api/auth', authRoutes);
