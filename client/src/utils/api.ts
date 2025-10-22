@@ -99,3 +99,88 @@ export async function getSessionStatus(): Promise<SessionStatus> {
   const response = await fetch('/api/session/status');
   return await response.json();
 }
+
+/**
+ * Game-related types and functions
+ */
+export interface Game {
+  gameId: string;
+  creatorUserId: string;
+  maxPlayers: number;
+  currentPlayers: number;
+  playerList?: string[];
+  state: 'waiting' | 'started';
+  currentYear: number;
+  createdAt: string;
+  startedAt?: string;
+  lastTickAt?: string;
+}
+
+export interface GamesListResponse {
+  success: boolean;
+  games: Game[];
+}
+
+export interface GameResponse {
+  success: boolean;
+  game: Game;
+}
+
+/**
+ * Get all games
+ */
+export async function getGames(): Promise<GamesListResponse> {
+  const response = await fetch('/api/games');
+  return await response.json();
+}
+
+/**
+ * Get a specific game
+ */
+export async function getGame(gameId: string): Promise<GameResponse> {
+  const response = await fetch(`/api/games/${gameId}`);
+  return await response.json();
+}
+
+/**
+ * Create a new game
+ */
+export async function createGame(maxPlayers: number): Promise<GameResponse> {
+  const response = await fetch('/api/games', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ maxPlayers })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create game');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Join a game
+ */
+export async function joinGame(gameId: string): Promise<GameResponse> {
+  const response = await fetch(`/api/games/${gameId}/join`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to join game');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Get user's games
+ */
+export async function getMyGames(): Promise<GamesListResponse> {
+  const response = await fetch('/api/games/user/my-games');
+  return await response.json();
+}
