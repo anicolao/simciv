@@ -130,7 +130,17 @@ sudo systemctl start mongod
 
 #### Using Docker for MongoDB
 
-If you prefer to run MongoDB in a container:
+If you prefer to run MongoDB in a container, you can use the provided `mongo` script:
+
+```bash
+# Add bin directory to your PATH
+export PATH="$PWD/bin:$PATH"
+
+# Start MongoDB (uses Docker if native MongoDB is not available)
+mongo start
+```
+
+Or use Docker directly:
 
 ```bash
 docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0

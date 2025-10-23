@@ -131,7 +131,9 @@ npm install
 npm run build
 
 # Start MongoDB (required)
-docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0
+# Note: If you're using the Nix flake on Linux, native MongoDB will be used automatically
+# Otherwise, Docker will be used (make sure Docker is running)
+./bin/mongo start
 
 # Run development server
 npm run dev
