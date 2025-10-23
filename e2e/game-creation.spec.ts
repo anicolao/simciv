@@ -75,7 +75,7 @@ test.describe('Game Creation and Management', () => {
     await page.screenshot({ path: 'e2e-screenshots/game-created.png', fullPage: true });
   });
 
-  test('should allow second player to join game', async ({ page, context }) => {
+  test('should allow second player to join game', async ({ page }) => {
     const timestamp = Date.now();
     
     // Create first user and game
@@ -93,32 +93,32 @@ test.describe('Game Creation and Management', () => {
     // Take screenshot before second player joins
     await page.screenshot({ path: 'e2e-screenshots/game-waiting-for-players.png', fullPage: true });
 
-    // Open second browser tab for second player
-    const page2 = await context.newPage();
+    // Clear cookies and navigate to new session for second player
+    await page.context().clearCookies();
     const alias2 = `gameuser2_${timestamp}`;
-    await registerAndLogin(page2, alias2, password);
+    await registerAndLogin(page, alias2, password);
     
     // Wait for game lobby
-    await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
 
     // Find the game and join
-    const gameCard2 = page2.locator('.game-card').first();
-    await expect(gameCard2).toBeVisible();
+    const gameCard = page.locator('.game-card').first();
+    await expect(gameCard).toBeVisible();
     
     // Take screenshot showing join button
-    await page2.screenshot({ path: 'e2e-screenshots/game-second-player-view.png', fullPage: true });
+    await page.screenshot({ path: 'e2e-screenshots/game-second-player-view.png', fullPage: true });
     
     // Click join button
-    await gameCard2.locator('button:has-text("Join")').click();
+    await gameCard.locator('button:has-text("Join")').click();
 
     // Verify game state changed to "Started"
-    await expect(page2.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
 
     // Take screenshot of game started
-    await page2.screenshot({ path: 'e2e-screenshots/game-started.png', fullPage: true });
+    await page.screenshot({ path: 'e2e-screenshots/game-started.png', fullPage: true });
   });
 
-  test('should show time progression in started game', async ({ page, context }) => {
+  test('should show time progression in started game', async ({ page }) => {
     const timestamp = Date.now();
     const password = 'TestPassword123!';
     
@@ -133,37 +133,37 @@ test.describe('Game Creation and Management', () => {
     await page.click('button:has-text("Create Game")');
     await page.waitForSelector('.game-card');
 
-    // Open second browser tab for second player
-    const page2 = await context.newPage();
+    // Clear cookies and login as second player
+    await page.context().clearCookies();
     const alias2 = `gameuser2_${timestamp}`;
-    await registerAndLogin(page2, alias2, password);
-    await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
+    await registerAndLogin(page, alias2, password);
+    await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
 
     // Join the game
-    const gameCard2 = page2.locator('.game-card').first();
-    await gameCard2.locator('button:has-text("Join")').click();
+    const gameCard = page.locator('.game-card').first();
+    await gameCard.locator('button:has-text("Join")').click();
 
     // Wait for game to start
-    await expect(page2.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
 
     // Check that year is displayed
-    const yearValue = page2.locator('.value.year').first();
+    const yearValue = page.locator('.value.year').first();
     await expect(yearValue).toBeVisible();
     
     // Initial year should be 5000 BC
     await expect(yearValue).toContainText('5000 BC');
 
     // Take screenshot showing initial year
-    await page2.screenshot({ path: 'e2e-screenshots/game-time-initial.png', fullPage: true });
+    await page.screenshot({ path: 'e2e-screenshots/game-time-initial.png', fullPage: true });
 
     // Wait for time to progress - wait for year to change from 5000 BC
     await expect(yearValue).not.toContainText('5000 BC', { timeout: 10000 });
 
     // Take screenshot showing time progression
-    await page2.screenshot({ path: 'e2e-screenshots/game-time-progressed.png', fullPage: true });
+    await page.screenshot({ path: 'e2e-screenshots/game-time-progressed.png', fullPage: true });
   });
 
-  test('should prevent joining a full game', async ({ page, context }) => {
+  test('should prevent joining a full game', async ({ page }) => {
     const timestamp = Date.now();
     const password = 'TestPassword123!';
     
@@ -179,27 +179,27 @@ test.describe('Game Creation and Management', () => {
     await page.waitForSelector('.game-card');
 
     // Second player joins
-    const page2 = await context.newPage();
+    await page.context().clearCookies();
     const alias2 = `gameuser2_${timestamp}`;
-    await registerAndLogin(page2, alias2, password);
-    await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
-    await page2.locator('.game-card').first().locator('button:has-text("Join")').click();
+    await registerAndLogin(page, alias2, password);
+    await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
+    await page.locator('.game-card').first().locator('button:has-text("Join")').click();
     
     // Wait for game to start
-    await expect(page2.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
 
     // Third player tries to join
-    const page3 = await context.newPage();
+    await page.context().clearCookies();
     const alias3 = `gameuser3_${timestamp}`;
-    await registerAndLogin(page3, alias3, password);
-    await expect(page3.locator('h2:has-text("Game Lobby")')).toBeVisible();
+    await registerAndLogin(page, alias3, password);
+    await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
 
     // Game should show as "Started" without join button
-    const gameCard3 = page3.locator('.game-card').first();
-    await expect(gameCard3.locator('.game-state.started')).toContainText('Started', { timeout: 5000 });
+    const gameCard = page.locator('.game-card').first();
+    await expect(gameCard.locator('.game-state.started')).toContainText('Started', { timeout: 5000 });
 
     // Take screenshot showing full game
-    await page3.screenshot({ path: 'e2e-screenshots/game-full-no-join.png', fullPage: true });
+    await page.screenshot({ path: 'e2e-screenshots/game-full-no-join.png', fullPage: true });
   });
 
   test('should show game details when viewing', async ({ page }) => {
