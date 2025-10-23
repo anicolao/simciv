@@ -6,16 +6,16 @@ This directory contains Playwright E2E tests that validate the complete authenti
 
 ## Performance Optimization
 
-**Important:** RSA key generation in the browser can be very slow (10-30 seconds per user). To speed up tests, use the pre-generated key approach documented below instead of generating keys during tests.
-
 ### Fast Testing with Pre-Generated Keys
 
-The `e2e/helpers.ts` module provides utilities for creating test users with pre-generated RSA keys. This approach:
+The `e2e/helpers.ts` module provides utilities for creating test users with pre-generated RSA keys. This approach offers several benefits for E2E testing:
 
-- **Generates keys in Node.js** (~300-400ms) instead of browser (~30s)
-- **Seeds the database** with user and session data
-- **Injects keys into localStorage** before tests run
-- **Sets session cookies** to match the pre-generated session
+- **Generates keys in Node.js** (~300-400ms) - consistent performance across environments
+- **Seeds the database** with user and session data - complete control over test state
+- **Injects keys into localStorage** before tests run - skip the registration UI flow
+- **Sets session cookies** to match the pre-generated session - seamless authentication
+
+**Note:** While browser-based RSA key generation can vary in performance across different environments (from a few hundred milliseconds to several seconds), using pre-generated keys provides consistent, fast test execution and better control over test data.
 
 **Example usage:**
 
@@ -193,24 +193,24 @@ When adding new E2E tests:
 5. Test both success and failure paths
 6. Update this README with new test scenarios
 
-**For authentication tests:** Use the pre-generated key approach from `helpers.ts` to avoid slow RSA key generation:
+**For authentication tests:** Use the pre-generated key approach from `helpers.ts` for better test control and consistency:
 
 ```typescript
-// Instead of this (SLOW - 30s):
+// Instead of this (slower and less control):
 await page.fill('input[id="alias"]', 'newuser');
 await page.fill('input[id="password"]', 'password');
 await page.locator('form button[type="submit"]').click();
 await expect(page.locator('.message.success')).toContainText('Registration successful', {
-  timeout: 60000  // Long timeout needed!
+  timeout: 10000
 });
 
-// Do this (FAST - 2-4s):
+// Do this (faster and more control):
 const testUser = createTestUser('newuser', 'password');
 await seedTestUser(testUser);
 await context.addCookies([{ name: 'simciv_session', value: testUser.sessionGuid, /* ... */ }]);
 await page.goto(`/id=${testUser.sessionGuid}`);
 await page.evaluate(getLocalStorageInjectionCode(testUser));
-// User is ready to login instantly!
+// User is ready to login instantly with full control over test data!
 ```
 
 ## Helper Utilities
@@ -237,9 +237,14 @@ The `e2e/helpers.ts` module provides the following utilities:
 
 ## Performance Benchmarks
 
-- **Traditional browser RSA key generation:** ~10-30 seconds per user
-- **Node.js pre-generated keys:** ~300-400ms per user
+The pre-generated key approach provides consistent performance and better test control:
+
+- **Node.js RSA key generation:** ~300-400ms (consistent across environments)
 - **Complete test with pre-generated keys:** ~2-4 seconds total
 - **Pre-authenticated session test:** ~2 seconds total
 
-**Speed improvement: ~10-15x faster!**
+**Benefits:**
+- Consistent performance regardless of browser environment
+- Complete control over test data and state
+- Skip UI flows to test specific functionality
+- Easier test isolation and cleanup

@@ -93,7 +93,7 @@ test.describe('SimCiv Authentication - Optimized with Pre-generated Keys', () =>
     }
   });
 
-  test('compare: traditional registration (SLOW for reference)', async ({ page }) => {
+  test('compare: traditional registration for reference', async ({ page }) => {
     await page.goto('/');
     await page.waitForURL(/\/id=[a-f0-9-]+/);
 
@@ -105,13 +105,13 @@ test.describe('SimCiv Authentication - Optimized with Pre-generated Keys', () =>
     await page.fill('input[id="password"]', password);
     await page.fill('input[id="passwordConfirm"]', password);
 
-    // Submit registration - THIS WILL BE SLOW due to RSA key generation in browser
+    // Submit registration - includes key generation in browser
     const startTime = Date.now();
     await page.locator('form button[type="submit"]').first().click();
 
     // Wait for registration to complete
     await expect(page.locator('.message.success')).toContainText('Registration successful', {
-      timeout: 60000, // Increased timeout due to slow key generation
+      timeout: 10000,
     });
 
     const duration = Date.now() - startTime;
@@ -124,7 +124,7 @@ test.describe('SimCiv Authentication - Optimized with Pre-generated Keys', () =>
     await cleanupTestUser(alias);
 
     console.log(
-      `📊 Performance comparison: Pre-generated keys vs Traditional registration = ~${Math.round(duration / 1000)}s saved`
+      `📊 Note: Pre-generated keys provide consistent performance and better test control`
     );
   });
 

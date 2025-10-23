@@ -50,22 +50,22 @@ test('my fast test', async ({ page, context }) => {
 
 ## Performance Tips
 
-### ❌ DON'T: Generate keys in browser (30s delay)
+### ❌ DON'T: Generate keys through registration UI when testing other features
 
 ```typescript
-// This is SLOW - avoid unless testing actual registration UI
+// This tests the registration UI but is slower for other test scenarios
 await page.fill('input[id="alias"]', 'newuser');
 await page.fill('input[id="password"]', 'password');
 await page.locator('form button[type="submit"]').click();
 await expect(page.locator('.message.success')).toContainText('Registration successful', {
-  timeout: 60000  // Need long timeout!
+  timeout: 10000
 });
 ```
 
-### ✅ DO: Use pre-generated keys (2-4s total)
+### ✅ DO: Use pre-generated keys for better control and speed
 
 ```typescript
-// This is FAST - use for most tests
+// This gives you full control over test data and state
 const testUser = createTestUser('newuser', 'password');
 await seedTestUser(testUser);
 await context.addCookies([{ name: 'simciv_session', value: testUser.sessionGuid, /* ... */ }]);
@@ -287,9 +287,14 @@ DB_NAME=simciv
 | Operation | Time |
 |-----------|------|
 | Pre-generate RSA keys (Node.js) | 300-400ms |
-| Browser RSA key generation | 10-30s |
 | Complete test with pre-generated keys | 2-4s |
 | Pre-authenticated session setup | 2s |
+
+**Benefits of pre-generated keys:**
+- Consistent performance across environments
+- Full control over test data and state
+- Skip UI flows to focus on specific functionality
+- Easier test isolation and cleanup
 
 ## Remember
 
