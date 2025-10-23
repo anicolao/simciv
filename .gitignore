@@ -4,7 +4,10 @@ package-lock.json
 
 # Build output
 dist/
-public/
+public/*
+!public/assets/
+public/assets/*.js
+public/assets/*.css
 *.js
 *.js.map
 *.d.ts
