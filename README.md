@@ -102,6 +102,25 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed documentation 
 
 ### Getting Started
 
+#### Using Nix (NixOS/nix-darwin)
+
+If you're on NixOS or macOS with nix-darwin, you can use Nix flakes to set up your development environment with all required tools:
+
+```bash
+# Enter the development shell with all tools installed
+nix develop
+
+# This will provide:
+# - Node.js 20.x
+# - Go 1.24.x
+# - MongoDB 7.0
+# - All other development dependencies
+
+# Then follow the standard setup steps below
+```
+
+#### Standard Setup
+
 To run SimCiv locally:
 
 ```bash
@@ -112,7 +131,9 @@ npm install
 npm run build
 
 # Start MongoDB (required)
-docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0
+# Note: If you're using the Nix flake on Linux, native MongoDB will be used automatically
+# Otherwise, Docker will be used (make sure Docker is running)
+./bin/mongo start
 
 # Run development server
 npm run dev
@@ -140,6 +161,7 @@ npm run test:e2e
 ```
 
 For more details:
+- [Development Environment Setup](docs/DEVELOPMENT.md)
 - [Authentication Documentation](docs/AUTHENTICATION.md)
 - [Game Creation Documentation](docs/GAME_CREATION.md)
 

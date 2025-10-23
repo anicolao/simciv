@@ -148,8 +148,8 @@ cd simulation && go test ./...
 
 ### Integration Tests
 ```bash
-# Start MongoDB
-docker run -d -p 27017:27017 mongo:7.0
+# Start MongoDB (using the mongo script)
+./bin/mongo start
 
 # Run integration tests
 TEST_MONGO_URI="mongodb://localhost:27017" npm test

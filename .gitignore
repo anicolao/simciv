@@ -4,7 +4,10 @@ package-lock.json
 
 # Build output
 dist/
-public/
+public/*
+!public/assets/
+public/assets/*.js
+public/assets/*.css
 *.js
 *.js.map
 *.d.ts
@@ -24,6 +27,9 @@ test-results/
 .env
 .env.local
 .env.*.local
+
+# Direnv
+.direnv/
 
 # IDE
 .vscode/
@@ -47,3 +53,6 @@ yarn-error.log*
 simulation/simciv-sim
 simulation/simciv-sim.exe
 simulation/simulation
+
+# MongoDB data directory (for native mongod)
+.mongodb-data/

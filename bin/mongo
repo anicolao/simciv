@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+# MongoDB management script for SimCiv
+# Works on both Linux and macOS
+#
+# On Linux: Uses native mongod if available, falls back to Docker
+# On macOS: Uses Colima + Docker
+
+set -e
+
+MONGO_CONTAINER_NAME="simciv-mongo"
+MONGO_PORT="27017"
+MONGO_IMAGE="mongo:7.0"
+MONGO_DATA_DIR="$(pwd)/.mongodb-data"
+MONGO_PID_FILE="${MONGO_DATA_DIR}/mongod.pid"
+MONGO_LOG_FILE="${MONGO_DATA_DIR}/mongod.log"
+
+# Detect OS
+IS_MACOS=false
+if [[ "$(uname)" == "Darwin" ]]; then
+	IS_MACOS=true
+fi
+
+# Check if native mongod is available (Linux only)
+HAS_NATIVE_MONGOD=false
+if [ "$IS_MACOS" = false ] && command -v mongod >/dev/null 2>&1; then
+	HAS_NATIVE_MONGOD=true
+fi
+
+# Check if MongoDB container is running
+mongodb_container_running() {
+	docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${MONGO_CONTAINER_NAME}$"
+}
+
+# Check if native MongoDB is running
+mongodb_native_running() {
+	if [ ! -f "$MONGO_PID_FILE" ]; then
+		return 1
+	fi
+	
+	local pid
+	pid=$(cat "$MONGO_PID_FILE" 2>/dev/null)
+	
+	if [ -z "$pid" ]; then
+		return 1
+	fi
+	
+	# Check if process is actually running
+	if ps -p "$pid" >/dev/null 2>&1; then
+		return 0
+	else
+		# PID file exists but process is not running, clean up
+		rm -f "$MONGO_PID_FILE"
+		return 1
+	fi
+}
+
+# Check if any MongoDB is running
+mongodb_running() {
+	if [ "$HAS_NATIVE_MONGOD" = true ]; then
+		mongodb_native_running
+	else
+		mongodb_container_running
+	fi
+}
+
+# Check if Colima is running (macOS only)
+colima_running() {
+	if [ "$IS_MACOS" = true ]; then
+		colima status 2>&1 | grep -iq 'running'
+	else
+		return 1
+	fi
+}
+
+# Start native MongoDB (Linux)
+start_mongodb_native() {
+	if mongodb_native_running; then
+		echo "✅ MongoDB is already running on localhost:${MONGO_PORT}"
+		return 0
+	fi
+
+	# Create data directory if it doesn't exist
+	mkdir -p "$MONGO_DATA_DIR"
+
+	echo "🍃 Starting native MongoDB..."
+	mongod --dbpath "$MONGO_DATA_DIR" --port "$MONGO_PORT" --fork \
+		--logpath "$MONGO_LOG_FILE" --pidfilepath "$MONGO_PID_FILE" >/dev/null 2>&1
+	
+	# Wait a moment for MongoDB to start
+	sleep 2
+	
+	if mongodb_native_running; then
+		echo "✅ MongoDB started on localhost:${MONGO_PORT}"
+		echo "   Data directory: ${MONGO_DATA_DIR}"
+		echo "   Log file: ${MONGO_LOG_FILE}"
+	else
+		echo "❌ Failed to start MongoDB. Check ${MONGO_LOG_FILE} for details."
+		exit 1
+	fi
+}
+
+# Stop native MongoDB (Linux)
+stop_mongodb_native() {
+	if ! mongodb_native_running; then
+		echo "✅ MongoDB is not running"
+		# Clean up stale PID file
+		rm -f "$MONGO_PID_FILE"
+		return 0
+	fi
+
+	local pid
+	pid=$(cat "$MONGO_PID_FILE" 2>/dev/null)
+
+	echo "🧹 Stopping MongoDB..."
+	
+	# Send SIGTERM for graceful shutdown
+	kill "$pid" 2>/dev/null || true
+	
+	# Wait for process to exit (up to 10 seconds)
+	local count=0
+	while ps -p "$pid" >/dev/null 2>&1 && [ $count -lt 10 ]; do
+		sleep 1
+		count=$((count + 1))
+	done
+	
+	# Force kill if still running
+	if ps -p "$pid" >/dev/null 2>&1; then
+		echo "⚠️  Force stopping MongoDB..."
+		kill -9 "$pid" 2>/dev/null || true
+	fi
+	
+	rm -f "$MONGO_PID_FILE"
+	echo "✅ MongoDB stopped"
+}
+
+# Start MongoDB container (macOS or Linux without native mongod)
+start_mongodb_container() {
+	if mongodb_container_running; then
+		echo "✅ MongoDB is already running on localhost:${MONGO_PORT}"
+		return 0
+	fi
+
+	if [ "$IS_MACOS" = true ]; then
+		# On macOS, ensure Colima is running
+		if ! colima_running; then
+			echo "🚀 Starting Colima..."
+			colima start --cpu 2 --memory 4 --arch "$(uname -m)"
+		fi
+
+		# Wait for Docker to be ready
+		echo "⏳ Waiting for Docker to be ready..."
+		max_wait=30
+		count=0
+		while ! docker info >/dev/null 2>&1 && [ $count -lt $max_wait ]; do
+			sleep 1
+			count=$((count + 1))
+		done
+
+		if ! docker info >/dev/null 2>&1; then
+			echo "❌ Docker is not ready. Please check Colima status."
+			exit 1
+		fi
+	else
+		# On Linux, check if Docker is available
+		if ! command -v docker >/dev/null 2>&1; then
+			echo "❌ Docker is not installed and native MongoDB is not available"
+			echo "   Please install MongoDB or Docker to continue"
+			exit 1
+		fi
+
+		if ! docker info >/dev/null 2>&1; then
+			echo "❌ Docker is not running. Please start Docker first."
+			exit 1
+		fi
+	fi
+
+	echo "🍃 Starting MongoDB container..."
+	docker run -d --name "${MONGO_CONTAINER_NAME}" -p "${MONGO_PORT}:27017" "${MONGO_IMAGE}" >/dev/null
+	echo "✅ MongoDB started on localhost:${MONGO_PORT}"
+}
+
+# Stop MongoDB container
+stop_mongodb_container() {
+	if ! mongodb_container_running; then
+		echo "✅ MongoDB is not running"
+		return 0
+	fi
+
+	echo "🧹 Stopping MongoDB container..."
+	docker stop "${MONGO_CONTAINER_NAME}" >/dev/null 2>&1
+	docker rm "${MONGO_CONTAINER_NAME}" >/dev/null 2>&1
+	echo "✅ MongoDB stopped"
+}
+
+# Start MongoDB
+start_mongodb() {
+	if [ "$HAS_NATIVE_MONGOD" = true ]; then
+		start_mongodb_native
+	else
+		start_mongodb_container
+	fi
+}
+
+# Stop MongoDB
+stop_mongodb() {
+	if [ "$HAS_NATIVE_MONGOD" = true ]; then
+		stop_mongodb_native
+	else
+		stop_mongodb_container
+	fi
+}
+
+# Show MongoDB status
+status_mongodb() {
+	echo "MongoDB Status:"
+	echo "==============="
+
+	if [ "$IS_MACOS" = true ]; then
+		echo "Platform: macOS (using Docker via Colima)"
+		if colima_running; then
+			echo "Colima: ✅ Running"
+		else
+			echo "Colima: ❌ Not running"
+		fi
+	else
+		if [ "$HAS_NATIVE_MONGOD" = true ]; then
+			echo "Platform: Linux (using native MongoDB)"
+		else
+			echo "Platform: Linux (using Docker)"
+		fi
+	fi
+
+	if [ "$HAS_NATIVE_MONGOD" = true ]; then
+		if mongodb_native_running; then
+			echo "MongoDB: ✅ Running on localhost:${MONGO_PORT}"
+			echo ""
+			echo "Process Info:"
+			local pid
+			pid=$(cat "$MONGO_PID_FILE" 2>/dev/null)
+			echo "  PID: ${pid}"
+			echo "  Data directory: ${MONGO_DATA_DIR}"
+			echo "  Log file: ${MONGO_LOG_FILE}"
+		else
+			echo "MongoDB: ❌ Not running"
+		fi
+	else
+		if mongodb_container_running; then
+			echo "MongoDB: ✅ Running on localhost:${MONGO_PORT}"
+			echo ""
+			echo "Container Info:"
+			docker ps --filter "name=${MONGO_CONTAINER_NAME}" --format "  ID: {{.ID}}\n  Status: {{.Status}}\n  Ports: {{.Ports}}"
+		else
+			echo "MongoDB: ❌ Not running"
+		fi
+	fi
+}
+
+# Main command dispatcher
+case "${1:-}" in
+start)
+	start_mongodb
+	;;
+stop)
+	stop_mongodb
+	;;
+status)
+	status_mongodb
+	;;
+restart)
+	stop_mongodb
+	start_mongodb
+	;;
+*)
+	echo "Usage: mongo {start|stop|status|restart}"
+	echo ""
+	echo "Commands:"
+	echo "  start    Start MongoDB container"
+	echo "  stop     Stop MongoDB container"
+	echo "  status   Show MongoDB status"
+	echo "  restart  Restart MongoDB container"
+	exit 1
+	;;
+esac
