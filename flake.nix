@@ -10,11 +10,12 @@
 # The flake provides:
 #   - Node.js 20.x for server and client
 #   - Go (latest stable) for simulation engine  
-#   - MongoDB 7.0 for database (NixOS only, use Docker on macOS)
+#   - MongoDB 7.0 for database (NixOS only, Colima + Docker on macOS)
 #   - Git for version control
+#   - Colima + Docker (macOS only) for containerized MongoDB
 #
 # Note: MongoDB is excluded on macOS/Darwin due to build issues in nixpkgs.
-# macOS users should use Docker to run MongoDB.
+# macOS users get Colima and Docker installed to run MongoDB in a container.
 #
 # Environment variables are automatically set:
 #   - MONGO_URI=mongodb://localhost:27017
@@ -38,9 +39,12 @@
         };
         
         # MongoDB has build issues on macOS/Darwin, so we make it optional
-        # On Darwin, users should use Docker for MongoDB
+        # On Darwin, use Colima + Docker for MongoDB instead
         isDarwin = pkgs.stdenv.isDarwin;
         mongoPackage = if isDarwin then [ ] else [ pkgs.mongodb ];
+        
+        # Colima and Docker are only needed on macOS for running MongoDB
+        colimaPackages = if isDarwin then [ pkgs.colima pkgs.docker pkgs.docker-compose ] else [ ];
       in
       {
         devShells.default = pkgs.mkShell {
@@ -54,12 +58,7 @@
             
             # Development tools
             git
-            
-            # Docker (optional, for containerized MongoDB)
-            # Uncomment if you prefer Docker over local MongoDB
-            # docker
-            # docker-compose
-          ] ++ mongoPackage;
+          ] ++ mongoPackage ++ colimaPackages;
 
           shellHook = ''
             echo "🎮 Welcome to SimCiv development environment!"
@@ -69,10 +68,18 @@
             echo "  npm:      $(npm --version)"
             echo "  Go:       $(go version | cut -d' ' -f3)"
             ${if isDarwin then ''
+            echo "  Colima:   $(colima version 2>/dev/null || echo 'not running')"
+            echo "  Docker:   $(docker --version 2>/dev/null || echo 'requires Colima')"
             echo ""
-            echo "Note: MongoDB is not included on macOS due to build issues."
-            echo "Please use Docker to run MongoDB:"
-            echo "  docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
+            echo "Note: MongoDB runs in Colima on macOS."
+            echo ""
+            echo "To start Colima and MongoDB:"
+            echo "  1. colima start --cpu 2 --memory 4 --arch $(uname -m)"
+            echo "  2. docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
+            echo ""
+            echo "To stop:"
+            echo "  docker stop simciv-mongo && docker rm simciv-mongo"
+            echo "  colima stop"
             '' else ''
             echo "  MongoDB:  $(mongod --version | head -n1)"
             ''}
@@ -89,12 +96,15 @@
             echo "  cd simulation && go test ./... - Run Go tests"
             echo ""
             ${if isDarwin then ''
-            echo "MongoDB (Docker required on macOS):"
+            echo "MongoDB (via Colima):"
+            echo "  Status: colima status"
+            echo "  Start:  colima start"
+            echo "  Stop:   colima stop"
             '' else ''
             echo "MongoDB:"
             echo "  Local:  mongod --dbpath ./data/db (create data/db directory first)"
-            ''}
             echo "  Docker: docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
+            ''}
             echo ""
           '';
 

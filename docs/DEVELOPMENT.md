@@ -30,6 +30,7 @@ nix develop
 # - Node.js 20.x
 # - Go (latest stable)
 # - MongoDB 7.0 (NixOS only)
+# - Colima + Docker (macOS only)
 # - Git and other development tools
 
 # The flake also sets up environment variables:
@@ -38,10 +39,18 @@ nix develop
 # - PORT=3000
 ```
 
-**Note for macOS users:** MongoDB has build issues in nixpkgs on macOS/Darwin, so it's not included in the Nix environment. You'll need to run MongoDB using Docker:
+**Note for macOS users:** MongoDB has build issues in nixpkgs on macOS/Darwin, so the flake includes Colima and Docker instead. To run MongoDB:
 
 ```bash
+# Start Colima VM (first time or after restart)
+colima start --cpu 2 --memory 4 --arch $(uname -m)
+
+# Run MongoDB in a container
 docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0
+
+# When done, you can stop MongoDB and Colima:
+docker stop simciv-mongo && docker rm simciv-mongo
+colima stop
 ```
 
 #### Using direnv (Optional)
