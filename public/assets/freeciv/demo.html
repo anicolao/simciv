@@ -97,8 +97,10 @@
             arctic: { x: 0, y: 60, w: 30, h: 30, name: 'Arctic' },            // row 2, col 0 (layer 1 arctic)
             swamp: { x: 0, y: 150, w: 30, h: 30, name: 'Swamp' },             // row 5, col 0
             ocean: { 
-                base: { x: 90, y: 0, w: 30, h: 30 },                          // row 0, col 3 (inaccessible1 - base)
-                overlay: { x: 450, y: 300, w: 30, h: 30 },                    // row 10, col 15 (floor_n0e0s0w0 - overlay)
+                // Ocean uses half-height tiles from grid_ocean (15x15 tiles at y=210)
+                // Using darker blue floor_cell tiles
+                top: { x: 0, y: 210, w: 15, h: 15 },                          // floor_cell top half
+                bottom: { x: 0, y: 225, w: 15, h: 15 },                       // floor_cell bottom half  
                 name: 'Ocean'
             },
         };
@@ -152,17 +154,17 @@
                 // Draw sprite at 2x scale for visibility
                 ctx.imageSmoothingEnabled = false;
                 
-                // Special handling for ocean (layered rendering)
+                // Special handling for ocean (half-height tiles stacked)
                 if (key === 'ocean') {
-                    // Draw base layer (inaccessible)
+                    // Draw top half (scaled to 60x30)
                     ctx.drawImage(terrainImg, 
-                        sprite.base.x, sprite.base.y, sprite.base.w, sprite.base.h,
-                        0, 0, 60, 60
+                        sprite.top.x, sprite.top.y, sprite.top.w, sprite.top.h,
+                        0, 0, 60, 30
                     );
-                    // Draw overlay layer (floor)
+                    // Draw bottom half (scaled to 60x30)
                     ctx.drawImage(terrainImg, 
-                        sprite.overlay.x, sprite.overlay.y, sprite.overlay.w, sprite.overlay.h,
-                        0, 0, 60, 60
+                        sprite.bottom.x, sprite.bottom.y, sprite.bottom.w, sprite.bottom.h,
+                        0, 30, 60, 30
                     );
                 } else {
                     ctx.drawImage(terrainImg, 
@@ -207,17 +209,17 @@
                     
                     const sprite = terrainSprites[terrainType];
                     if (sprite) {
-                        // Special handling for ocean (layered rendering)
+                        // Special handling for ocean (half-height tiles stacked)
                         if (terrainType === 'ocean') {
-                            // Draw base layer (inaccessible)
+                            // Draw top half
                             ctx.drawImage(terrainImg,
-                                sprite.base.x, sprite.base.y, sprite.base.w, sprite.base.h,
-                                x * tileSize, y * tileSize, tileSize, tileSize
+                                sprite.top.x, sprite.top.y, sprite.top.w, sprite.top.h,
+                                x * tileSize, y * tileSize, tileSize, tileSize / 2
                             );
-                            // Draw overlay layer (floor)
+                            // Draw bottom half
                             ctx.drawImage(terrainImg,
-                                sprite.overlay.x, sprite.overlay.y, sprite.overlay.w, sprite.overlay.h,
-                                x * tileSize, y * tileSize, tileSize, tileSize
+                                sprite.bottom.x, sprite.bottom.y, sprite.bottom.w, sprite.bottom.h,
+                                x * tileSize, y * tileSize + tileSize / 2, tileSize, tileSize / 2
                             );
                         } else {
                             ctx.drawImage(terrainImg,

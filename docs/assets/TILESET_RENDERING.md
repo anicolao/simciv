@@ -41,46 +41,52 @@ This system allows Freeciv to blend terrain smoothly at boundaries.
 
 ## Ocean/Water Rendering
 
-Ocean tiles in Freeciv require **layered rendering** to display correctly:
+Ocean tiles in Freeciv use a **special half-height tile system** from the `grid_ocean` section:
 
 ### Components:
-1. **Base Layer (t.l0.inaccessible1)**: Row 0, col 3 - The dark blue ocean base
-2. **Floor Layer (t.l1.floor_*)**: Row 10 - The water texture overlay
-3. **Coast Layer (t.l1.coast_*)**: Row 10 - Transitions to land (optional)
+1. **Ocean Grid**: Separate 15x15 pixel tile grid starting at y=210 (not the main 30x30 grid)
+2. **Floor Cell Tiles**: Deep ocean tiles at grid_ocean row 0, columns 0-4 (darker blue)
+3. **Coast Cell Tiles**: Shallow water/coast transitions
 
-### Why Layering is Required:
-The floor sprites (row 10) are semi-transparent overlays designed to be drawn on top of a base layer. Without the base layer, the middle of the tile appears white/transparent.
+### Why Half-Height Tiles:
+The Freeciv Trident tileset uses 15x15 pixel tiles in the ocean grid, which are half the height and width of regular 30x30 terrain tiles. To render a full 30x30 ocean tile, you stack two 15x15 tiles vertically.
+
+### Tile Locations:
+- **Grid Ocean**: x_top_left=0, y_top_left=210, dx=15, dy=15
+- **Deep Ocean (floor_cell)**: Columns 0-4 at row 0 (darker blue)
+  - Top half: x=0, y=210, w=15, h=15
+  - Bottom half: x=0, y=225, w=15, h=15
+- **Coast tiles**: Columns 0-7 (for land boundaries)
+- **Lake tiles**: Columns 16-23
 
 ### Implementation:
 
 **Simple Deep Ocean (Recommended for demos):**
 ```javascript
-// Draw both layers for proper ocean rendering
+// Use half-height tiles from grid_ocean stacked vertically
 function drawOcean(ctx, x, y) {
-  // Layer 0: Base (inaccessible1)
-  ctx.drawImage(tileImg, 90, 0, 30, 30, x, y, 30, 30);  // row 0, col 3
+  // Top half (15x15 scaled to 30x15)
+  ctx.drawImage(tileImg, 0, 210, 15, 15, x, y, 30, 15);
   
-  // Layer 1: Floor overlay (floor_n0e0s0w0)
-  ctx.drawImage(tileImg, 450, 300, 30, 30, x, y, 30, 30);  // row 10, col 15
+  // Bottom half (15x15 scaled to 30x15)
+  ctx.drawImage(tileImg, 0, 225, 15, 15, x, y + 15, 30, 15);
 }
 ```
 
-**Production Ocean with Coastlines:**
+**Full-Size Rendering:**
 ```javascript
-function drawOceanTile(ctx, neighbors, x, y) {
-  // Always draw base layer first
-  ctx.drawImage(tileImg, 90, 0, 30, 30, x, y, 30, 30);  // inaccessible1
-  
-  // Draw floor overlay
-  const floorVariant = getFloorVariant(neighbors);
-  ctx.drawImage(tileImg, floorVariant.x, floorVariant.y, 30, 30, x, y, 30, 30);
-  
-  // If adjacent to land, draw coast overlay
-  if (hasLandNeighbor(neighbors)) {
-    const coastVariant = getCoastVariant(neighbors);
-    ctx.drawImage(tileImg, coastVariant.x, coastVariant.y, 30, 30, x, y, 30, 30);
-  }
-}
+// Render at native size then scale up
+const oceanCanvas = document.createElement('canvas');
+oceanCanvas.width = 15;
+oceanCanvas.height = 30;
+const octx = oceanCanvas.getContext('2d');
+
+// Draw top and bottom 15x15 tiles
+octx.drawImage(tileImg, 0, 210, 15, 15, 0, 0, 15, 15);
+octx.drawImage(tileImg, 0, 225, 15, 15, 0, 15, 15, 15);
+
+// Then scale to 30x30 when drawing to main canvas
+ctx.drawImage(oceanCanvas, 0, 0, 15, 30, x, y, 30, 30);
 ```
 
 ## Simple Single-Tile Sprites
@@ -137,15 +143,15 @@ Cities have different styles and sizes:
 ### Basic Single-Layer Approach (Simple)
 
 ```javascript
-// For a simple demo - EXCEPT OCEAN which requires layering
+// For a simple demo - EXCEPT OCEAN which uses half-height tiles
 const terrain = {
   grassland: { x: 60, y: 0 },
   desert: { x: 0, y: 30 },
   plains: { x: 0, y: 120 },
-  // Ocean needs two layers!
+  // Ocean uses half-height tiles from grid_ocean
   ocean: {
-    base: { x: 90, y: 0 },      // inaccessible1
-    overlay: { x: 450, y: 300 }  // floor_n0e0s0w0
+    top: { x: 0, y: 210, w: 15, h: 15 },      // floor_cell top
+    bottom: { x: 0, y: 225, w: 15, h: 15 }    // floor_cell bottom
   },
   // ... etc
 };
@@ -154,10 +160,10 @@ function drawTile(ctx, terrainType, x, y) {
   const sprite = terrain[terrainType];
   
   if (terrainType === 'ocean') {
-    // Draw base layer first
-    ctx.drawImage(tileImg, sprite.base.x, sprite.base.y, 30, 30, x, y, 30, 30);
-    // Draw overlay
-    ctx.drawImage(tileImg, sprite.overlay.x, sprite.overlay.y, 30, 30, x, y, 30, 30);
+    // Draw top half (scaled to 30x15)
+    ctx.drawImage(tileImg, sprite.top.x, sprite.top.y, 15, 15, x, y, 30, 15);
+    // Draw bottom half (scaled to 30x15)
+    ctx.drawImage(tileImg, sprite.bottom.x, sprite.bottom.y, 15, 15, x, y + 15, 30, 15);
   } else {
     ctx.drawImage(tileImg, sprite.x, sprite.y, 30, 30, x, y, 30, 30);
   }
@@ -203,24 +209,20 @@ function getDirectionalVariant(terrainType, neighbors) {
 
 ```javascript
 function drawOceanTile(ctx, neighbors, x, y) {
-  // CRITICAL: Always draw base layer first!
-  // Without this, the floor overlay appears white/transparent in the middle
-  ctx.drawImage(tileImg, 90, 0, 30, 30, x, y, 30, 30);  // inaccessible1 base
+  // Ocean uses half-height 15x15 tiles from grid_ocean
+  // For deep ocean, use floor_cell tiles (columns 0-4 for darker blue)
   
-  // Check if any neighbors are land
   const hasLandNeighbor = Object.values(neighbors).some(n => n !== 'ocean');
   
   if (hasLandNeighbor) {
-    // Draw appropriate floor variant based on neighbors
-    const floorVariant = getFloorVariant(neighbors);
-    ctx.drawImage(tileImg, floorVariant.x, floorVariant.y, 30, 30, x, y, 30, 30);
-    
-    // Draw coast overlay to show land boundary
-    const coastVariant = getCoastVariant(neighbors);
-    ctx.drawImage(tileImg, coastVariant.x, coastVariant.y, 30, 30, x, y, 30, 30);
+    // Draw coast tiles (half-height) for land boundaries
+    const coastVariant = getCoastCellVariant(neighbors);
+    ctx.drawImage(tileImg, coastVariant.topX, coastVariant.topY, 15, 15, x, y, 30, 15);
+    ctx.drawImage(tileImg, coastVariant.bottomX, coastVariant.bottomY, 15, 15, x, y + 15, 30, 15);
   } else {
-    // Deep ocean - just base + floor overlay
-    ctx.drawImage(tileImg, 450, 300, 30, 30, x, y, 30, 30);  // floor_n0e0s0w0
+    // Deep ocean - floor_cell tiles at y=210
+    ctx.drawImage(tileImg, 0, 210, 15, 15, x, y, 30, 15);      // top half
+    ctx.drawImage(tileImg, 0, 225, 15, 15, x, y + 15, 30, 15); // bottom half
   }
 }
 ```
@@ -237,13 +239,13 @@ Example: Row 5, Column 3
 
 ## Common Pitfalls
 
-1. **Ocean rendering without base layer**: The floor sprites (`t.l1.floor_*`) are semi-transparent overlays. They MUST be drawn on top of the base layer (`t.l0.inaccessible1` at row 0, col 3) or they will appear white/transparent in the middle with only the edges visible.
+1. **Ocean rendering with wrong tiles**: Ocean uses a separate 15x15 tile grid (`grid_ocean`) starting at y=210, NOT the main 30x30 grid. You must use half-height tiles stacked vertically. The `inaccessible1` tile has red diagonal lines and should not be used for ocean.
 
-2. **Using coast variants for deep ocean**: Coast sprites (`t.l1.coast_*`) are meant to be overlays showing land boundaries, not standalone ocean tiles.
+2. **Not stacking ocean tiles**: Each 15x15 ocean tile is half-height. You need to draw two tiles vertically to create a full 30x30 ocean square.
 
-3. **Ignoring directional variants**: Most terrain types require directional variants for proper blending. Don't use `_n1e1s1w1` for all tiles.
+3. **Using coast variants for deep ocean**: Coast cell sprites are for land boundaries. For deep ocean, use floor_cell tiles (columns 0-4 for darker blue).
 
-4. **Missing layers**: Some terrains need multiple layers to render correctly. Ocean especially needs the base + overlay layers.
+4. **Ignoring directional variants**: Most terrain types require directional variants for proper blending. Don't use `_n1e1s1w1` for all tiles.
 
 5. **Wrong unit coordinates**: The units.spec file has units scattered across the sprite sheet, not in sequential order.
 
