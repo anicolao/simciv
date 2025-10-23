@@ -142,13 +142,13 @@ func (g *Generator) generateGreatCircles(playerCount int) []models.GreatCircle {
 		var heightModifier float64
 		if roll < 0.3 {
 			circleType = "continental_boundary"
-			heightModifier = g.rng.Float64()*500 - 250 // -250 to +250m
+			heightModifier = g.rng.Float64()*1000 - 500 // -500 to +500m
 		} else if roll < 0.7 {
 			circleType = "mountain_range"
-			heightModifier = g.rng.Float64()*1500 + 500 // 500 to 2000m
+			heightModifier = g.rng.Float64()*2000 + 500 // 500 to 2500m
 		} else {
 			circleType = "ocean_trench"
-			heightModifier = g.rng.Float64()*-400 - 100 // -500 to -100m
+			heightModifier = g.rng.Float64()*-600 - 200 // -800 to -200m
 		}
 
 		circles[i] = models.GreatCircle{
@@ -158,7 +158,7 @@ func (g *Generator) generateGreatCircles(playerCount int) []models.GreatCircle {
 			VectorY:        vy,
 			VectorZ:        vz,
 			Type:           circleType,
-			Radius:         g.rng.Float64()*6 + 2, // 2-8 tiles
+			Radius:         g.rng.Float64()*8 + 4, // 4-12 tiles
 			HeightModifier: heightModifier,
 			Weight:         g.rng.Float64()*0.7 + 0.3, // 0.3-1.0
 		}
@@ -169,6 +169,9 @@ func (g *Generator) generateGreatCircles(playerCount int) []models.GreatCircle {
 
 // calculateElevation calculates elevation for a tile based on great circles
 func (g *Generator) calculateElevation(x, y int, circles []models.GreatCircle) int {
+	// Start with lower base elevation
+	baseElevation := 0.0
+	
 	// Convert tile coordinates to spherical coordinates
 	lon := (float64(x)/float64(g.width) - 0.5) * 2 * math.Pi
 	lat := (float64(y)/float64(g.height) - 0.5) * math.Pi
@@ -179,15 +182,21 @@ func (g *Generator) calculateElevation(x, y int, circles []models.GreatCircle) i
 	pz := math.Sin(lat)
 
 	// Sum influence from all great circles
-	totalElevation := 0.0
+	totalElevation := baseElevation
 	for _, circle := range circles {
 		// Calculate distance from point to great circle
 		// Distance is based on dot product with circle's normal vector
 		dotProduct := px*circle.VectorX + py*circle.VectorY + pz*circle.VectorZ
+		// Clamp to valid range for asin
+		if dotProduct > 1 {
+			dotProduct = 1
+		} else if dotProduct < -1 {
+			dotProduct = -1
+		}
 		distance := math.Abs(math.Asin(dotProduct))
 
-		// Apply Gaussian influence function
-		influence := circle.Weight * math.Exp(-(distance*distance)/(circle.Radius*circle.Radius))
+		// Apply Gaussian influence function with tighter spread
+		influence := circle.Weight * math.Exp(-(distance*distance)/(circle.Radius*circle.Radius*0.05))
 		totalElevation += influence * circle.HeightModifier
 	}
 
@@ -224,7 +233,7 @@ func (g *Generator) calculateNoise(x, y int) float64 {
 	return noise
 }
 
-// calculateSeaLevel determines the sea level threshold (median elevation)
+// calculateSeaLevel determines the sea level threshold (use 35th percentile for more land)
 func (g *Generator) calculateSeaLevel(elevationGrid [][]int) int {
 	// Collect all elevations
 	elevations := make([]int, 0, g.width*g.height)
@@ -234,7 +243,7 @@ func (g *Generator) calculateSeaLevel(elevationGrid [][]int) int {
 		}
 	}
 
-	// Sort and find median
+	// Sort to find percentile
 	// Simple insertion sort for small arrays, would use better sort for production
 	for i := 1; i < len(elevations); i++ {
 		key := elevations[i]
@@ -246,7 +255,9 @@ func (g *Generator) calculateSeaLevel(elevationGrid [][]int) int {
 		elevations[j+1] = key
 	}
 
-	return elevations[len(elevations)/2]
+	// Use 35th percentile instead of median for more land
+	percentileIndex := len(elevations) * 35 / 100
+	return elevations[percentileIndex]
 }
 
 // assignTerrainType assigns terrain type based on elevation and climate
@@ -255,38 +266,48 @@ func (g *Generator) assignTerrainType(x, y, elevation, seaLevel int) string {
 		return "OCEAN"
 	} else if elevation < seaLevel {
 		return "SHALLOW_WATER"
-	} else if elevation > 1800 {
+	} else if elevation > 2200 {
 		return "MOUNTAIN"
-	} else if elevation > 1200 {
+	} else if elevation > 1600 {
 		return "HILLS"
 	}
 
 	// For land, use climate to determine type
 	lat := math.Abs(float64(y)/float64(g.height) - 0.5) * 180 // 0-90 degrees
 
+	// Add some elevation-based variation
+	elevAboveSeaLevel := elevation - seaLevel
+	
 	// Simplified climate-based terrain (would be more sophisticated in production)
-	if lat > 60 {
+	if lat > 60 || elevAboveSeaLevel > 800 {
+		if elevAboveSeaLevel > 800 {
+			return "TUNDRA"
+		}
 		return "TUNDRA"
 	} else if lat > 45 {
-		if elevation > 800 {
+		if elevAboveSeaLevel > 600 {
 			return "HILLS"
 		}
 		return "GRASSLAND"
 	} else if lat > 30 {
-		if g.rng.Float64() < 0.6 {
+		if g.rng.Float64() < 0.4 {
 			return "GRASSLAND"
 		}
 		return "FOREST"
 	} else if lat > 15 {
-		if g.rng.Float64() < 0.4 {
+		if g.rng.Float64() < 0.3 {
 			return "DESERT"
+		} else if g.rng.Float64() < 0.5 {
+			return "PLAINS"
 		}
-		return "PLAINS"
+		return "GRASSLAND"
 	} else {
-		if g.rng.Float64() < 0.5 {
+		if g.rng.Float64() < 0.3 {
 			return "JUNGLE"
+		} else if g.rng.Float64() < 0.6 {
+			return "FOREST"
 		}
-		return "FOREST"
+		return "GRASSLAND"
 	}
 }
 
