@@ -99,10 +99,12 @@ The current implementation includes:
 - Use descriptive test names
 
 **CRITICAL TESTING REQUIREMENTS:**
+- **PASSING TESTS ARE MANDATORY** - All tests must pass before PR completion
+- **NO SKIPPED TESTS** - Tests marked as `.skip()` must be fixed, not left skipped
+- **NO FAILING TESTS** - Fix all test failures before completion  
+- **NO EXCEPTIONS FOR COMPLEXITY** - "Too complex" is not a valid reason to skip tests
 - **ALWAYS run all unit and integration tests before completing a PR**
 - **ALWAYS run Playwright E2E tests (`npm run test:e2e`) before completing a PR**
-- **NO SKIPPED TESTS ARE ACCEPTABLE** - All tests must run and pass
-- **NO FAILING TESTS ARE ACCEPTABLE** - Fix all test failures before completion
 - **DELETING TESTS IS GENERALLY UNACCEPTABLE** - Only remove tests if they're truly obsolete
 - Use `TEST_MONGO_URI` environment variable to run integration tests with external MongoDB when mongodb-memory-server has issues
 - Integration tests must pass before PR completion
@@ -124,6 +126,34 @@ The current implementation includes:
   - New features or UI changes
 - **Review screenshots** to ensure UI layout is correct and no visual bugs are introduced
 - **Update e2e-screenshots/README.md** to document new screenshots when adding them
+- **Use the proper authentication pattern**: Follow the `registerAndLogin()` helper pattern from existing tests (auth.spec.ts, game-creation.spec.ts)
+- **Do NOT manually set cookies or database records** - use the actual UI flow instead
+- **Use `page.context().clearCookies()`** to switch between different users in tests
+
+## How to Run E2E Tests
+
+### Prerequisites
+1. MongoDB running: `bin/mongo start`
+2. Simulation engine: `cd simulation && go build && ./simulation &`
+3. Web server: `npm run build && npm start &`
+
+### Running E2E Tests
+```bash
+# Run all e2e tests with timeout
+timeout 180 npx playwright test e2e/ 2>&1 | tail -100
+
+# Run specific test file
+timeout 180 npx playwright test e2e/map-view.spec.ts 2>&1 | tail -100
+
+# Debug mode (headed browser)
+npx playwright test e2e/ --headed --debug
+```
+
+### Common Issues
+- Browsers not installed: `npx playwright install chromium`
+- Tests timeout: Increase timeout or check services are running
+- Authentication fails: Verify session cookies are being set correctly
+- Screenshots blank: Wait for elements to be visible before capturing
 
 ### File Organization
 ```
