@@ -46,3 +46,4 @@ yarn-error.log*
 # Go
 simulation/simciv-sim
 simulation/simciv-sim.exe
+simulation/simulation
