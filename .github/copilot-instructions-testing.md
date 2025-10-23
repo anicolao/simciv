@@ -250,6 +250,16 @@ npx playwright  --version
 ls -la ~/.cache/ms-playwright/
 ```
 
+### Known E2E Test Limitations in CI Environments
+
+In some CI environments, you may encounter issues:
+
+1. **Playwright Browser Installation Failures**: `npx playwright install` may fail with EPIPE or download errors due to network restrictions or download size issues
+2. **HttpOnly Cookie Limitations**: The Playwright MCP browser server cannot set HttpOnly cookies before navigation, making it unsuitable for testing authenticated user flows
+3. **Session Management**: The SimCiv server creates new sessions on first access, which can interfere with pre-configured test sessions
+
+**Workaround**: E2E screenshots are best generated in local development environments or CI systems with proper Playwright browser caching, where the full `@playwright/test` API and browser installation work reliably.
+
 ## Test Coverage Summary
 
 ### Go Unit Tests (simulation/pkg/)
