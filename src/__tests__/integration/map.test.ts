@@ -143,7 +143,7 @@ describe('Map API Integration Tests', () => {
     it('should return map metadata for authenticated user', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/metadata`)
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.metadata).toBeDefined();
@@ -163,7 +163,7 @@ describe('Map API Integration Tests', () => {
     it('should return 404 for non-existent game', async () => {
       const response = await request(app)
         .get('/api/map/non-existent-game/metadata')
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(404);
     });
@@ -173,7 +173,7 @@ describe('Map API Integration Tests', () => {
     it('should return visible tiles for authenticated user', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/tiles`)
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
@@ -217,7 +217,7 @@ describe('Map API Integration Tests', () => {
 
       const response = await request(app)
         .get(`/api/map/${testGameId}/tiles`)
-        .set('Cookie', [`sessionGuid=${otherSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${otherSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
@@ -229,7 +229,7 @@ describe('Map API Integration Tests', () => {
     it('should return starting position for authenticated user', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/starting-position`)
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.position).toBeDefined();
@@ -270,7 +270,7 @@ describe('Map API Integration Tests', () => {
 
       const response = await request(app)
         .get(`/api/map/${testGameId}/starting-position`)
-        .set('Cookie', [`sessionGuid=${otherSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${otherSessionGuid}`]);
 
       expect(response.status).toBe(404);
     });
