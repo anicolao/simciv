@@ -4,6 +4,53 @@
 
 This directory contains Playwright E2E tests that validate the complete authentication workflow including UI interactions and visual layout.
 
+## Performance Optimization
+
+**Important:** RSA key generation in the browser can be very slow (10-30 seconds per user). To speed up tests, use the pre-generated key approach documented below instead of generating keys during tests.
+
+### Fast Testing with Pre-Generated Keys
+
+The `e2e/helpers.ts` module provides utilities for creating test users with pre-generated RSA keys. This approach:
+
+- **Generates keys in Node.js** (~300-400ms) instead of browser (~30s)
+- **Seeds the database** with user and session data
+- **Injects keys into localStorage** before tests run
+- **Sets session cookies** to match the pre-generated session
+
+**Example usage:**
+
+```typescript
+import { createTestUser, seedTestUser, getLocalStorageInjectionCode } from './helpers';
+
+test('fast authentication test', async ({ page, context }) => {
+  // Create user with pre-generated keys (300-400ms)
+  const testUser = createTestUser('testuser', 'password123');
+  
+  // Seed database
+  await seedTestUser(testUser);
+  
+  // Set session cookie
+  await context.addCookies([{
+    name: 'simciv_session',
+    value: testUser.sessionGuid,
+    domain: 'localhost',
+    path: '/',
+    httpOnly: true,
+    sameSite: 'Lax',
+  }]);
+  
+  // Navigate with the pre-set session
+  await page.goto(`/id=${testUser.sessionGuid}`);
+  
+  // Inject keys into localStorage
+  await page.evaluate(getLocalStorageInjectionCode(testUser));
+  
+  // Now the user can login instantly!
+});
+```
+
+See `e2e/auth-optimized.spec.ts` for complete examples.
+
 ## Test Coverage
 
 ### 1. User Registration and Login Flow (`auth.spec.ts`)
@@ -145,3 +192,54 @@ When adding new E2E tests:
 4. Document expected behavior
 5. Test both success and failure paths
 6. Update this README with new test scenarios
+
+**For authentication tests:** Use the pre-generated key approach from `helpers.ts` to avoid slow RSA key generation:
+
+```typescript
+// Instead of this (SLOW - 30s):
+await page.fill('input[id="alias"]', 'newuser');
+await page.fill('input[id="password"]', 'password');
+await page.locator('form button[type="submit"]').click();
+await expect(page.locator('.message.success')).toContainText('Registration successful', {
+  timeout: 60000  // Long timeout needed!
+});
+
+// Do this (FAST - 2-4s):
+const testUser = createTestUser('newuser', 'password');
+await seedTestUser(testUser);
+await context.addCookies([{ name: 'simciv_session', value: testUser.sessionGuid, /* ... */ }]);
+await page.goto(`/id=${testUser.sessionGuid}`);
+await page.evaluate(getLocalStorageInjectionCode(testUser));
+// User is ready to login instantly!
+```
+
+## Helper Utilities
+
+The `e2e/helpers.ts` module provides the following utilities:
+
+### Key Generation
+- `generateRSAKeyPair()` - Fast RSA key generation using Node.js crypto
+- `encryptPrivateKeyWithPassword()` - Encrypt private key matching browser format
+- `createTestUser()` - Create complete test user with keys
+
+### Database Operations
+- `seedTestUser()` - Insert user and session into database
+- `cleanupTestUser()` - Remove test user from database
+- `authenticateSession()` - Mark session as authenticated
+
+### Browser Integration
+- `getLocalStorageInjectionCode()` - Generate code to inject keys into localStorage
+- `getSessionCookie()` - Get cookie data for session
+
+### Performance Measurement
+- `measureTime()` - Measure synchronous operation time
+- `measureTimeAsync()` - Measure async operation time
+
+## Performance Benchmarks
+
+- **Traditional browser RSA key generation:** ~10-30 seconds per user
+- **Node.js pre-generated keys:** ~300-400ms per user
+- **Complete test with pre-generated keys:** ~2-4 seconds total
+- **Pre-authenticated session test:** ~2 seconds total
+
+**Speed improvement: ~10-15x faster!**
