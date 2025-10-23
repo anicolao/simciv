@@ -159,6 +159,7 @@ npm run test:e2e
 ```
 
 For more details:
+- [Development Environment Setup](docs/DEVELOPMENT.md)
 - [Authentication Documentation](docs/AUTHENTICATION.md)
 - [Game Creation Documentation](docs/GAME_CREATION.md)
 
