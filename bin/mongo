@@ -22,7 +22,7 @@ mongodb_running() {
 # Check if Colima is running (macOS only)
 colima_running() {
   if [ "$IS_MACOS" = true ]; then
-    colima status 2>/dev/null | grep -q 'Running'
+    colima status 2>/dev/null | grep -iq 'running'
   else
     return 1
   fi
