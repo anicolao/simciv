@@ -96,7 +96,7 @@
             tundra: { x: 0, y: 180, w: 30, h: 30, name: 'Tundra' },           // row 6, col 0
             arctic: { x: 0, y: 60, w: 30, h: 30, name: 'Arctic' },            // row 2, col 0 (layer 1 arctic)
             swamp: { x: 0, y: 150, w: 30, h: 30, name: 'Swamp' },             // row 5, col 0
-            ocean: { x: 240, y: 300, w: 30, h: 30, name: 'Ocean' },           // row 10, col 8 (coast variant)
+            ocean: { x: 450, y: 300, w: 30, h: 30, name: 'Ocean' },           // row 10, col 15 (floor_n0e0s0w0 - deep ocean)
         };
 
         // Load terrain tileset
@@ -200,14 +200,14 @@
         function displayUnitSprites() {
             const container = document.getElementById('unitSprites');
             
-            // Sample unit positions from units.spec (approximate)
+            // Unit positions from units.spec - corrected coordinates
             const unitSprites = [
-                { x: 0, y: 0, w: 30, h: 30, name: 'Settlers' },
-                { x: 30, y: 0, w: 30, h: 30, name: 'Warriors' },
-                { x: 60, y: 0, w: 30, h: 30, name: 'Phalanx' },
-                { x: 90, y: 0, w: 30, h: 30, name: 'Archers' },
-                { x: 120, y: 0, w: 30, h: 30, name: 'Legion' },
-                { x: 0, y: 30, w: 30, h: 30, name: 'Pikemen' },
+                { x: 120, y: 30, w: 30, h: 30, name: 'Settlers' },   // row 1, col 4
+                { x: 540, y: 0, w: 30, h: 30, name: 'Warriors' },    // row 0, col 18
+                { x: 30, y: 30, w: 30, h: 30, name: 'Phalanx' },     // row 1, col 1
+                { x: 240, y: 30, w: 30, h: 30, name: 'Archers' },    // row 1, col 8
+                { x: 480, y: 0, w: 30, h: 30, name: 'Legion' },      // row 0, col 16
+                { x: 510, y: 30, w: 30, h: 30, name: 'Pikemen' },    // row 1, col 17
             ];
             
             unitSprites.forEach(sprite => {
