@@ -84,18 +84,19 @@
 
     <script>
         // Sample sprite definitions (from tiles.spec)
+        // Format: row and column in tiles.spec, where each tile is 30x30
         const terrainSprites = {
-            grassland: { x: 60, y: 0, w: 30, h: 30, name: 'Grassland' },
-            hills: { x: 120, y: 0, w: 30, h: 30, name: 'Hills' },
-            forest: { x: 240, y: 0, w: 30, h: 30, name: 'Forest' },
-            mountains: { x: 360, y: 0, w: 30, h: 30, name: 'Mountains' },
-            desert: { x: 0, y: 30, w: 30, h: 30, name: 'Desert' },
-            plains: { x: 0, y: 60, w: 30, h: 30, name: 'Plains' },
-            jungle: { x: 120, y: 60, w: 30, h: 30, name: 'Jungle' },
-            tundra: { x: 0, y: 90, w: 30, h: 30, name: 'Tundra' },
-            arctic: { x: 180, y: 90, w: 30, h: 30, name: 'Arctic' },
-            swamp: { x: 0, y: 120, w: 30, h: 30, name: 'Swamp' },
-            ocean: { x: 120, y: 120, w: 30, h: 30, name: 'Ocean' },
+            grassland: { x: 60, y: 0, w: 30, h: 30, name: 'Grassland' },      // row 0, col 2
+            hills: { x: 120, y: 0, w: 30, h: 30, name: 'Hills' },             // row 0, col 4
+            forest: { x: 240, y: 0, w: 30, h: 30, name: 'Forest' },           // row 0, col 8
+            mountains: { x: 360, y: 0, w: 30, h: 30, name: 'Mountains' },     // row 0, col 12
+            desert: { x: 0, y: 30, w: 30, h: 30, name: 'Desert' },            // row 1, col 0
+            plains: { x: 0, y: 120, w: 30, h: 30, name: 'Plains' },           // row 4, col 0
+            jungle: { x: 0, y: 90, w: 30, h: 30, name: 'Jungle' },            // row 3, col 0
+            tundra: { x: 0, y: 180, w: 30, h: 30, name: 'Tundra' },           // row 6, col 0
+            arctic: { x: 0, y: 210, w: 30, h: 30, name: 'Arctic' },           // row 7, col 0
+            swamp: { x: 0, y: 150, w: 30, h: 30, name: 'Swamp' },             // row 5, col 0
+            ocean: { x: 0, y: 300, w: 30, h: 30, name: 'Ocean' },             // row 10, col 0 (lake)
         };
 
         // Load terrain tileset
@@ -236,12 +237,12 @@
         function displayCitySprites() {
             const container = document.getElementById('citySprites');
             
-            // Sample city positions from cities.spec (approximate)
+            // City sprites from cities.spec - european cities row 1, cols 0-3
             const citySprites = [
-                { x: 0, y: 0, w: 30, h: 30, name: 'City Size 1' },
-                { x: 30, y: 0, w: 30, h: 30, name: 'City Size 2' },
-                { x: 60, y: 0, w: 30, h: 30, name: 'City Size 3' },
-                { x: 90, y: 0, w: 30, h: 30, name: 'City Size 4' },
+                { x: 0, y: 30, w: 30, h: 30, name: 'City Size 1' },   // row 1, col 0
+                { x: 30, y: 30, w: 30, h: 30, name: 'City Size 2' },  // row 1, col 1
+                { x: 60, y: 30, w: 30, h: 30, name: 'City Size 3' },  // row 1, col 2
+                { x: 90, y: 30, w: 30, h: 30, name: 'City Size 4' },  // row 1, col 3 (wall)
             ];
             
             citySprites.forEach(sprite => {
