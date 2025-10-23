@@ -167,27 +167,36 @@ All components must support mock implementations for isolated testing.
 - Easy to find developers
 - Good for rapid prototyping
 - Familiar to web developers
+- Type safety shared with client code
 
-**Framework:** Express or Fastify
+**Framework:** Express
 - RESTful API for data access
-- WebSocket support for real-time updates
-- Easy middleware integration
+- Simple routing and middleware
+- Cookie-based session management
+- Serves static Svelte client build
 
-**UI Framework:** Svelte with SvelteKit
+**UI Framework:** Svelte (with Vite)
 
 **Rationale:**
 - Lightweight and performant
 - Simple reactive paradigm
 - Less boilerplate than React/Vue
 - Excellent developer experience
-- Compiles to vanilla JavaScript
-- Good fit for data-driven UI
+- Compiles to optimized vanilla JavaScript
+- Perfect for data-driven game UI
+- **Client-side rendering only** (no SSR needed for authenticated game)
+
+**Build Tool:** Vite
+- Fast development with hot module replacement (HMR)
+- Optimized production builds
+- TypeScript support out of the box
+- Simple configuration
 
 **Additional Frontend Tools:**
-- TypeScript for type safety
-- Vite for fast builds and HMR
-- Tailwind CSS or similar for styling
-- Chart.js or D3.js for data visualization
+- TypeScript for type safety (shared with server)
+- Custom CSS for game UI styling
+- Web Crypto API for client-side key management
+- localStorage for key storage (GUID-namespaced)
 
 ## Database Schema Design
 
@@ -820,18 +829,29 @@ func BenchmarkSimulationTick(b *testing.B) {
 
 ### ADR-004: Svelte for UI
 
-**Status:** Accepted
+**Status:** Accepted (Updated 2025-10-23)
 
 **Context:** Need modern, performant UI framework for data-driven interface.
 
-**Decision:** Use Svelte with SvelteKit for client UI.
+**Decision:** Use Svelte (with Vite, not SvelteKit) for client UI.
+
+**Implementation Details:**
+- **Build Tool:** Vite for fast development and optimized production builds
+- **Rendering:** Client-side rendering (CSR) only, no SSR
+- **Rationale:** SimCiv is an authenticated, interactive game dashboard that doesn't benefit from SSR
+- **Development:** Hot module replacement (HMR) for fast iteration
+- **Deployment:** Compiled to static assets served by Node.js server
 
 **Consequences:**
-- Positive: Lightweight and fast
-- Positive: Simple reactivity model
-- Positive: Growing ecosystem
-- Negative: Smaller community than React
-- Negative: Fewer ready-made components
+- Positive: Lightweight and fast client-side framework
+- Positive: Simple reactivity model ideal for game state
+- Positive: Vite provides excellent developer experience
+- Positive: No SSR complexity since it's not needed
+- Positive: Fast hot reload during development
+- Negative: Smaller community than React (but growing)
+- Negative: Fewer ready-made components (but sufficient for game UI)
+- Neutral: No built-in routing (using simple component switching)
+- Neutral: SvelteKit features not available (but not needed)
 
 ### ADR-005: Repository Pattern
 
@@ -847,6 +867,104 @@ func BenchmarkSimulationTick(b *testing.B) {
 - Positive: Clear API boundaries
 - Negative: Additional abstraction layer
 - Negative: More code to maintain
+
+### ADR-006: Node.js Server for Web Client (Not Go)
+
+**Status:** Accepted
+
+**Context:** 
+- SimCiv uses a Go simulation engine for continuous game logic processing
+- A web-based client is needed to present game state and capture user actions
+- The question arose: Should we use Node.js or convert the server to Go for simplification?
+- Initial thought was to support Svelte's Server-Side Rendering (SSR) capabilities
+
+**Decision:** Continue using Node.js/TypeScript server for the web client, keeping it separate from the Go simulation engine.
+
+**Rationale:**
+
+1. **SSR Is Not Beneficial for SimCiv's Use Case:**
+   - SimCiv is an **interactive game dashboard/lobby**, not a content-heavy website
+   - Authentication requires **client-side cryptography** (Web Crypto API for RSA key generation and encryption)
+   - Game state is **dynamic and user-specific**, updated in real-time
+   - No SEO requirements (game is accessed by authenticated users, not search engines)
+   - No initial content to pre-render (everything loads from API after authentication)
+   - **SvelteKit's SSR would add complexity with minimal benefit**
+
+2. **Current Architecture Already Works Well:**
+   - Svelte + Vite (client-side rendering) is working perfectly
+   - Fast development with hot module replacement
+   - Simple build process and deployment
+   - Clear separation: Node.js serves API and static files, Go runs simulation
+
+3. **Node.js Advantages for Web API Server:**
+   - **Excellent MongoDB integration**: Native driver with mature ecosystem
+   - **JavaScript/TypeScript ecosystem**: Vast library availability for web-related tasks
+   - **Rapid development**: Fast iteration on API endpoints and middleware
+   - **Easy debugging**: Chrome DevTools work seamlessly
+   - **Type safety**: TypeScript provides compile-time checks across client and server
+   - **Code sharing**: Can share types and utilities between client and server
+   - **Express/Fastify maturity**: Battle-tested web frameworks
+
+4. **Go Better Suited for Simulation:**
+   - Go excels at **CPU-intensive continuous processing** (citizen AI, game logic)
+   - Node.js excels at **I/O-bound operations** (HTTP requests, database queries)
+   - This division of labor plays to each language's strengths
+
+5. **Converting to Go Would Add Complexity:**
+   - Need to rewrite ~826 lines of working TypeScript server code
+   - Lose type sharing between client and server (TypeScript → Go translation required)
+   - Less mature web framework ecosystem compared to Node.js
+   - Minimal performance benefit (server is I/O-bound, not CPU-bound)
+   - More deployment complexity (need to coordinate two Go processes)
+
+6. **Modularity is Preserved:**
+   - Database remains single source of truth (ADR-001)
+   - Node.js server and Go simulation are independent processes
+   - Both can scale independently based on their specific needs
+   - Both can be tested in isolation with mock database
+
+**Considered Alternatives:**
+
+**Alternative 1: Convert entire server to Go**
+- **Rejected**: Adds rewrite effort with no clear benefit
+- Go web frameworks are less mature than Express/Fastify
+- Would lose TypeScript's type sharing with client
+- Node.js performs well for I/O-bound API operations
+
+**Alternative 2: Use SvelteKit with SSR**
+- **Rejected**: SSR provides no value for authenticated game dashboard
+- Adds build complexity and routing conventions
+- Client-side rendering is faster for dynamic game UI
+- Authentication requires client-side crypto anyway
+
+**Alternative 3: Separate Go API server + static file server**
+- **Rejected**: Adds deployment complexity
+- Node.js already handles both API and static files efficiently
+- No performance gain (API is I/O-bound)
+
+**Implementation:**
+- Keep Node.js/TypeScript server with Express for API and static file serving
+- Use Vite to build Svelte client as static assets (no SSR)
+- Continue using Go for simulation engine (separate process)
+- Both processes communicate via MongoDB (database-centric architecture)
+
+**Consequences:**
+- Positive: Maintain fast development velocity with TypeScript/JavaScript ecosystem
+- Positive: Keep working client-side rendering setup (Vite + Svelte)
+- Positive: Each component uses language best suited to its purpose
+- Positive: Type safety across client and server (TypeScript)
+- Positive: Code sharing between client and server (types, utilities)
+- Negative: Two language stack (TypeScript for server/client, Go for simulation)
+- Negative: Team needs expertise in both ecosystems
+- Neutral: Cannot use SvelteKit SSR features (but they're not needed)
+
+**Status Date:** 2025-10-23
+
+**Review:** This decision should be revisited if:
+- SEO becomes important (unlikely for authenticated game)
+- Initial page load performance becomes critical (can add SSR later if needed)
+- Client-side crypto requirements change
+- Team composition shifts significantly toward Go expertise
 
 ## Risk Assessment and Mitigation
 
