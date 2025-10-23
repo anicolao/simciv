@@ -39,3 +39,48 @@ export interface Game {
   startedAt?: Date;
   lastTickAt?: Date;
 }
+
+export interface MapTile {
+  gameId: string;
+  x: number;
+  y: number;
+  elevation: number;
+  terrainType: string;
+  climateZone: string;
+  hasRiver: boolean;
+  isCoastal: boolean;
+  resources: string[];
+  improvements: string[];
+  ownerId?: string;
+  visibleTo: string[];
+  createdAt: Date;
+}
+
+export interface StartingPosition {
+  gameId: string;
+  playerId: string;
+  centerX: number;
+  centerY: number;
+  startingCityX: number;
+  startingCityY: number;
+  regionScore: number;
+  revealedTiles: number;
+  guaranteedFootprint: {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+  };
+  createdAt: Date;
+}
+
+export interface MapMetadata {
+  gameId: string;
+  seed: string;
+  width: number;
+  height: number;
+  playerCount: number;
+  seaLevel: number;
+  generatedAt: Date;
+  generationTimeMs: number;
+}

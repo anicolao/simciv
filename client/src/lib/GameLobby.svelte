@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { getGames, createGame, joinGame, getGame } from '../utils/api';
+  import MapView from './MapView.svelte';
 
   export let currentUser: string;
 
@@ -231,6 +232,12 @@
           </div>
         {/if}
       </div>
+
+      {#if selectedGame.state === 'started' && isInGame(selectedGame)}
+        <div class="map-section">
+          <MapView gameId={selectedGame.gameId} />
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -464,6 +471,9 @@
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     min-width: 400px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
     z-index: 1000;
   }
 
@@ -504,5 +514,11 @@
 
   .detail-row .value {
     color: #333;
+  }
+
+  .map-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #e0e0e0;
   }
 </style>

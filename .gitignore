@@ -52,6 +52,7 @@ yarn-error.log*
 # Go
 simulation/simciv-sim
 simulation/simciv-sim.exe
+simulation/simulation
 
 # MongoDB data directory (for native mongod)
 .mongodb-data/

@@ -1,0 +1,278 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import { connectToDatabase, closeDatabase, getGamesCollection, getUsersCollection, getSessionsCollection, getMapTilesCollection, getStartingPositionsCollection, getMapMetadataCollection } from '../../db/connection';
+import { Game, User, Session, MapTile, StartingPosition, MapMetadata } from '../../models/types';
+import { sessionMiddleware } from '../../middleware/session';
+import mapRoutes from '../../routes/map';
+
+describe('Map API Integration Tests', () => {
+  let mongoServer: MongoMemoryServer;
+  let app: express.Application;
+  let testSessionGuid: string;
+  let testUserId: string;
+  let testGameId: string;
+
+  beforeEach(async () => {
+    // Use external MongoDB if TEST_MONGO_URI is set
+    if (process.env.TEST_MONGO_URI) {
+      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test');
+      // Clean up existing data
+      await getGamesCollection().deleteMany({});
+      await getUsersCollection().deleteMany({});
+      await getSessionsCollection().deleteMany({});
+      await getMapTilesCollection().deleteMany({});
+      await getStartingPositionsCollection().deleteMany({});
+      await getMapMetadataCollection().deleteMany({});
+    } else {
+      mongoServer = await MongoMemoryServer.create();
+      const uri = mongoServer.getUri();
+      await connectToDatabase(uri, 'simciv-test');
+    }
+
+    // Create test user
+    testUserId = 'testuser';
+    const user: User = {
+      alias: testUserId,
+      publicKey: 'test-public-key',
+      accountStatus: 'active',
+      createdAt: new Date(),
+    };
+    await getUsersCollection().insertOne(user);
+
+    // Create test session
+    testSessionGuid = 'test-session-guid';
+    const session: Session = {
+      sessionGuid: testSessionGuid,
+      userId: testUserId,
+      state: 'authenticated',
+      createdAt: new Date(),
+      lastAccessAt: new Date(),
+      expiresAt: new Date(Date.now() + 3600000),
+    };
+    await getSessionsCollection().insertOne(session);
+
+    // Create test game
+    testGameId = 'test-game-123';
+    const game: Game = {
+      gameId: testGameId,
+      creatorUserId: testUserId,
+      maxPlayers: 4,
+      currentPlayers: 1,
+      playerList: [testUserId],
+      state: 'started',
+      currentYear: -4000,
+      createdAt: new Date(),
+      startedAt: new Date(),
+    };
+    await getGamesCollection().insertOne(game);
+
+    // Create test map data
+    const metadata: MapMetadata = {
+      gameId: testGameId,
+      seed: 'test-seed',
+      width: 80,
+      height: 80,
+      playerCount: 4,
+      seaLevel: 500,
+      generatedAt: new Date(),
+      generationTimeMs: 100,
+    };
+    await getMapMetadataCollection().insertOne(metadata);
+
+    // Create some test tiles
+    const tiles: MapTile[] = [];
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x < 10; x++) {
+        tiles.push({
+          gameId: testGameId,
+          x,
+          y,
+          elevation: 600,
+          terrainType: 'GRASSLAND',
+          climateZone: 'TEMPERATE',
+          hasRiver: false,
+          isCoastal: false,
+          resources: [],
+          improvements: [],
+          visibleTo: [testUserId],
+          createdAt: new Date(),
+        });
+      }
+    }
+    await getMapTilesCollection().insertMany(tiles);
+
+    // Create starting position
+    const startingPosition: StartingPosition = {
+      gameId: testGameId,
+      playerId: testUserId,
+      centerX: 40,
+      centerY: 40,
+      startingCityX: 40,
+      startingCityY: 40,
+      regionScore: 100,
+      revealedTiles: 225,
+      guaranteedFootprint: {
+        minX: 20,
+        maxX: 60,
+        minY: 20,
+        maxY: 60,
+      },
+      createdAt: new Date(),
+    };
+    await getStartingPositionsCollection().insertOne(startingPosition);
+
+    // Setup Express app
+    app = express();
+    app.use(express.json());
+    app.use(cookieParser());
+    app.use(sessionMiddleware);
+    app.use('/api/map', mapRoutes);
+  });
+
+  afterEach(async () => {
+    await closeDatabase();
+    if (mongoServer) {
+      await mongoServer.stop();
+    }
+  });
+
+  describe('GET /api/map/:gameId/metadata', () => {
+    it('should return map metadata for authenticated user', async () => {
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/metadata`)
+        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+
+      expect(response.status).toBe(200);
+      expect(response.body.metadata).toBeDefined();
+      expect(response.body.metadata.gameId).toBe(testGameId);
+      expect(response.body.metadata.width).toBe(80);
+      expect(response.body.metadata.height).toBe(80);
+      expect(response.body.metadata.seed).toBe('test-seed');
+    });
+
+    it('should return 401 for unauthenticated user', async () => {
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/metadata`);
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 404 for non-existent game', async () => {
+      const response = await request(app)
+        .get('/api/map/non-existent-game/metadata')
+        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('GET /api/map/:gameId/tiles', () => {
+    it('should return visible tiles for authenticated user', async () => {
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/tiles`)
+        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+
+      expect(response.status).toBe(200);
+      expect(response.body.tiles).toBeDefined();
+      expect(Array.isArray(response.body.tiles)).toBe(true);
+      expect(response.body.tiles.length).toBe(100); // 10x10 tiles we created
+      
+      // Check tile properties
+      const firstTile = response.body.tiles[0];
+      expect(firstTile.gameId).toBe(testGameId);
+      expect(firstTile.terrainType).toBe('GRASSLAND');
+      expect(firstTile.visibleTo).toContain(testUserId);
+    });
+
+    it('should return 401 for unauthenticated user', async () => {
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/tiles`);
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return empty array for game with no visible tiles', async () => {
+      // Create another user with no visible tiles
+      const otherUserId = 'otheruser';
+      const otherSessionGuid = 'other-session-guid';
+      
+      await getUsersCollection().insertOne({
+        alias: otherUserId,
+        publicKey: 'other-public-key',
+        accountStatus: 'active',
+        createdAt: new Date(),
+      });
+      
+      await getSessionsCollection().insertOne({
+        sessionGuid: otherSessionGuid,
+        userId: otherUserId,
+        state: 'authenticated',
+        createdAt: new Date(),
+        lastAccessAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600000),
+      });
+
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/tiles`)
+        .set('Cookie', [`sessionGuid=${otherSessionGuid}`]);
+
+      expect(response.status).toBe(200);
+      expect(response.body.tiles).toBeDefined();
+      expect(response.body.tiles.length).toBe(0);
+    });
+  });
+
+  describe('GET /api/map/:gameId/starting-position', () => {
+    it('should return starting position for authenticated user', async () => {
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/starting-position`)
+        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+
+      expect(response.status).toBe(200);
+      expect(response.body.position).toBeDefined();
+      expect(response.body.position.gameId).toBe(testGameId);
+      expect(response.body.position.playerId).toBe(testUserId);
+      expect(response.body.position.centerX).toBe(40);
+      expect(response.body.position.centerY).toBe(40);
+      expect(response.body.position.regionScore).toBe(100);
+    });
+
+    it('should return 401 for unauthenticated user', async () => {
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/starting-position`);
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 404 for user with no starting position', async () => {
+      // Create another user with no starting position
+      const otherUserId = 'otheruser2';
+      const otherSessionGuid = 'other-session-guid2';
+      
+      await getUsersCollection().insertOne({
+        alias: otherUserId,
+        publicKey: 'other-public-key',
+        accountStatus: 'active',
+        createdAt: new Date(),
+      });
+      
+      await getSessionsCollection().insertOne({
+        sessionGuid: otherSessionGuid,
+        userId: otherUserId,
+        state: 'authenticated',
+        createdAt: new Date(),
+        lastAccessAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600000),
+      });
+
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/starting-position`)
+        .set('Cookie', [`sessionGuid=${otherSessionGuid}`]);
+
+      expect(response.status).toBe(404);
+    });
+  });
+});

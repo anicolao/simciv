@@ -10,14 +10,20 @@ import (
 
 // MockRepository implements GameRepository for testing
 type MockRepository struct {
-	games          map[string]*models.Game
-	updateCalls    int
-	getStartedCalls int
+	games             map[string]*models.Game
+	updateCalls       int
+	getStartedCalls   int
+	mapMetadata       map[string]*models.MapMetadata
+	mapTiles          map[string][]*models.MapTile
+	startingPositions map[string][]*models.StartingPosition
 }
 
 func NewMockRepository() *MockRepository {
 	return &MockRepository{
-		games: make(map[string]*models.Game),
+		games:             make(map[string]*models.Game),
+		mapMetadata:       make(map[string]*models.MapMetadata),
+		mapTiles:          make(map[string][]*models.MapTile),
+		startingPositions: make(map[string][]*models.StartingPosition),
 	}
 }
 
@@ -44,6 +50,47 @@ func (m *MockRepository) UpdateGameTick(ctx context.Context, gameID string, newY
 		game.LastTickAt = &now
 	}
 	return nil
+}
+
+func (m *MockRepository) SaveMapMetadata(ctx context.Context, metadata *models.MapMetadata) error {
+	m.mapMetadata[metadata.GameID] = metadata
+	return nil
+}
+
+func (m *MockRepository) SaveMapTiles(ctx context.Context, tiles []*models.MapTile) error {
+	if len(tiles) == 0 {
+		return nil
+	}
+	gameID := tiles[0].GameID
+	m.mapTiles[gameID] = tiles
+	return nil
+}
+
+func (m *MockRepository) SaveStartingPositions(ctx context.Context, positions []*models.StartingPosition) error {
+	if len(positions) == 0 {
+		return nil
+	}
+	gameID := positions[0].GameID
+	m.startingPositions[gameID] = positions
+	return nil
+}
+
+func (m *MockRepository) GetMapMetadata(ctx context.Context, gameID string) (*models.MapMetadata, error) {
+	return m.mapMetadata[gameID], nil
+}
+
+func (m *MockRepository) GetMapTiles(ctx context.Context, gameID string, playerID *string) ([]*models.MapTile, error) {
+	return m.mapTiles[gameID], nil
+}
+
+func (m *MockRepository) GetStartingPosition(ctx context.Context, gameID string, playerID string) (*models.StartingPosition, error) {
+	positions := m.startingPositions[gameID]
+	for _, pos := range positions {
+		if pos.PlayerID == playerID {
+			return pos, nil
+		}
+	}
+	return nil, nil
 }
 
 func (m *MockRepository) Close(ctx context.Context) error {
@@ -234,3 +281,77 @@ func TestGameEngine_TickTiming(t *testing.T) {
 		t.Errorf("Game2 should have been updated: year %d", repo.games["game2"].CurrentYear)
 	}
 }
+
+func TestGameEngine_MapGenerationOnFirstTick(t *testing.T) {
+	repo := NewMockRepository()
+	engine := NewGameEngine(repo)
+
+	// Add a newly started game (no last tick, year is -4000)
+	repo.games["game1"] = &models.Game{
+		GameID:      "game1",
+		State:       "started",
+		CurrentYear: -4000,
+		MaxPlayers:  4,
+		PlayerList:  []string{"player1", "player2", "player3", "player4"},
+		LastTickAt:  nil, // First tick
+	}
+
+	// Process tick
+	ctx := context.Background()
+	err := engine.processTick(ctx)
+	if err != nil {
+		t.Fatalf("processTick failed: %v", err)
+	}
+
+	// Verify map was generated
+	if repo.mapMetadata["game1"] == nil {
+		t.Error("Expected map metadata to be saved")
+	}
+	if len(repo.mapTiles["game1"]) == 0 {
+		t.Error("Expected map tiles to be saved")
+	}
+	if len(repo.startingPositions["game1"]) != 4 {
+		t.Errorf("Expected 4 starting positions, got %d", len(repo.startingPositions["game1"]))
+	}
+
+	// Verify metadata properties
+	metadata := repo.mapMetadata["game1"]
+	if metadata.Width == 0 || metadata.Height == 0 {
+		t.Error("Map dimensions should be non-zero")
+	}
+	if metadata.Seed == "" {
+		t.Error("Map seed should be set")
+	}
+	if metadata.PlayerCount != 4 {
+		t.Errorf("Expected player count 4, got %d", metadata.PlayerCount)
+	}
+}
+
+func TestGameEngine_MapGenerationOnlyOnFirstTick(t *testing.T) {
+	repo := NewMockRepository()
+	engine := NewGameEngine(repo)
+
+	// Add a game that already has a last tick (not first tick)
+	lastTick := time.Now().Add(-2 * time.Second)
+	repo.games["game1"] = &models.Game{
+		GameID:      "game1",
+		State:       "started",
+		CurrentYear: -3999, // Already past first tick
+		MaxPlayers:  4,
+		PlayerList:  []string{"player1", "player2", "player3", "player4"},
+		LastTickAt:  &lastTick,
+	}
+
+	// Process tick
+	ctx := context.Background()
+	err := engine.processTick(ctx)
+	if err != nil {
+		t.Fatalf("processTick failed: %v", err)
+	}
+
+	// Verify map was NOT generated (already exists)
+	if repo.mapMetadata["game1"] != nil {
+		t.Error("Map should not be generated on subsequent ticks")
+	}
+}
+

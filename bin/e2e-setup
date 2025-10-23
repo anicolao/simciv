@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# E2E test environment setup script for SimCiv
+# This script ensures all prerequisites are met for running E2E tests
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+echo "🔧 SimCiv E2E Test Setup"
+echo "========================"
+echo ""
+
+# Check if npm dependencies are installed
+if [ ! -d "${PROJECT_ROOT}/node_modules" ]; then
+    echo "📦 Installing npm dependencies..."
+    cd "${PROJECT_ROOT}"
+    npm install
+else
+    echo "✅ npm dependencies already installed"
+fi
+
+# Check if Playwright browsers are installed
+echo ""
+echo "🌐 Checking Playwright browsers..."
+if ! npx playwright --version &>/dev/null; then
+    echo "📥 Installing Playwright..."
+    npm install @playwright/test
+fi
+
+# Install Chromium browser
+echo "📥 Installing Chromium browser..."
+npx playwright install chromium
+
+# Build the client
+echo ""
+echo "🏗️  Building client application..."
+cd "${PROJECT_ROOT}"
+npm run build
+
+# Ensure screenshots directory exists
+echo ""
+echo "📁 Creating screenshots directory..."
+mkdir -p "${PROJECT_ROOT}/e2e-screenshots"
+
+# Start MongoDB if not already running
+echo ""
+echo "🍃 Starting MongoDB..."
+"${SCRIPT_DIR}/mongo" start
+
+# Check if server is running on port 3000
+echo ""
+echo "🔍 Checking if server is running on port 3000..."
+if lsof -ti:3000 &>/dev/null; then
+    echo "✅ Server is already running on port 3000"
+else
+    echo "🚀 Starting server..."
+    cd "${PROJECT_ROOT}"
+    npm start &
+    SERVER_PID=$!
+    
+    # Wait for server to be ready
+    echo "⏳ Waiting for server to be ready..."
+    max_wait=30
+    count=0
+    while ! curl -s http://localhost:3000/ >/dev/null 2>&1 && [ $count -lt $max_wait ]; do
+        sleep 1
+        count=$((count + 1))
+    done
+    
+    if curl -s http://localhost:3000/ >/dev/null 2>&1; then
+        echo "✅ Server is running on port 3000 (PID: $SERVER_PID)"
+    else
+        echo "❌ Server failed to start"
+        exit 1
+    fi
+fi
+
+echo ""
+echo "✅ E2E test environment is ready!"
+echo ""
+echo "To run tests:"
+echo "  npm run test:e2e"
+echo ""
+echo "To run tests in UI mode:"
+echo "  npx playwright test --ui"
+echo ""
+echo "To run specific test:"
+echo "  npx playwright test e2e/auth.spec.ts"

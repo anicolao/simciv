@@ -184,3 +184,73 @@ export async function getMyGames(): Promise<GamesListResponse> {
   const response = await fetch('/api/games/user/my-games');
   return await response.json();
 }
+
+/**
+ * Map-related types and functions
+ */
+export interface MapTile {
+  gameId: string;
+  x: number;
+  y: number;
+  elevation: number;
+  terrainType: string;
+  climateZone: string;
+  hasRiver: boolean;
+  isCoastal: boolean;
+  resources: string[];
+}
+
+export interface StartingPosition {
+  gameId: string;
+  playerId: string;
+  centerX: number;
+  centerY: number;
+  startingCityX: number;
+  startingCityY: number;
+}
+
+export interface MapMetadata {
+  gameId: string;
+  seed: string;
+  width: number;
+  height: number;
+  playerCount: number;
+  seaLevel: number;
+}
+
+/**
+ * Get map tiles for a game
+ */
+export async function getMapTiles(gameId: string): Promise<{ tiles: MapTile[] }> {
+  const response = await fetch(`/api/map/${gameId}/tiles`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch map tiles');
+  }
+  return await response.json();
+}
+
+/**
+ * Get player's starting position
+ */
+export async function getStartingPosition(gameId: string): Promise<{ position: StartingPosition }> {
+  const response = await fetch(`/api/map/${gameId}/starting-position`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch starting position');
+  }
+  return await response.json();
+}
+
+/**
+ * Get map metadata
+ */
+export async function getMapMetadata(gameId: string): Promise<{ metadata: MapMetadata }> {
+  const response = await fetch(`/api/map/${gameId}/metadata`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch map metadata');
+  }
+  return await response.json();
+}
+
