@@ -41,21 +41,47 @@ This system allows Freeciv to blend terrain smoothly at boundaries.
 
 ## Ocean/Water Rendering
 
-Ocean tiles are complex in Freeciv:
+Ocean tiles in Freeciv require **layered rendering** to display correctly:
 
 ### Components:
-1. **Base Layer**: Often uses a generic base
-2. **Floor Layer**: `t.l1.floor_*` - The actual water appearance
-3. **Coast Layer**: `t.l1.coast_*` - Transitions to land
+1. **Base Layer (t.l0.inaccessible1)**: Row 0, col 3 - The dark blue ocean base
+2. **Floor Layer (t.l1.floor_*)**: Row 10 - The water texture overlay
+3. **Coast Layer (t.l1.coast_*)**: Row 10 - Transitions to land (optional)
 
-### Recommended Approach for Simple Rendering:
-For a basic 2D map where you just need to show ocean:
-- Use `t.l1.floor_n0e0s0w0` (row 10, col 15) - This shows deep ocean without coastlines
+### Why Layering is Required:
+The floor sprites (row 10) are semi-transparent overlays designed to be drawn on top of a base layer. Without the base layer, the middle of the tile appears white/transparent.
 
-### For Coastal Areas:
-Layer multiple sprites:
-1. Draw the base ocean floor
-2. Draw the coast overlay based on adjacent land tiles
+### Implementation:
+
+**Simple Deep Ocean (Recommended for demos):**
+```javascript
+// Draw both layers for proper ocean rendering
+function drawOcean(ctx, x, y) {
+  // Layer 0: Base (inaccessible1)
+  ctx.drawImage(tileImg, 90, 0, 30, 30, x, y, 30, 30);  // row 0, col 3
+  
+  // Layer 1: Floor overlay (floor_n0e0s0w0)
+  ctx.drawImage(tileImg, 450, 300, 30, 30, x, y, 30, 30);  // row 10, col 15
+}
+```
+
+**Production Ocean with Coastlines:**
+```javascript
+function drawOceanTile(ctx, neighbors, x, y) {
+  // Always draw base layer first
+  ctx.drawImage(tileImg, 90, 0, 30, 30, x, y, 30, 30);  // inaccessible1
+  
+  // Draw floor overlay
+  const floorVariant = getFloorVariant(neighbors);
+  ctx.drawImage(tileImg, floorVariant.x, floorVariant.y, 30, 30, x, y, 30, 30);
+  
+  // If adjacent to land, draw coast overlay
+  if (hasLandNeighbor(neighbors)) {
+    const coastVariant = getCoastVariant(neighbors);
+    ctx.drawImage(tileImg, coastVariant.x, coastVariant.y, 30, 30, x, y, 30, 30);
+  }
+}
+```
 
 ## Simple Single-Tile Sprites
 
@@ -111,18 +137,30 @@ Cities have different styles and sizes:
 ### Basic Single-Layer Approach (Simple)
 
 ```javascript
-// For a simple demo or prototype
+// For a simple demo - EXCEPT OCEAN which requires layering
 const terrain = {
   grassland: { x: 60, y: 0 },
   desert: { x: 0, y: 30 },
   plains: { x: 0, y: 120 },
-  ocean: { x: 450, y: 300 },  // floor_n0e0s0w0
+  // Ocean needs two layers!
+  ocean: {
+    base: { x: 90, y: 0 },      // inaccessible1
+    overlay: { x: 450, y: 300 }  // floor_n0e0s0w0
+  },
   // ... etc
 };
 
 function drawTile(ctx, terrainType, x, y) {
   const sprite = terrain[terrainType];
-  ctx.drawImage(tileImg, sprite.x, sprite.y, 30, 30, x, y, 30, 30);
+  
+  if (terrainType === 'ocean') {
+    // Draw base layer first
+    ctx.drawImage(tileImg, sprite.base.x, sprite.base.y, 30, 30, x, y, 30, 30);
+    // Draw overlay
+    ctx.drawImage(tileImg, sprite.overlay.x, sprite.overlay.y, 30, 30, x, y, 30, 30);
+  } else {
+    ctx.drawImage(tileImg, sprite.x, sprite.y, 30, 30, x, y, 30, 30);
+  }
 }
 ```
 
@@ -165,19 +203,24 @@ function getDirectionalVariant(terrainType, neighbors) {
 
 ```javascript
 function drawOceanTile(ctx, neighbors, x, y) {
+  // CRITICAL: Always draw base layer first!
+  // Without this, the floor overlay appears white/transparent in the middle
+  ctx.drawImage(tileImg, 90, 0, 30, 30, x, y, 30, 30);  // inaccessible1 base
+  
   // Check if any neighbors are land
   const hasLandNeighbor = Object.values(neighbors).some(n => n !== 'ocean');
   
   if (hasLandNeighbor) {
-    // Draw ocean floor base
-    drawSprite(ctx, 'floor_n0e0s0w0', x, y);
+    // Draw appropriate floor variant based on neighbors
+    const floorVariant = getFloorVariant(neighbors);
+    ctx.drawImage(tileImg, floorVariant.x, floorVariant.y, 30, 30, x, y, 30, 30);
     
-    // Draw coast overlay based on which neighbors are land
+    // Draw coast overlay to show land boundary
     const coastVariant = getCoastVariant(neighbors);
-    drawSprite(ctx, coastVariant, x, y);
+    ctx.drawImage(tileImg, coastVariant.x, coastVariant.y, 30, 30, x, y, 30, 30);
   } else {
-    // Deep ocean - just draw floor
-    drawSprite(ctx, 'floor_n0e0s0w0', x, y);
+    // Deep ocean - just base + floor overlay
+    ctx.drawImage(tileImg, 450, 300, 30, 30, x, y, 30, 30);  // floor_n0e0s0w0
   }
 }
 ```
@@ -194,13 +237,15 @@ Example: Row 5, Column 3
 
 ## Common Pitfalls
 
-1. **Using coast variants for deep ocean**: Coast sprites (`t.l1.coast_*`) are meant to be overlays, not standalone ocean tiles. Use floor sprites instead.
+1. **Ocean rendering without base layer**: The floor sprites (`t.l1.floor_*`) are semi-transparent overlays. They MUST be drawn on top of the base layer (`t.l0.inaccessible1` at row 0, col 3) or they will appear white/transparent in the middle with only the edges visible.
 
-2. **Ignoring directional variants**: Most terrain types require directional variants for proper blending. Don't use `_n1e1s1w1` for all tiles.
+2. **Using coast variants for deep ocean**: Coast sprites (`t.l1.coast_*`) are meant to be overlays showing land boundaries, not standalone ocean tiles.
 
-3. **Missing layers**: Some terrains need multiple layers to render correctly. Ocean especially needs the floor layer.
+3. **Ignoring directional variants**: Most terrain types require directional variants for proper blending. Don't use `_n1e1s1w1` for all tiles.
 
-4. **Wrong unit coordinates**: The units.spec file has units scattered across the sprite sheet, not in sequential order.
+4. **Missing layers**: Some terrains need multiple layers to render correctly. Ocean especially needs the base + overlay layers.
+
+5. **Wrong unit coordinates**: The units.spec file has units scattered across the sprite sheet, not in sequential order.
 
 ## Performance Optimization
 

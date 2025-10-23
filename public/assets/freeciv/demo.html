@@ -96,7 +96,11 @@
             tundra: { x: 0, y: 180, w: 30, h: 30, name: 'Tundra' },           // row 6, col 0
             arctic: { x: 0, y: 60, w: 30, h: 30, name: 'Arctic' },            // row 2, col 0 (layer 1 arctic)
             swamp: { x: 0, y: 150, w: 30, h: 30, name: 'Swamp' },             // row 5, col 0
-            ocean: { x: 450, y: 300, w: 30, h: 30, name: 'Ocean' },           // row 10, col 15 (floor_n0e0s0w0 - deep ocean)
+            ocean: { 
+                base: { x: 90, y: 0, w: 30, h: 30 },                          // row 0, col 3 (inaccessible1 - base)
+                overlay: { x: 450, y: 300, w: 30, h: 30 },                    // row 10, col 15 (floor_n0e0s0w0 - overlay)
+                name: 'Ocean'
+            },
         };
 
         // Load terrain tileset
@@ -147,10 +151,25 @@
                 
                 // Draw sprite at 2x scale for visibility
                 ctx.imageSmoothingEnabled = false;
-                ctx.drawImage(terrainImg, 
-                    sprite.x, sprite.y, sprite.w, sprite.h,
-                    0, 0, 60, 60
-                );
+                
+                // Special handling for ocean (layered rendering)
+                if (key === 'ocean') {
+                    // Draw base layer (inaccessible)
+                    ctx.drawImage(terrainImg, 
+                        sprite.base.x, sprite.base.y, sprite.base.w, sprite.base.h,
+                        0, 0, 60, 60
+                    );
+                    // Draw overlay layer (floor)
+                    ctx.drawImage(terrainImg, 
+                        sprite.overlay.x, sprite.overlay.y, sprite.overlay.w, sprite.overlay.h,
+                        0, 0, 60, 60
+                    );
+                } else {
+                    ctx.drawImage(terrainImg, 
+                        sprite.x, sprite.y, sprite.w, sprite.h,
+                        0, 0, 60, 60
+                    );
+                }
                 
                 const label = document.createElement('label');
                 label.textContent = sprite.name;
@@ -188,10 +207,24 @@
                     
                     const sprite = terrainSprites[terrainType];
                     if (sprite) {
-                        ctx.drawImage(terrainImg,
-                            sprite.x, sprite.y, sprite.w, sprite.h,
-                            x * tileSize, y * tileSize, tileSize, tileSize
-                        );
+                        // Special handling for ocean (layered rendering)
+                        if (terrainType === 'ocean') {
+                            // Draw base layer (inaccessible)
+                            ctx.drawImage(terrainImg,
+                                sprite.base.x, sprite.base.y, sprite.base.w, sprite.base.h,
+                                x * tileSize, y * tileSize, tileSize, tileSize
+                            );
+                            // Draw overlay layer (floor)
+                            ctx.drawImage(terrainImg,
+                                sprite.overlay.x, sprite.overlay.y, sprite.overlay.w, sprite.overlay.h,
+                                x * tileSize, y * tileSize, tileSize, tileSize
+                            );
+                        } else {
+                            ctx.drawImage(terrainImg,
+                                sprite.x, sprite.y, sprite.w, sprite.h,
+                                x * tileSize, y * tileSize, tileSize, tileSize
+                            );
+                        }
                     }
                 }
             }
