@@ -28,6 +28,7 @@ test-results/
 # Direnv
 .direnv/
 .simciv-cleanup.sh
+.simciv-colima-state
 
 # IDE
 .vscode/
