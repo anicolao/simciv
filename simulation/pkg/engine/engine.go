@@ -121,6 +121,24 @@ func (e *GameEngine) generateMapForGame(ctx context.Context, game *models.Game) 
 		}
 	}
 
+	// Initialize tile visibility for all players
+	// Each player can see tiles around their starting position
+	for _, position := range positions {
+		if position.PlayerID == "" {
+			continue
+		}
+		// Make tiles within vision range visible to this player
+		visionRange := 3 // tiles around starting position
+		for _, tile := range tiles {
+			dx := tile.X - position.CenterX
+			dy := tile.Y - position.CenterY
+			distanceSquared := dx*dx + dy*dy
+			if distanceSquared <= visionRange*visionRange {
+				tile.VisibleTo = append(tile.VisibleTo, position.PlayerID)
+			}
+		}
+	}
+
 	// Save to database
 	if err := e.repo.SaveMapMetadata(ctx, metadata); err != nil {
 		return err
