@@ -53,7 +53,7 @@ func (e *GameEngine) processTick(ctx context.Context) error {
 
 	for _, game := range games {
 		// Check if map needs to be generated (new game just started)
-		if game.CurrentYear == -4000 && game.LastTickAt == nil {
+		if game.CurrentYear == -5000 && game.LastTickAt == nil {
 			// Generate map for new game
 			if err := e.generateMapForGame(ctx, game); err != nil {
 				log.Printf("Error generating map for game %s: %v", game.GameID, err)

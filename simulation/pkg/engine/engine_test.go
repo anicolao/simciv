@@ -167,7 +167,7 @@ func TestGameEngine_MultipleGames(t *testing.T) {
 	repo.games["game2"] = &models.Game{
 		GameID:      "game2",
 		State:       "started",
-		CurrentYear: -4000,
+		CurrentYear: -5000,
 		LastTickAt:  &now,
 	}
 	repo.games["game3"] = &models.Game{
@@ -191,8 +191,8 @@ func TestGameEngine_MultipleGames(t *testing.T) {
 	if repo.games["game1"].CurrentYear != -4999 {
 		t.Errorf("Game1: Expected year -4999, got %d", repo.games["game1"].CurrentYear)
 	}
-	if repo.games["game2"].CurrentYear != -3999 {
-		t.Errorf("Game2: Expected year -3999, got %d", repo.games["game2"].CurrentYear)
+	if repo.games["game2"].CurrentYear != -4999 {
+		t.Errorf("Game2: Expected year -4999, got %d", repo.games["game2"].CurrentYear)
 	}
 	if repo.games["game3"].CurrentYear != -5000 {
 		t.Errorf("Game3: Expected year -5000 (unchanged), got %d", repo.games["game3"].CurrentYear)
@@ -286,11 +286,11 @@ func TestGameEngine_MapGenerationOnFirstTick(t *testing.T) {
 	repo := NewMockRepository()
 	engine := NewGameEngine(repo)
 
-	// Add a newly started game (no last tick, year is -4000)
+	// Add a newly started game (no last tick, year is -5000)
 	repo.games["game1"] = &models.Game{
 		GameID:      "game1",
 		State:       "started",
-		CurrentYear: -4000,
+		CurrentYear: -5000,
 		MaxPlayers:  4,
 		PlayerList:  []string{"player1", "player2", "player3", "player4"},
 		LastTickAt:  nil, // First tick
