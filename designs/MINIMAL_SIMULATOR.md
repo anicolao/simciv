@@ -1,0 +1,1304 @@
+# SimCiv Minimal Simulator Design Specification
+## Viability Verification Simulator for Prehistoric Civilizations
+
+### Document Status
+**Version:** 0.0006  
+**Status:** Design Review (Revised)  
+**Last Updated:** 2025-10-23  
+**Purpose:** Specification for the minimal viable simulator to verify that starting positions support population growth and basic research capability
+
+**Revision History:**
+- v0.0005 (2025-10-23): Initial design specification
+- v0.0006 (2025-10-23): Revised based on feedback:
+  - Removed starting technology (no free Stone Knapping)
+  - Changed to production-ready code with elaborate unit tests
+  - Extended simulation until Fire Mastery unlock (not fixed 1 year)
+  - Added 10-50 hardcoded seed tests for reproducibility
+
+---
+
+## Executive Summary
+
+This document specifies the design for SimCiv's minimal simulator implementation. The goal is to create the **smallest possible system** that can verify a player's start position is viable—meaning their population can grow and conduct at least a little bit of research.
+
+**Key Features:**
+- Minimal implementation of the five human attributes (health only fully implemented)
+- Basic two-choice resource allocation (food vs. science)
+- Simplified reproduction and mortality mechanics
+- No starting technology (primitive conditions)
+- Research goal: Fire Mastery (100 science points)
+- Deterministic simulation with multiple seed-based tests
+- Implemented as production-ready code with elaborate unit tests
+- No UI required (simulation-only verification)
+
+**Success Criteria:**
+A starting position is considered viable if:
+1. Population survives until Fire Mastery is researched
+2. Population continues growing (not stagnant or declining)
+3. Fire Mastery is unlocked within reasonable time (target: 2-3 years, max: 5 years)
+4. Average health remains above 30 (survival threshold) throughout
+
+This minimal design serves as a proof-of-concept for the full simulation system and validates that the game's foundational mechanics can produce viable starting conditions.
+
+---
+
+## Scope and Limitations
+
+### In Scope (Minimal Implementation)
+
+**Human Attributes:**
+- ✓ Health (0-100) - FULLY IMPLEMENTED
+- ✓ Shelter (0-100) - SIMPLIFIED (fixed value based on starting conditions)
+- ✓ Safety (0-100) - SIMPLIFIED (fixed value, no threats)
+- ✓ Belonging (0-100) - SIMPLIFIED (fixed value based on population)
+- ✓ Luxury (0-100) - SIMPLIFIED (science level × 5)
+
+**Resource Systems:**
+- ✓ Food production and consumption
+- ✓ Science point accumulation
+- ✓ Food/science allocation ratio (player-set or default 80/20)
+
+**Population Dynamics:**
+- ✓ Basic reproduction (fertility at ages 15-30, health >= 50 required)
+- ✓ Basic mortality (age-based + health-based)
+- ✓ Age progression (daily)
+- ✓ Starting population: 20 humans
+
+**Technology:**
+- ✓ No starting technology (primitive start)
+- ✓ Research goal: Fire Mastery (100 science points)
+- ✓ Tech effects on food production and other systems
+
+**Time System:**
+- ✓ Daily simulation ticks
+- ✓ Variable simulation period (until Fire Mastery unlocked or failure)
+- ✓ Deterministic time progression with seeded RNG
+- ✓ Multiple test runs with hardcoded seeds (10-50 seeds)
+
+### Out of Scope (Future Implementation)
+
+**Human Attributes:**
+- ✗ Complex shelter calculations (overcrowding, weather, construction)
+- ✗ Dynamic safety calculations (predators, threats, defenses)
+- ✗ Social belonging mechanics (interactions, activities, status)
+- ✗ Complex luxury calculations (artisan goods, leisure time)
+
+**Resource Systems:**
+- ✗ Resource storage and preservation
+- ✗ Seasonal variation in food production
+- ✗ Resource trading between groups
+- ✗ Material resources (wood, stone, etc.)
+
+**Population Dynamics:**
+- ✗ Individual personalities and variation
+- ✗ Pregnancy mechanics (9-month duration)
+- ✗ Infant care and work capacity impacts
+- ✗ Disease and epidemic systems
+- ✗ Complex social relationships
+
+**Technology:**
+- ✗ Full technology tree (35 technologies)
+- ✗ Multiple research paths
+- ✗ Technology prerequisites and dependencies
+- ✗ Complex tech effects on multiple systems
+
+**Gameplay:**
+- ✗ Player interaction and decision-making
+- ✗ Multiple civilizations
+- ✗ Combat and conflict
+- ✗ Map and terrain
+- ✗ UI and visualization
+
+---
+
+## Architecture Context
+
+The minimal simulator is a **standalone verification tool** that will evolve into the full simulation engine. It integrates with:
+
+- **Database Layer**: Reads starting position data (population, terrain type)
+- **Simulation Core**: Runs deterministic simulation ticks
+- **Validation Output**: Reports viability metrics (success/failure)
+
+This minimal design maintains the database-as-single-source-of-truth principle while focusing only on essential viability checks.
+
+---
+
+## Data Model
+
+### Human Entity (Minimal)
+
+```typescript
+interface MinimalHuman {
+  id: string;                    // Unique identifier
+  age: number;                   // Age in years (0-60)
+  gender: "male" | "female";     // Required for reproduction
+  health: number;                // 0-100 (fully implemented)
+  isAlive: boolean;              // Alive status
+}
+```
+
+**Simplified Attributes (Not Stored Per Individual):**
+- **Shelter**: Fixed at 20 (minimal natural shelter)
+- **Safety**: Fixed at 25 (baseline group safety)
+- **Belonging**: Calculated as `min(50, population / 2)` (simple group size formula)
+- **Luxury**: Calculated as `scienceLevel * 5` where scienceLevel = number of techs unlocked
+
+### Civilization State (Minimal)
+
+```typescript
+interface MinimalCivilizationState {
+  // Population
+  humans: MinimalHuman[];        // Array of all humans
+  
+  // Resources
+  foodStockpile: number;         // Available food units
+  sciencePoints: number;         // Accumulated science
+  
+  // Configuration
+  foodAllocationRatio: number;   // 0.0 to 1.0 (default 0.8 = 80%)
+  
+  // Technology
+  hasFireMastery: boolean;       // Research goal (unlocks at 100 science)
+  
+  // Simulation State
+  currentDay: number;            // Day counter (increments until completion or failure)
+}
+```
+
+### Starting Conditions
+
+```typescript
+const STARTING_CONDITIONS = {
+  population: 20,                // 20 humans
+  ageDistribution: {
+    children_0_14: 0.30,         // 6 children (ages 0-14)
+    adults_15_30: 0.50,          // 10 adults (ages 15-30, fertile)
+    elders_31_plus: 0.20,        // 4 elders (ages 31+)
+  },
+  genderRatio: 0.5,              // 50% male, 50% female
+  startingHealth: {
+    min: 30,
+    max: 50,
+    average: 40,                 // Low health (prehistoric conditions)
+  },
+  foodStockpile: 100,            // 100 food units (50 days for 20 people)
+  sciencePoints: 0,              // No initial science
+  hasFireMastery: false,         // Research goal
+  foodAllocationRatio: 0.8,      // 80% food, 20% science (default)
+};
+```
+
+---
+
+## Simulation Mechanics
+
+### Daily Simulation Tick
+
+The simulator runs daily ticks until Fire Mastery is unlocked or a failure condition is met, processing the following steps in order:
+
+```
+For each day (until Fire Mastery unlocked or max 1,825 days = 5 years):
+  1. Calculate available labor
+  2. Allocate labor to food/science
+  3. Produce food and science
+  4. Consume food
+  5. Update health based on nutrition
+  6. Age all humans by 1/365 year
+  7. Process mortality checks
+  8. Process reproduction checks
+  9. Check for Fire Mastery unlock
+  10. Check for failure conditions (extinction, stagnation)
+  11. Record metrics for viability assessment
+```
+
+### Step 1: Calculate Available Labor
+
+```typescript
+function calculateAvailableLabor(humans: MinimalHuman[]): number {
+  let totalWorkHours = 0;
+  
+  for (const human of humans.filter(h => h.isAlive)) {
+    // Only adults (age >= 15) can work
+    if (human.age < 15) {
+      continue;
+    }
+    
+    // Work capacity based on health
+    if (human.health >= 50) {
+      totalWorkHours += 8;  // Full day of work
+    } else if (human.health >= 30) {
+      totalWorkHours += 4;  // Half day (weakened)
+    }
+    // health < 30: cannot work (0 hours)
+  }
+  
+  return totalWorkHours;
+}
+```
+
+**Example Calculation:**
+- Starting population: 20 humans
+- Adults (age >= 15): ~14 humans (6 are children)
+- Average health: 40 (all work half capacity)
+- Total work hours: 14 × 4 = 56 hours/day
+
+### Step 2: Allocate Labor to Food/Science
+
+```typescript
+function allocateLabor(
+  totalWorkHours: number,
+  foodRatio: number
+): { foodHours: number; scienceHours: number } {
+  return {
+    foodHours: totalWorkHours * foodRatio,
+    scienceHours: totalWorkHours * (1 - foodRatio),
+  };
+}
+```
+
+**Example:**
+- Total work hours: 56
+- Food ratio: 0.8 (80%)
+- Food hours: 56 × 0.8 = 44.8
+- Science hours: 56 × 0.2 = 11.2
+
+### Step 3: Produce Food and Science
+
+**Food Production:**
+
+```typescript
+function produceFood(
+  foodHours: number,
+  hasFireMastery: boolean,
+  terrainMultiplier: number = 1.0
+): number {
+  const BASE_RATE = 0.3;  // Food units per hour (primitive gathering)
+  
+  let multiplier = 1.0;
+  if (hasFireMastery) {
+    multiplier *= 1.15;  // +15% from cooking/food preparation
+  }
+  
+  return foodHours * BASE_RATE * multiplier * terrainMultiplier;
+}
+```
+
+**Example (before Fire Mastery):**
+- Food hours: 44.8
+- Base rate: 0.3 food/hour
+- Fire mastery: Not yet unlocked (1.0x)
+- Terrain: Normal (1.0x)
+- Production: 44.8 × 0.3 × 1.0 × 1.0 = **13.4 food units/day**
+
+**Example (after Fire Mastery):**
+- Food hours: 44.8
+- Base rate: 0.3 food/hour
+- Fire mastery: +15% (1.15x)
+- Terrain: Normal (1.0x)
+- Production: 44.8 × 0.3 × 1.15 × 1.0 = **15.4 food units/day**
+
+**Science Production:**
+
+```typescript
+function produceScience(
+  scienceHours: number,
+  population: number,
+  averageHealth: number
+): number {
+  const BASE_RATE = 1.0;  // Science points per hour
+  
+  let multiplier = 1.0;
+  
+  // Population collaboration bonus
+  multiplier *= Math.log10(population);  // log10(20) ≈ 1.3
+  
+  // Health threshold penalty
+  if (averageHealth < 50) {
+    multiplier *= 0.5;  // Half effectiveness when malnourished
+  }
+  
+  return scienceHours * BASE_RATE * multiplier;
+}
+```
+
+**Example:**
+- Science hours: 11.2
+- Population: 20 (log10 = 1.3)
+- Average health: 40 (< 50, so 0.5x penalty)
+- Production: 11.2 × 1.0 × 1.3 × 0.5 = **7.3 science points/day**
+
+### Step 4: Consume Food
+
+```typescript
+function consumeFood(
+  humans: MinimalHuman[],
+  foodStockpile: number
+): { remainingFood: number; foodPerPerson: number } {
+  const aliveHumans = humans.filter(h => h.isAlive);
+  const population = aliveHumans.length;
+  
+  // Food requirements
+  const FOOD_REQUIRED_PER_PERSON = 2.0;  // Units per day
+  const totalRequired = population * FOOD_REQUIRED_PER_PERSON;
+  
+  // Calculate actual consumption (may be less than required if shortage)
+  const actualConsumption = Math.min(foodStockpile, totalRequired);
+  const foodPerPerson = actualConsumption / population;
+  
+  return {
+    remainingFood: foodStockpile - actualConsumption,
+    foodPerPerson: foodPerPerson,
+  };
+}
+```
+
+**Example:**
+- Population: 20
+- Food required: 20 × 2.0 = 40 units
+- Food stockpile: 100 units
+- Consumption: 40 units
+- Remaining: 60 units
+- Per person: 2.0 units (fully fed)
+
+### Step 5: Update Health Based on Nutrition
+
+```typescript
+function updateHealth(human: MinimalHuman, foodPerPerson: number): void {
+  const FOOD_REQUIRED = 2.0;
+  
+  // Base health decline (natural)
+  let healthChange = -0.5;
+  
+  // Food bonus/penalty
+  const foodRatio = foodPerPerson / FOOD_REQUIRED;
+  healthChange += (foodRatio - 0.5) * 15;
+  
+  // Example calculations:
+  // foodRatio = 1.0 (fully fed): healthChange = -0.5 + (1.0 - 0.5) * 15 = +7.0
+  // foodRatio = 0.5 (half fed): healthChange = -0.5 + (0.5 - 0.5) * 15 = -0.5
+  // foodRatio = 0.0 (starving): healthChange = -0.5 + (0.0 - 0.5) * 15 = -8.0
+  
+  // Age penalty (simplified - no tech modifiers)
+  healthChange -= (human.age / 30) * 5;
+  
+  // Apply change
+  human.health = Math.max(0, Math.min(100, human.health + healthChange));
+}
+```
+
+**Example (Adult age 20, fully fed):**
+- Base decline: -0.5
+- Food bonus: (1.0 - 0.5) × 15 = +7.5
+- Age penalty: (20/30) × 5 = -3.3
+- Net change: +3.7 per day
+- Health trajectory: Increasing toward equilibrium
+
+**Example (Elder age 50, half fed):**
+- Base decline: -0.5
+- Food bonus: (0.5 - 0.5) × 15 = 0
+- Age penalty: (50/30) × 5 = -8.3
+- Net change: -8.8 per day
+- Health trajectory: Rapidly declining
+
+### Step 6: Age All Humans
+
+```typescript
+function ageHumans(humans: MinimalHuman[]): void {
+  const AGE_INCREMENT = 1 / 365;  // 1 year / 365 days
+  
+  for (const human of humans.filter(h => h.isAlive)) {
+    human.age += AGE_INCREMENT;
+  }
+}
+```
+
+### Step 7: Process Mortality Checks
+
+**Simplified Mortality (Daily Check):**
+
+```typescript
+function checkMortality(human: MinimalHuman): boolean {
+  if (!human.isAlive) return false;
+  
+  // Convert monthly rates to daily
+  const DAYS_PER_MONTH = 30;
+  
+  // Base mortality rate by age (monthly rate / 30)
+  let dailyDeathChance = 0;
+  
+  if (human.age < 1) {
+    dailyDeathChance = 0.025 / DAYS_PER_MONTH;  // 2.5% monthly = 0.083% daily
+  } else if (human.age < 5) {
+    dailyDeathChance = 0.012 / DAYS_PER_MONTH;  // 1.2% monthly
+  } else if (human.age < 15) {
+    dailyDeathChance = 0.003 / DAYS_PER_MONTH;  // 0.3% monthly
+  } else if (human.age < 30) {
+    dailyDeathChance = 0.002 / DAYS_PER_MONTH;  // 0.2% monthly
+  } else if (human.age < 45) {
+    dailyDeathChance = 0.004 / DAYS_PER_MONTH;  // 0.4% monthly
+  } else if (human.age < 60) {
+    dailyDeathChance = 0.010 / DAYS_PER_MONTH;  // 1.0% monthly
+  } else {
+    dailyDeathChance = 0.020 / DAYS_PER_MONTH;  // 2.0% monthly
+  }
+  
+  // Health modifiers
+  if (human.health > 80) {
+    dailyDeathChance *= 0.5;
+  } else if (human.health < 60 && human.health >= 40) {
+    dailyDeathChance *= 1.5;
+  } else if (human.health < 40 && human.health >= 20) {
+    dailyDeathChance *= 3.0;
+  } else if (human.health < 20) {
+    dailyDeathChance *= 10.0;
+  }
+  
+  // Roll for death
+  const died = Math.random() < dailyDeathChance;
+  if (died) {
+    human.isAlive = false;
+  }
+  
+  return died;
+}
+```
+
+**Example Mortality Rates:**
+- Healthy adult (age 25, health 80): 0.002/30 × 0.5 = 0.0033% daily ≈ 1.2% yearly
+- Unhealthy adult (age 25, health 35): 0.002/30 × 3.0 = 0.020% daily ≈ 7.3% yearly
+- Starving elder (age 55, health 15): 0.010/30 × 10.0 = 0.33% daily ≈ 69% yearly (high risk)
+
+### Step 8: Process Reproduction Checks
+
+**Simplified Reproduction (Daily Check):**
+
+```typescript
+function checkReproduction(
+  male: MinimalHuman,
+  female: MinimalHuman
+): MinimalHuman | null {
+  // Prerequisites
+  if (!male.isAlive || !female.isAlive) return null;
+  if (male.age < 15 || male.age > 45) return null;
+  if (female.age < 15 || female.age > 45) return null;
+  if (male.health < 50 || female.health < 50) return null;
+  
+  // Calculate simplified belonging
+  const belonging = Math.min(50, getCurrentPopulation() / 2);
+  if (belonging < 40) return null;
+  
+  // Monthly conception rate converted to daily
+  const MONTHLY_BASE_CHANCE = 0.03;
+  const DAYS_PER_MONTH = 30;
+  const dailyConceptionChance = MONTHLY_BASE_CHANCE / DAYS_PER_MONTH;
+  
+  // Modifiers (simplified)
+  let modifiers = 1.0;
+  
+  // Health modifier (average of both parents)
+  const avgHealth = (male.health + female.health) / 2;
+  modifiers *= (avgHealth - 50) / 50;  // 0.0 at health=50, 1.0 at health=100
+  
+  // Age modifier (simplified - peak at 15-25)
+  const avgAge = (male.age + female.age) / 2;
+  if (avgAge >= 15 && avgAge <= 25) {
+    modifiers *= 1.0;  // Peak fertility
+  } else if (avgAge > 25 && avgAge <= 30) {
+    modifiers *= 0.8;
+  } else if (avgAge > 30 && avgAge <= 40) {
+    modifiers *= 0.5;
+  } else {
+    modifiers *= 0.2;
+  }
+  
+  const finalChance = dailyConceptionChance * Math.max(0, modifiers);
+  
+  // Roll for conception
+  if (Math.random() < finalChance) {
+    // Instant birth (no pregnancy mechanics in minimal version)
+    const child: MinimalHuman = {
+      id: generateId(),
+      age: 0,
+      gender: Math.random() < 0.5 ? "male" : "female",
+      health: avgHealth * 0.8,  // Child starts at 80% of parents' health
+      isAlive: true,
+    };
+    
+    // 70% infant survival rate at birth (simplified)
+    if (Math.random() > 0.7) {
+      child.isAlive = false;  // Stillborn/infant mortality
+      return null;
+    }
+    
+    return child;
+  }
+  
+  return null;
+}
+
+function attemptReproduction(humans: MinimalHuman[]): MinimalHuman[] {
+  const newborns: MinimalHuman[] = [];
+  const aliveHumans = humans.filter(h => h.isAlive);
+  const males = aliveHumans.filter(h => h.gender === "male");
+  const females = aliveHumans.filter(h => h.gender === "female");
+  
+  // Try to pair each eligible female with an eligible male
+  for (const female of females) {
+    for (const male of males) {
+      const child = checkReproduction(male, female);
+      if (child) {
+        newborns.push(child);
+        break;  // Each female can only have one child per day check
+      }
+    }
+  }
+  
+  return newborns;
+}
+```
+
+**Example Reproduction Rate:**
+- 10 fertile adults (5 male, 5 female), average health 60
+- Daily chance per pair: 0.03/30 × 0.2 × 0.8 = 0.00016 (0.016%)
+- Expected births per month for 5 pairs: 5 × 0.00016 × 30 = 0.024 births/month
+- With 70% survival: ~0.017 surviving births/month
+- Annual births for population of 20: ~0.2 births/year (10% population growth)
+
+### Step 9: Check for Fire Mastery Unlock
+
+```typescript
+function checkTechnologyUnlock(
+  state: MinimalCivilizationState
+): boolean {
+  if (!state.hasFireMastery && state.sciencePoints >= 100) {
+    state.hasFireMastery = true;
+    return true;  // Unlocked!
+  }
+  return false;
+}
+```
+
+### Step 10: Record Metrics
+
+```typescript
+interface DailyMetrics {
+  day: number;
+  population: number;
+  averageHealth: number;
+  foodStockpile: number;
+  sciencePoints: number;
+  foodProduction: number;
+  scienceProduction: number;
+  births: number;
+  deaths: number;
+  hasFireMastery: boolean;
+}
+
+function recordMetrics(state: MinimalCivilizationState): DailyMetrics {
+  const aliveHumans = state.humans.filter(h => h.isAlive);
+  
+  return {
+    day: state.currentDay,
+    population: aliveHumans.length,
+    averageHealth: aliveHumans.reduce((sum, h) => sum + h.health, 0) / aliveHumans.length,
+    foodStockpile: state.foodStockpile,
+    sciencePoints: state.sciencePoints,
+    foodProduction: 0,  // Set during production step
+    scienceProduction: 0,  // Set during production step
+    births: 0,  // Set during reproduction step
+    deaths: 0,  // Set during mortality step
+    hasFireMastery: state.hasFireMastery,
+  };
+}
+```
+
+---
+
+## Viability Assessment
+
+The simulation runs until Fire Mastery is unlocked or a failure condition is met, then evaluates the starting position against success criteria:
+
+### Success Criteria
+
+```typescript
+interface ViabilityResult {
+  isViable: boolean;
+  metrics: {
+    finalPopulation: number;
+    daysToFireMastery: number;
+    finalAverageHealth: number;
+    peakPopulation: number;
+    minimumPopulation: number;
+    fireMasteryUnlocked: boolean;
+  };
+  failureReasons: string[];
+}
+
+function assessViability(
+  startingPopulation: number,
+  allMetrics: DailyMetrics[],
+  maxDays: number = 1825  // 5 years maximum
+): ViabilityResult {
+  const failures: string[] = [];
+  const lastDay = allMetrics[allMetrics.length - 1];
+  
+  // Find day when Fire Mastery was unlocked (if ever)
+  const fireMasteryDay = allMetrics.findIndex(m => m.hasFireMastery);
+  const daysToFireMastery = fireMasteryDay >= 0 ? fireMasteryDay + 1 : -1;
+  
+  // Calculate population metrics
+  const peakPopulation = Math.max(...allMetrics.map(m => m.population));
+  const minimumPopulation = Math.min(...allMetrics.map(m => m.population));
+  
+  // Criterion 1: Fire Mastery must be unlocked
+  if (!lastDay.hasFireMastery) {
+    failures.push("Fire Mastery not unlocked");
+  }
+  
+  // Criterion 2: Fire Mastery must be unlocked in reasonable time
+  if (daysToFireMastery < 0) {
+    failures.push("Fire Mastery never unlocked");
+  } else if (daysToFireMastery > maxDays) {
+    failures.push(`Fire Mastery took too long (${daysToFireMastery} days, max ${maxDays})`);
+  } else if (daysToFireMastery > 1095) {  // 3 years target
+    // Warning but not failure if between 3-5 years
+    console.warn(`Fire Mastery took longer than target (${daysToFireMastery} days, target 1095)`);
+  }
+  
+  // Criterion 3: Population must be growing or stable (not declining at end)
+  // Check last 90 days for trend
+  const recentMetrics = allMetrics.slice(-90);
+  const recentGrowth = lastDay.population - recentMetrics[0].population;
+  if (recentGrowth < 0 && lastDay.population < startingPopulation * 0.9) {
+    failures.push(`Population declining (${recentGrowth} in last 90 days)`);
+  }
+  
+  // Criterion 4: Population must not go extinct
+  if (lastDay.population === 0) {
+    failures.push("Population extinct");
+  }
+  
+  // Criterion 5: Average health must remain viable
+  const avgHealthOverTime = allMetrics.reduce((sum, m) => sum + m.averageHealth, 0) / allMetrics.length;
+  if (avgHealthOverTime < 30) {
+    failures.push(`Average health too low over time (${avgHealthOverTime.toFixed(1)}/30 required)`);
+  }
+  
+  return {
+    isViable: failures.length === 0,
+    metrics: {
+      finalPopulation: lastDay.population,
+      daysToFireMastery: daysToFireMastery,
+      finalAverageHealth: lastDay.averageHealth,
+      peakPopulation: peakPopulation,
+      minimumPopulation: minimumPopulation,
+      fireMasteryUnlocked: lastDay.hasFireMastery,
+    },
+    failureReasons: failures,
+  };
+}
+```
+
+### Expected Outcomes for Viable Start
+
+**Scenario: Viable Starting Position (Default 80/20 allocation)**
+
+Starting Conditions:
+- Population: 20
+- Average health: 40
+- Food stockpile: 100
+- No starting technology
+- Food allocation: 80%
+
+Expected Daily Production (before Fire Mastery):
+- Food: ~13.4 units/day
+- Consumption: 40 units/day
+- Net food: -26.6 units/day (initially running deficit)
+
+**Week 1-2: Food Crisis**
+- Food stockpile depletes rapidly
+- Health begins declining due to insufficient food
+- Population enters starvation mode
+- Player would see red warning: "CRITICAL FOOD SHORTAGE"
+
+**Week 3-4: Critical Adjustment Needed**
+- With severe food deficit, population health drops quickly
+- Automatic adjustment or high food allocation (95%+) needed
+- If allocation increases to 95%:
+  - Food production: ~15.9 units/day
+  - Net food: -24.1 units/day (still deficit but slower decline)
+- Health stabilizes around 30-35
+- Science accumulation very slow: ~1-2 points/day
+
+**Month 2-6: Slow Stabilization**
+- As weaker individuals die, food per capita improves
+- Remaining population's health recovers to 40-50
+- Work capacity increases (more people at full 8 hours)
+- Food production slowly increases with better health
+- Science accumulation: ~2-3 points/day
+
+**Month 7-18: Gradual Progress**
+- Population fluctuates 16-22 (volatile but surviving)
+- Average health: 45-55
+- Science accumulation: 3-5 points/day when health improves
+- Total science: 60-90 points by month 12
+
+**Month 19-24: Fire Mastery Unlocked**
+- Population reaches 18-21
+- Average health: 50-60
+- Total science: 100 points (Fire Mastery unlocked around day 600-730)
+- After Fire Mastery: +15% food production helps stabilize further
+
+**Final Metrics (Day ~700):**
+- Population: 20 (stable from start)
+- Average health: 55
+- Days to Fire Mastery: ~700 days (~2 years)
+- Fire Mastery: Unlocked ✓
+- **VIABLE** ✓
+
+### Expected Outcomes for Non-Viable Start
+
+**Scenario: Non-Viable Starting Position (Harsh Terrain, Default 80/20)**
+
+Starting Conditions:
+- Population: 20
+- Average health: 40
+- Food stockpile: 100
+- No starting technology
+- Food allocation: 80%
+- **Terrain multiplier: 0.6** (harsh/desert terrain)
+
+Expected Daily Production:
+- Food: 13.4 × 0.6 = ~8.0 units/day (VERY LOW)
+- Consumption: 40 units/day
+- Net food: -32.0 units/day (severe deficit)
+
+**Week 1-4: Rapid Decline**
+- Food stockpile depleted in 3-4 days
+- Immediate starvation conditions
+- Health drops rapidly (8-10 points/day)
+- Population begins dying (highest mortality in elders, infants)
+
+**Month 2-3: Collapse**
+- Population drops to 12-15
+- Average health: 20-25 (critical)
+- No reproduction (health too low)
+- Science accumulation: 10-20 points total (far from goal)
+
+**Month 4-12: Extinction or Long Struggle**
+- Even with 100% food allocation:
+  - Max food: ~9.2 units/day for 12 people = 0.77 units/person
+  - Required: 2.0 units/person
+  - Severe starvation conditions persist
+- Population continues declining
+- Eventual extinction or barely surviving remnant (3-6 people)
+- If remnant survives, extremely slow science progress
+
+**Outcome Paths:**
+1. **Extinction (most likely):** Population reaches 0 before Fire Mastery
+2. **Perpetual stagnation:** 3-5 survivors, health 15-25, science < 50 points after 5 years
+
+**Final Metrics (if extinction avoided, Day 1825):**
+- Population: 5 (-15 from start)
+- Average health: 20
+- Science points: 45
+- Days to Fire Mastery: Never (5 year timeout)
+- Fire Mastery: Not unlocked
+- **NOT VIABLE** ✗
+- Failure reasons:
+  - "Fire Mastery never unlocked"
+  - "Fire Mastery took too long (1825 days, max 1825)"
+  - "Population declining (-15 in last 90 days)"
+  - "Average health too low over time (23/30 required)"
+
+---
+
+## Implementation Considerations
+
+### Production-Ready Implementation
+
+The minimal simulator is **not a throwaway validation tool** but production code that will be part of the final simulation engine:
+
+**Architecture:**
+- Core simulation logic goes into production codebase (`simulation/` or `src/simulator/`)
+- Reusable functions that will be used in the full game
+- Clean separation of concerns: state, logic, RNG
+- Proper error handling and logging
+
+**Unit Test Framework:**
+- Elaborate unit test suite that validates starting position viability
+- Multiple hardcoded random seeds (10-50 seeds) for reproducibility
+- Each seed tests the same starting conditions with different RNG outcomes
+- Tests ensure variety in outcomes while maintaining viability
+
+```typescript
+// Example unit test structure
+describe('Starting Position Viability', () => {
+  const VIABILITY_TEST_SEEDS = [
+    12345, 67890, 11111, 22222, 33333, 44444, 55555,
+    66666, 77777, 88888, 99999, 10101, 20202, 30303,
+    40404, 50505, 60606, 70707, 80808, 90909, // 20 seeds
+    // ... up to 50 seeds for thorough testing
+  ];
+  
+  test.each(VIABILITY_TEST_SEEDS)(
+    'Starting position should be viable with seed %d',
+    (seed) => {
+      const result = runSimulation({
+        seed,
+        startingConditions: DEFAULT_STARTING_CONDITIONS,
+      });
+      
+      expect(result.isViable).toBe(true);
+      expect(result.metrics.fireMasteryUnlocked).toBe(true);
+      expect(result.metrics.daysToFireMastery).toBeLessThan(1825);
+      expect(result.metrics.daysToFireMastery).toBeGreaterThan(365);
+    }
+  );
+  
+  test('Viability statistics across all seeds', () => {
+    const results = VIABILITY_TEST_SEEDS.map(seed => 
+      runSimulation({ seed, startingConditions: DEFAULT_STARTING_CONDITIONS })
+    );
+    
+    const viableCount = results.filter(r => r.isViable).length;
+    const avgDaysToFire = results
+      .filter(r => r.isViable)
+      .reduce((sum, r) => sum + r.metrics.daysToFireMastery, 0) / viableCount;
+    
+    // Most starting positions should be viable (60-90%)
+    expect(viableCount / results.length).toBeGreaterThan(0.6);
+    expect(viableCount / results.length).toBeLessThan(0.9);
+    
+    // Average time to Fire Mastery should be reasonable (2-3 years)
+    expect(avgDaysToFire).toBeGreaterThan(365 * 1.5);  // > 1.5 years
+    expect(avgDaysToFire).toBeLessThan(365 * 3.5);     // < 3.5 years
+  });
+});
+```
+
+### Deterministic Simulation with Seeded RNG
+
+```typescript
+class RandomGenerator {
+  private seed: number;
+  
+  constructor(seed: number) {
+    this.seed = seed;
+  }
+  
+  next(): number {
+    // Simple LCG (Linear Congruential Generator)
+    this.seed = (this.seed * 1103515245 + 12345) % 2147483648;
+    return this.seed / 2147483648;
+  }
+}
+
+// Usage in production code
+function runSimulation(config: SimulationConfig): ViabilityResult {
+  const rng = new RandomGenerator(config.seed);
+  // ... simulation logic using rng for all random decisions
+}
+```
+
+This approach:
+- Makes tests reproducible (same seed = same outcome)
+- Validates across multiple scenarios (different seeds)
+- Catches edge cases and balance issues
+- Provides ongoing validation as code evolves
+- Production code can use same RNG for deterministic multiplayer
+
+### Performance Targets
+
+The minimal simulator should be extremely fast:
+
+- **Target**: Simulate 1,825 days (5 years) in < 200ms
+- **Population**: Up to 50 humans (starting 20, variable growth)
+- **No I/O**: Pure in-memory computation
+- **No UI**: Headless simulation for testing
+
+This allows:
+- Rapid execution of 50-seed test suite (< 10 seconds total)
+- Fast validation during development
+- Quick testing of balance changes
+- Efficient map generation validation
+
+### Testing Strategy
+
+**Unit Tests (Individual Components):**
+- Each simulation step function (labor, production, health, mortality, reproduction)
+- Edge cases: zero food, zero population, extreme ages
+- Formula validation against design specifications
+- RNG determinism verification
+
+**Integration Tests (Full Simulation Runs):**
+- Multi-seed viability test with 10-50 hardcoded seeds
+- Each seed runs full simulation until Fire Mastery or failure
+- Tests verify:
+  - Viable starting positions (default conditions) succeed in 60-80% of seeds
+  - Non-viable starting positions (harsh terrain) fail consistently
+  - Fire Mastery unlock happens within reasonable timeframe (2-3 years typical)
+  - Population dynamics are realistic (growth, stability, or decline)
+  - Science accumulation progresses at expected rates
+
+**Statistical Validation Tests:**
+- Aggregate metrics across all seeds:
+  - Viability rate: 60-80% for balanced starts, 0-20% for harsh starts
+  - Average days to Fire Mastery: 600-900 days (1.6-2.5 years)
+  - Population variance: Some growth, some decline, showing randomness
+  - No deterministic outcomes (not all seeds identical)
+- Distribution analysis:
+  - Time to Fire Mastery should form reasonable distribution
+  - Final population should vary across runs
+  - Health trajectories should show different patterns
+
+**Regression Tests:**
+- Hardcoded seed tests serve as regression tests
+- Any code change that breaks viability for previously passing seeds is caught
+- Ongoing validation ensures balance is maintained as simulator evolves
+- Test suite grows with the simulator (Phase 2, 3, 4 add more test cases)
+
+---
+
+## Data Flow
+
+```
+Input: Simulation Config (seed + starting conditions)
+  ↓
+Initialize RNG with Seed
+  ↓
+Initialize Simulation State
+  - Create 20 humans with age/gender/health distribution (using RNG)
+  - Set starting food stockpile (100 units)
+  - Set starting science (0 points)
+  - No starting technology
+  - Set food allocation ratio (0.8 default)
+  ↓
+For Day 1 until (Fire Mastery OR Max Days OR Extinction):
+  ↓
+  Calculate Labor → Allocate Labor → Produce Resources
+  ↓
+  Consume Food → Update Health
+  ↓
+  Age Humans → Check Mortality (RNG) → Check Reproduction (RNG)
+  ↓
+  Check Tech Unlock → Check Failure Conditions → Record Metrics
+  ↓
+  If Fire Mastery Unlocked: Break (Success)
+  If Population = 0: Break (Extinction Failure)
+  If Day > Max Days (1825): Break (Timeout Failure)
+  ↓
+Next Day
+  ↓
+After Simulation Complete:
+  ↓
+Assess Viability
+  ↓
+Output: ViabilityResult
+  - isViable: true/false
+  - metrics: days to fire, population trajectory, health
+  - failureReasons: array of specific issues
+  ↓
+Store Result for Statistical Analysis (in test suite)
+```
+
+---
+
+## Success Metrics and Thresholds
+
+### Primary Success Criterion: Viability
+
+A starting position is **VIABLE** if all conditions are met:
+
+1. ✓ Fire Mastery is unlocked (100 science points reached)
+2. ✓ Fire Mastery unlocked within reasonable time (< 5 years, target 2-3 years)
+3. ✓ Population continues growing or remains stable (not perpetually declining)
+4. ✓ Population never goes extinct (> 0 humans at all times)
+5. ✓ Average health remains viable throughout (average > 30 over full simulation)
+
+### Secondary Metrics (For Analysis)
+
+These metrics help diagnose why a position is viable or not:
+
+**Population Metrics:**
+- Peak population (highest during 365 days)
+- Minimum population (lowest point)
+- Final population
+- Total births
+- Total deaths
+- Net growth rate
+
+**Health Metrics:**
+- Starting average health
+- Minimum average health (worst point)
+- Final average health
+- Health trajectory (improving/declining/stable)
+
+**Resource Metrics:**
+- Total food produced (365-day sum)
+- Total food consumed (365-day sum)
+- Minimum food stockpile (lowest point)
+- Final food stockpile
+- Average food per person over year
+
+**Science Metrics:**
+- Total science produced (365-day sum)
+- Science production rate (average per day)
+- Day of Fire Mastery unlock (if applicable)
+- Final science points
+
+**Efficiency Metrics:**
+- Work hours per capita (average)
+- Food production per work hour
+- Science production per work hour
+
+---
+
+## Example Simulation Output
+
+```json
+{
+  "simulationId": "test_viability_seed_12345",
+  "seed": 12345,
+  "startingConditions": {
+    "population": 20,
+    "averageHealth": 40,
+    "foodStockpile": 100,
+    "foodAllocationRatio": 0.8,
+    "terrainMultiplier": 1.0
+  },
+  "viabilityResult": {
+    "isViable": true,
+    "metrics": {
+      "finalPopulation": 22,
+      "daysToFireMastery": 687,
+      "finalAverageHealth": 56.2,
+      "peakPopulation": 24,
+      "minimumPopulation": 16,
+      "fireMasteryUnlocked": true
+    },
+    "failureReasons": []
+  },
+  "statistics": {
+    "totalDays": 687,
+    "totalBirths": 7,
+    "totalDeaths": 5,
+    "totalFoodProduced": 9234,
+    "totalFoodConsumed": 9156,
+    "averageHealthOverTime": 47.3,
+    "populationTrend": "growing"
+  },
+  "keyMilestones": {
+    "day1": {
+      "population": 20,
+      "averageHealth": 40,
+      "foodStockpile": 100,
+      "sciencePoints": 0
+    },
+    "day180": {
+      "population": 18,
+      "averageHealth": 43,
+      "foodStockpile": 45,
+      "sciencePoints": 32
+    },
+    "day365": {
+      "population": 19,
+      "averageHealth": 48,
+      "foodStockpile": 67,
+      "sciencePoints": 58
+    },
+    "day550": {
+      "population": 21,
+      "averageHealth": 52,
+      "foodStockpile": 89,
+      "sciencePoints": 89
+    },
+    "day687_fireMastery": {
+      "population": 22,
+      "averageHealth": 56.2,
+      "foodStockpile": 105,
+      "sciencePoints": 100,
+      "event": "Fire Mastery Unlocked!"
+    }
+  }
+}
+```
+
+---
+
+## Future Evolution Path
+
+This minimal simulator is designed to evolve into the full simulation system:
+
+### Phase 1: Minimal Simulator (This Document)
+- ✓ Health attribute fully implemented
+- ✓ Other attributes simplified/fixed
+- ✓ Basic food/science system
+- ✓ Simple reproduction and mortality
+- ✓ Single technology research (Fire Mastery)
+- ✓ No starting technology (primitive start)
+- ✓ Variable-length simulation (until tech unlock or failure)
+- ✓ Production-ready code with elaborate unit tests
+- ✓ 10-50 hardcoded seed tests for reproducibility
+
+### Phase 2: Core Simulator
+- ✓ All five attributes fully implemented
+- ✓ Dynamic shelter, safety, belonging calculations
+- ✓ Multiple technologies in tech tree (5-10 prehistoric techs)
+- ✓ Seasonal variation in food production
+- ✓ Individual decision-making and action priorities
+- ✓ Group influence and urgency multipliers
+- ✓ Longer simulation periods for multiple tech unlocks
+- ✓ Extended test suite with more seed scenarios
+
+### Phase 3: Full Simulator
+- ✓ Multiple civilizations
+- ✓ Terrain and map integration
+- ✓ Resource trading
+- ✓ Combat and conflict
+- ✓ Complex social relationships
+- ✓ Disease systems
+- ✓ Player interaction and policy setting
+
+### Phase 4: Production Simulator
+- ✓ Real-time progression (1 year per second)
+- ✓ Multiplayer support
+- ✓ UI visualization
+- ✓ Save/load game state
+- ✓ Performance optimization for 100+ concurrent games
+
+---
+
+## Validation Approach
+
+### How to Validate This Design
+
+Before implementing code, validate the design through spreadsheet modeling:
+
+1. **Create Spreadsheet Model:**
+   - Columns for each simulation step
+   - Rows for each day (1-365)
+   - Formulas matching the specifications
+
+2. **Test Scenarios:**
+   - Default conditions (80/20 food/science)
+   - Harsh terrain (0.6 multiplier)
+   - Optimal conditions (1.5 multiplier)
+   - Various food allocation ratios (60%, 70%, 80%, 90%, 95%, 100%)
+
+3. **Verify Balance:**
+   - Does default scenario produce viable result?
+   - Is there interesting tension in resource allocation?
+   - Are formulas producing expected value ranges?
+   - Do extreme scenarios behave reasonably?
+
+4. **Iterate Design:**
+   - Adjust formulas if outcomes are too predictable
+   - Tune constants if viability is too high/low
+   - Refine thresholds based on observed patterns
+
+5. **Document Expected Results:**
+   - Typical viable scenario trajectory
+   - Typical non-viable scenario trajectory
+   - Critical decision points and player choices
+
+---
+
+## Design Rationale
+
+### Why This Minimal Scope?
+
+**Goal**: Verify starting positions are viable, not build the full game.
+
+**What's Essential:**
+- ✓ Food system (survival depends on it)
+- ✓ Health attribute (links food to survival)
+- ✓ Science system (shows growth capability)
+- ✓ Reproduction/mortality (population dynamics)
+- ✓ One research goal (proves science works)
+
+**What's Not Essential (Yet):**
+- ✗ Complex attribute interactions
+- ✗ Full tech tree (just need proof of concept)
+- ✗ Shelter/safety calculations (fixed values work for viability check)
+- ✗ Individual personalities (population averages sufficient)
+- ✗ Terrain and geography (use simple multiplier)
+- ✗ Multiple civilizations (single civ proves mechanics)
+
+### Why These Success Criteria?
+
+**Population Survival (day 365):**
+- Proves starting position isn't immediately fatal
+- Basic viability threshold
+
+**Population Growth (+1):**
+- Proves reproduction mechanics work
+- Shows position can support expansion
+- Indicates sustainable conditions
+
+**Science Progress (50 points):**
+- Proves research mechanics work
+- Shows civilization can advance
+- Halfway to first tech demonstrates progress is possible
+
+**Health Threshold (30):**
+- Proves population isn't perpetually starving
+- Shows basic needs can be met
+- Indicates sustainable living conditions
+
+Together, these criteria ensure a starting position can support a living, growing, advancing civilization—the core promise of the game.
+
+---
+
+## Related Documents
+
+- **HUMAN_ATTRIBUTES.md**: Full specification for the five-attribute system (this minimal version simplifies)
+- **PREHISTORIC_TECH_TREE.md**: Full tech tree (this minimal version uses only 2 technologies)
+- **MAP_GENERATION.md**: Terrain generation system (this minimal version uses terrain multiplier only)
+- **0.0002creategame.md**: Game creation system (starting positions generated here will be validated)
+
+---
+
+## Conclusion
+
+This minimal simulator design provides the smallest possible production-ready implementation to verify that starting positions can support viable civilizations. By focusing exclusively on survival, sustained growth, and achieving the first technology milestone, the design proves the core mechanics work while avoiding unnecessary complexity.
+
+**Key Design Decisions:**
+
+1. **No free starting technology**: Players begin in truly primitive conditions, making early survival more challenging and Fire Mastery a meaningful achievement.
+
+2. **Production-ready code**: This is not throwaway validation code but the foundation of the actual simulation engine, ensuring effort invested here pays dividends throughout development.
+
+3. **Elaborate unit test framework**: Using 10-50 hardcoded random seeds creates a comprehensive regression test suite that validates balance and catches issues as the simulator evolves.
+
+4. **Variable simulation length**: Running until Fire Mastery is unlocked (or failure) rather than a fixed timeframe ensures the test validates actual achievement, not just survival.
+
+The success criteria ensure that any starting position passing this viability check can support:
+1. A population that survives long-term (not just short-term)
+2. Sustained population growth or stability (not perpetual decline)
+3. Technological achievement (can unlock first major technology)
+4. Reasonable progression (advancement happens in expected timeframe)
+5. Viable living conditions (health remains adequate throughout)
+
+This foundation will be extended in future phases to include the full attribute system, complete tech tree, complex individual behaviors, and all other gameplay elements—but the minimal simulator establishes production-quality code and testing practices that will endure throughout development, continually validating: **"Can a civilization survive, grow, and advance from this starting position?"**
+
+---
+
+**Document Version History:**
+- 0.0005 (2025-10-23): Initial design specification for minimal viability simulator
+- 0.0006 (2025-10-23): Revised based on design review feedback
+
+**Implementation Notes:**
+- This is a **design document only**
+- No code implementation should begin until this design is reviewed and approved
+- Implementation should be production-ready code, not throwaway validation tool
+- Unit tests with hardcoded seeds (10-50) should be part of implementation
+- Spreadsheet validation is recommended before coding
+- Design may be refined based on validation results
+
+**Implementation Approach:**
+1. Build core simulation logic as production code in `simulation/` or `src/simulator/`
+2. Create elaborate unit test suite with hardcoded seeds
+3. Each test runs full simulation until Fire Mastery or failure
+4. Statistical tests validate aggregate behavior across all seeds
+5. Test suite serves as ongoing regression tests as simulator evolves
