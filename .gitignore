@@ -27,6 +27,7 @@ test-results/
 
 # Direnv
 .direnv/
+.simciv-cleanup.sh
 
 # IDE
 .vscode/

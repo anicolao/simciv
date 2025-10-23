@@ -71,15 +71,13 @@
             echo "  Colima:   $(colima version 2>/dev/null || echo 'not running')"
             echo "  Docker:   $(docker --version 2>/dev/null || echo 'requires Colima')"
             echo ""
-            echo "Note: MongoDB runs in Colima on macOS."
+            echo "Note: When using direnv, MongoDB starts automatically in Colima."
+            echo "      It will stop when you leave the directory."
             echo ""
-            echo "To start Colima and MongoDB:"
-            echo "  1. colima start --cpu 2 --memory 4 --arch $(uname -m)"
-            echo "  2. docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
-            echo ""
-            echo "To stop:"
-            echo "  docker stop simciv-mongo && docker rm simciv-mongo"
-            echo "  colima stop"
+            echo "Manual controls (if needed):"
+            echo "  Start:  colima start && docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
+            echo "  Stop:   docker stop simciv-mongo && docker rm simciv-mongo"
+            echo "  Status: docker ps | grep simciv-mongo"
             '' else ''
             echo "  MongoDB:  $(mongod --version | head -n1)"
             ''}
@@ -96,10 +94,7 @@
             echo "  cd simulation && go test ./... - Run Go tests"
             echo ""
             ${if isDarwin then ''
-            echo "MongoDB (via Colima):"
-            echo "  Status: colima status"
-            echo "  Start:  colima start"
-            echo "  Stop:   colima stop"
+            echo "MongoDB is managed automatically by .envrc when using direnv."
             '' else ''
             echo "MongoDB:"
             echo "  Local:  mongod --dbpath ./data/db (create data/db directory first)"

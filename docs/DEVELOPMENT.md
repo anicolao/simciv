@@ -39,30 +39,45 @@ nix develop
 # - PORT=3000
 ```
 
-**Note for macOS users:** MongoDB has build issues in nixpkgs on macOS/Darwin, so the flake includes Colima and Docker instead. To run MongoDB:
+**Note for macOS users:** MongoDB has build issues in nixpkgs on macOS/Darwin, so the flake includes Colima and Docker instead.
+
+#### Using direnv (Recommended)
+
+If you have [direnv](https://direnv.net/) installed, the repository includes a `.envrc` file that will automatically:
+- Load the Nix environment when you enter the directory
+- Start Colima and MongoDB automatically (macOS only)
+- Stop MongoDB when you leave the directory
 
 ```bash
-# Start Colima VM (first time or after restart)
+# Allow direnv for this directory (first time only)
+direnv allow
+
+# Now when you cd into the directory, everything starts automatically
+cd simciv
+# 🚀 Starting Colima...
+# 🍃 Starting MongoDB container...
+# ✅ MongoDB started on localhost:27017
+
+# When you leave the directory, MongoDB stops automatically
+cd ..
+# 🧹 Stopping MongoDB container...
+# ✅ MongoDB stopped
+```
+
+#### Manual Setup (Without direnv)
+
+If you prefer not to use direnv or need to manually control services:
+
+```bash
+# Start Colima VM (macOS)
 colima start --cpu 2 --memory 4 --arch $(uname -m)
 
 # Run MongoDB in a container
 docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0
 
-# When done, you can stop MongoDB and Colima:
+# When done, stop MongoDB and Colima:
 docker stop simciv-mongo && docker rm simciv-mongo
 colima stop
-```
-
-#### Using direnv (Optional)
-
-If you have [direnv](https://direnv.net/) installed, the repository includes a `.envrc` file that will automatically load the Nix environment when you enter the directory:
-
-```bash
-# Allow direnv for this directory
-direnv allow
-
-# The environment will now load automatically when you cd into the directory
-cd simciv  # Environment loads automatically
 ```
 
 #### Customizing the Nix Environment
