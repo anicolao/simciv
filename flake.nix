@@ -16,6 +16,8 @@
 #
 # Note: MongoDB is excluded on macOS/Darwin due to build issues in nixpkgs.
 # macOS users get Colima and Docker installed to run MongoDB in a container.
+# The bin/mongo script automatically uses native MongoDB on Linux when available,
+# or falls back to Docker when native MongoDB is not in PATH.
 #
 # Environment variables are automatically set:
 #   - MONGO_URI=mongodb://localhost:27017
