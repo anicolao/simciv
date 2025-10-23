@@ -174,7 +174,7 @@ Level 0 represents the most fundamental survival technologies. Players must choo
 
 **Research Requirements**:
 - 5 population minimum
-- 80 research points (lower cost due to simplicity)
+- 50 research points (lower cost due to simplicity)
 - Requires mountainous, forested, or hilly terrain
 
 **Effects**:
@@ -304,7 +304,7 @@ Level 0 represents the most fundamental survival technologies. Players must choo
 
 ### Unlocking Level 1
 
-Players must research **at least 3 Level 0 technologies** before Level 1 technologies become available for research. This represents the accumulated knowledge necessary for more advanced innovations.
+Players must research **at least 2 Level 0 technologies** before Level 1 technologies become available for research. This represents the accumulated knowledge necessary for more advanced innovations.
 
 ### Core Philosophy
 
@@ -477,7 +477,7 @@ Level 1 technologies represent the Upper Paleolithic revolution in human capabil
 **Description**: Systematic passing of knowledge, stories, and customs through generations via spoken language.
 
 **Prerequisites**:
-- Any 3 Level 0 technologies
+- Any 2 Level 0 technologies
 
 **Research Requirements**:
 - 25 population minimum
@@ -560,7 +560,7 @@ Level 1 technologies represent the Upper Paleolithic revolution in human capabil
 
 ### Unlocking Level 2
 
-Players must research **at least 5 Level 1 technologies** before Level 2 technologies become available. This represents a critical mass of knowledge enabling the next stage of human development.
+Players must research **at least 3 Level 1 technologies** before Level 2 technologies become available. This represents a critical mass of knowledge enabling the next stage of human development.
 
 ### Core Philosophy
 
@@ -881,7 +881,7 @@ Level 2 technologies represent regional specialization and proto-civilization ca
 
 ### Unlocking Level 3
 
-Players must research **at least 7 Level 2 technologies** before Level 3 technologies become available. At this stage, civilizations are transitioning from prehistoric societies to early civilizations with specialized labor, complex social structures, and the foundations of recorded history.
+Players must research **at least 4 Level 2 technologies** before Level 3 technologies become available. At this stage, civilizations are transitioning from prehistoric societies to early civilizations with specialized labor, complex social structures, and the foundations of recorded history.
 
 ### Core Philosophy
 
@@ -1305,9 +1305,9 @@ Technologies have two types of prerequisites:
 
 **Tier Prerequisites Summary**:
 - Level 0: No prerequisites (all available at start)
-- Level 1: Any 3 Level 0 technologies
-- Level 2: Any 5 Level 1 technologies (implies 8 total: 3 Level 0 + 5 Level 1)
-- Level 3: Any 7 Level 2 technologies (implies 15 total technologies researched)
+- Level 1: Any 2 Level 0 technologies
+- Level 2: Any 3 Level 1 technologies (implies 5 total: 2 Level 0 + 3 Level 1)
+- Level 3: Any 4 Level 2 technologies (implies 7 total technologies researched)
 
 ### Resource Requirements
 
