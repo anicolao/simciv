@@ -28,6 +28,9 @@ test-results/
 .env.local
 .env.*.local
 
+# Direnv
+.direnv/
+
 # IDE
 .vscode/
 .idea/

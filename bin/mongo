@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# MongoDB management script for SimCiv
+# Works on both Linux and macOS
+
+set -e
+
+MONGO_CONTAINER_NAME="simciv-mongo"
+MONGO_PORT="27017"
+MONGO_IMAGE="mongo:7.0"
+
+# Detect OS
+IS_MACOS=false
+if [[ "$(uname)" == "Darwin" ]]; then
+	IS_MACOS=true
+fi
+
+# Check if MongoDB container is running
+mongodb_running() {
+	docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${MONGO_CONTAINER_NAME}$"
+}
+
+# Check if Colima is running (macOS only)
+colima_running() {
+	if [ "$IS_MACOS" = true ]; then
+		colima status 2>&1 | grep -iq 'running'
+	else
+		return 1
+	fi
+}
+
+# Start MongoDB
+start_mongodb() {
+	if mongodb_running; then
+		echo "✅ MongoDB is already running on localhost:${MONGO_PORT}"
+		return 0
+	fi
+
+	if [ "$IS_MACOS" = true ]; then
+		# On macOS, ensure Colima is running
+		if ! colima_running; then
+			echo "🚀 Starting Colima..."
+			colima start --cpu 2 --memory 4 --arch "$(uname -m)"
+		fi
+
+		# Wait for Docker to be ready
+		echo "⏳ Waiting for Docker to be ready..."
+		max_wait=30
+		count=0
+		while ! docker info >/dev/null 2>&1 && [ $count -lt $max_wait ]; do
+			sleep 1
+			count=$((count + 1))
+		done
+
+		if ! docker info >/dev/null 2>&1; then
+			echo "❌ Docker is not ready. Please check Colima status."
+			exit 1
+		fi
+	else
+		# On Linux, check if Docker is available
+		if ! command -v docker >/dev/null 2>&1; then
+			echo "❌ Docker is not installed"
+			exit 1
+		fi
+
+		if ! docker info >/dev/null 2>&1; then
+			echo "❌ Docker is not running. Please start Docker first."
+			exit 1
+		fi
+	fi
+
+	echo "🍃 Starting MongoDB container..."
+	docker run -d --name "${MONGO_CONTAINER_NAME}" -p "${MONGO_PORT}:27017" "${MONGO_IMAGE}" >/dev/null
+	echo "✅ MongoDB started on localhost:${MONGO_PORT}"
+}
+
+# Stop MongoDB
+stop_mongodb() {
+	if ! mongodb_running; then
+		echo "✅ MongoDB is not running"
+		return 0
+	fi
+
+	echo "🧹 Stopping MongoDB container..."
+	docker stop "${MONGO_CONTAINER_NAME}" >/dev/null 2>&1
+	docker rm "${MONGO_CONTAINER_NAME}" >/dev/null 2>&1
+	echo "✅ MongoDB stopped"
+}
+
+# Show MongoDB status
+status_mongodb() {
+	echo "MongoDB Status:"
+	echo "==============="
+
+	if [ "$IS_MACOS" = true ]; then
+		if colima_running; then
+			echo "Colima: ✅ Running"
+		else
+			echo "Colima: ❌ Not running"
+		fi
+	fi
+
+	if mongodb_running; then
+		echo "MongoDB: ✅ Running on localhost:${MONGO_PORT}"
+
+		# Show container info
+		echo ""
+		echo "Container Info:"
+		docker ps --filter "name=${MONGO_CONTAINER_NAME}" --format "  ID: {{.ID}}\n  Status: {{.Status}}\n  Ports: {{.Ports}}"
+	else
+		echo "MongoDB: ❌ Not running"
+	fi
+}
+
+# Main command dispatcher
+case "${1:-}" in
+start)
+	start_mongodb
+	;;
+stop)
+	stop_mongodb
+	;;
+status)
+	status_mongodb
+	;;
+restart)
+	stop_mongodb
+	start_mongodb
+	;;
+*)
+	echo "Usage: mongo {start|stop|status|restart}"
+	echo ""
+	echo "Commands:"
+	echo "  start    Start MongoDB container"
+	echo "  stop     Stop MongoDB container"
+	echo "  status   Show MongoDB status"
+	echo "  restart  Restart MongoDB container"
+	exit 1
+	;;
+esac

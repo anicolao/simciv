@@ -102,6 +102,25 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed documentation 
 
 ### Getting Started
 
+#### Using Nix (NixOS/nix-darwin)
+
+If you're on NixOS or macOS with nix-darwin, you can use Nix flakes to set up your development environment with all required tools:
+
+```bash
+# Enter the development shell with all tools installed
+nix develop
+
+# This will provide:
+# - Node.js 20.x
+# - Go 1.24.x
+# - MongoDB 7.0
+# - All other development dependencies
+
+# Then follow the standard setup steps below
+```
+
+#### Standard Setup
+
 To run SimCiv locally:
 
 ```bash
@@ -140,6 +159,7 @@ npm run test:e2e
 ```
 
 For more details:
+- [Development Environment Setup](docs/DEVELOPMENT.md)
 - [Authentication Documentation](docs/AUTHENTICATION.md)
 - [Game Creation Documentation](docs/GAME_CREATION.md)
 
