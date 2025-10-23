@@ -111,9 +111,6 @@ test.describe('Game Creation and Management', () => {
     // Click join button
     await gameCard2.locator('button:has-text("Join")').click();
 
-    // Wait a bit for the game to update
-    await page2.waitForTimeout(2000);
-
     // Verify game state changed to "Started"
     await expect(page2.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
 
@@ -145,7 +142,6 @@ test.describe('Game Creation and Management', () => {
     // Join the game
     const gameCard2 = page2.locator('.game-card').first();
     await gameCard2.locator('button:has-text("Join")').click();
-    await page2.waitForTimeout(2000);
 
     // Wait for game to start
     await expect(page2.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
@@ -160,11 +156,8 @@ test.describe('Game Creation and Management', () => {
     // Take screenshot showing initial year
     await page2.screenshot({ path: 'e2e-screenshots/game-time-initial.png', fullPage: true });
 
-    // Wait for time to progress (at least 5 seconds)
-    await page2.waitForTimeout(7000);
-
-    // Year should have changed (allow for polling delay)
-    await page2.waitForTimeout(3000); // Wait for next poll
+    // Wait for time to progress - wait for year to change from 5000 BC
+    await expect(yearValue).not.toContainText('5000 BC', { timeout: 10000 });
 
     // Take screenshot showing time progression
     await page2.screenshot({ path: 'e2e-screenshots/game-time-progressed.png', fullPage: true });
@@ -191,7 +184,9 @@ test.describe('Game Creation and Management', () => {
     await registerAndLogin(page2, alias2, password);
     await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
     await page2.locator('.game-card').first().locator('button:has-text("Join")').click();
-    await page2.waitForTimeout(2000);
+    
+    // Wait for game to start
+    await expect(page2.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
 
     // Third player tries to join
     const page3 = await context.newPage();
