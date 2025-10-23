@@ -142,9 +142,6 @@ test.describe('Map View E2E Tests', () => {
     // Wait for game details modal to appear
     await page.waitForSelector('.game-details');
     
-    // Take screenshot of game details with map
-    await page.screenshot({ path: 'e2e-screenshots/19-map-view-game-started.png' });
-    
     // Verify map section is visible
     const mapSection = await page.locator('.map-section');
     await expect(mapSection).toBeVisible();
@@ -152,6 +149,9 @@ test.describe('Map View E2E Tests', () => {
     // Verify map view component is rendered
     const mapView = await page.locator('.map-view');
     await expect(mapView).toBeVisible();
+    
+    // Take screenshot showing game details with map section
+    await page.screenshot({ path: 'e2e-screenshots/19-map-section-visible.png' });
     
     // Verify map grid is displayed
     const mapGrid = await page.locator('.map-grid');
@@ -171,8 +171,8 @@ test.describe('Map View E2E Tests', () => {
     const legendCount = await legendItems.count();
     expect(legendCount).toBeGreaterThan(0);
     
-    // Take final screenshot showing the map
-    await page.screenshot({ path: 'e2e-screenshots/20-map-view-with-tiles.png', fullPage: true });
+    // Take final screenshot showing the complete map with tiles and legend
+    await page.screenshot({ path: 'e2e-screenshots/20-map-view-complete.png', fullPage: true });
   });
 
   test('should show starting city marker on map', async ({ page, context }) => {
@@ -276,6 +276,9 @@ test.describe('Map View E2E Tests', () => {
     await page.click(`text=View`);
     await page.waitForSelector('.game-details');
     
+    // Wait for map to render
+    await page.waitForSelector('.map-section');
+    
     // Verify starting city marker is displayed
     const cityMarker = await page.locator('.city-marker');
     await expect(cityMarker).toBeVisible();
@@ -284,7 +287,8 @@ test.describe('Map View E2E Tests', () => {
     const markerText = await cityMarker.textContent();
     expect(markerText).toContain('⭐');
     
-    await page.screenshot({ path: 'e2e-screenshots/21-map-view-city-marker.png' });
+    // Take screenshot highlighting the starting city marker
+    await page.screenshot({ path: 'e2e-screenshots/21-map-starting-city-marker.png' });
   });
 
   test('should show resource markers on tiles with resources', async ({ page, context }) => {
@@ -396,6 +400,9 @@ test.describe('Map View E2E Tests', () => {
     await page.click(`text=View`);
     await page.waitForSelector('.game-details');
     
+    // Wait for map to render
+    await page.waitForSelector('.map-section');
+    
     // Verify resource markers are displayed
     const resourceMarkers = await page.locator('.resource-marker');
     const markerCount = await resourceMarkers.count();
@@ -406,7 +413,8 @@ test.describe('Map View E2E Tests', () => {
     const markerText = await firstMarker.textContent();
     expect(markerText).toMatch(/[A-Z]/); // Should contain a capital letter
     
-    await page.screenshot({ path: 'e2e-screenshots/22-map-view-resources.png' });
+    // Take screenshot showing resource markers on map tiles
+    await page.screenshot({ path: 'e2e-screenshots/22-map-resource-markers.png' });
   });
 
   test('should not show map for waiting games', async ({ page, context }) => {
@@ -461,6 +469,7 @@ test.describe('Map View E2E Tests', () => {
     const mapSection = await page.locator('.map-section');
     await expect(mapSection).not.toBeVisible();
     
-    await page.screenshot({ path: 'e2e-screenshots/23-map-view-waiting-game.png' });
+    // Take screenshot showing game details without map section for waiting game
+    await page.screenshot({ path: 'e2e-screenshots/23-game-waiting-no-map.png' });
   });
 });
