@@ -11,7 +11,7 @@ SimCiv aims to create a revolutionary strategy game that combines the best eleme
 **Goal**: Create a believable world where simulated humans act autonomously and intelligently.
 
 #### Simulated Human Behavior
-- **Individual Needs**: Each simulated human has basic needs (food, shelter, safety, belonging)
+- **Individual Needs**: Each simulated human has basic needs (health, shelter, safety, belonging, luxury)
 - **Goal-Driven Actions**: Citizens work toward personal and civilizational goals
 - **Responsive AI**: Population responds to player policies and environmental conditions
 - **Learning and Adaptation**: Citizens learn from success and failure, adapting strategies over time
