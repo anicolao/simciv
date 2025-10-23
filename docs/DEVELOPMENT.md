@@ -29,13 +29,19 @@ nix develop
 # This will automatically install and configure:
 # - Node.js 20.x
 # - Go (latest stable)
-# - MongoDB 7.0
+# - MongoDB 7.0 (NixOS only)
 # - Git and other development tools
 
 # The flake also sets up environment variables:
 # - MONGO_URI=mongodb://localhost:27017
 # - DB_NAME=simciv
 # - PORT=3000
+```
+
+**Note for macOS users:** MongoDB has build issues in nixpkgs on macOS/Darwin, so it's not included in the Nix environment. You'll need to run MongoDB using Docker:
+
+```bash
+docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0
 ```
 
 #### Using direnv (Optional)

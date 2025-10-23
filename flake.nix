@@ -10,8 +10,11 @@
 # The flake provides:
 #   - Node.js 20.x for server and client
 #   - Go (latest stable) for simulation engine  
-#   - MongoDB 7.0 for database
+#   - MongoDB 7.0 for database (NixOS only, use Docker on macOS)
 #   - Git for version control
+#
+# Note: MongoDB is excluded on macOS/Darwin due to build issues in nixpkgs.
+# macOS users should use Docker to run MongoDB.
 #
 # Environment variables are automatically set:
 #   - MONGO_URI=mongodb://localhost:27017
@@ -33,6 +36,11 @@
           inherit system;
           config.allowUnfree = true;
         };
+        
+        # MongoDB has build issues on macOS/Darwin, so we make it optional
+        # On Darwin, users should use Docker for MongoDB
+        isDarwin = pkgs.stdenv.isDarwin;
+        mongoPackage = if isDarwin then [ ] else [ pkgs.mongodb ];
       in
       {
         devShells.default = pkgs.mkShell {
@@ -44,9 +52,6 @@
             # If go_1_24 is not available, use go_1_23 or go (latest stable)
             go
             
-            # MongoDB
-            mongodb
-            
             # Development tools
             git
             
@@ -54,7 +59,7 @@
             # Uncomment if you prefer Docker over local MongoDB
             # docker
             # docker-compose
-          ];
+          ] ++ mongoPackage;
 
           shellHook = ''
             echo "🎮 Welcome to SimCiv development environment!"
@@ -63,7 +68,14 @@
             echo "  Node.js:  $(node --version)"
             echo "  npm:      $(npm --version)"
             echo "  Go:       $(go version | cut -d' ' -f3)"
+            ${if isDarwin then ''
+            echo ""
+            echo "Note: MongoDB is not included on macOS due to build issues."
+            echo "Please use Docker to run MongoDB:"
+            echo "  docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
+            '' else ''
             echo "  MongoDB:  $(mongod --version | head -n1)"
+            ''}
             echo ""
             echo "Quick start:"
             echo "  1. npm install          - Install Node.js dependencies"
@@ -76,8 +88,12 @@
             echo "  npm run test:e2e        - Run E2E tests"
             echo "  cd simulation && go test ./... - Run Go tests"
             echo ""
+            ${if isDarwin then ''
+            echo "MongoDB (Docker required on macOS):"
+            '' else ''
             echo "MongoDB:"
             echo "  Local:  mongod --dbpath ./data/db (create data/db directory first)"
+            ''}
             echo "  Docker: docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
             echo ""
           '';
