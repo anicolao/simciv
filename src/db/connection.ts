@@ -1,5 +1,5 @@
 import { MongoClient, Db, Collection } from 'mongodb';
-import { User, Session, Challenge, Game } from '../models/types';
+import { User, Session, Challenge, Game, MapTile, StartingPosition, MapMetadata } from '../models/types';
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -22,6 +22,14 @@ export async function connectToDatabase(uri: string, dbName: string): Promise<Db
   await db.collection<Game>('games').createIndex({ gameId: 1 }, { unique: true });
   await db.collection<Game>('games').createIndex({ state: 1 });
   await db.collection<Game>('games').createIndex({ createdAt: 1 });
+  
+  // Map-related indexes
+  await db.collection<MapTile>('mapTiles').createIndex({ gameId: 1, x: 1, y: 1 }, { unique: true });
+  await db.collection<MapTile>('mapTiles').createIndex({ gameId: 1 });
+  await db.collection<MapTile>('mapTiles').createIndex({ gameId: 1, visibleTo: 1 });
+  await db.collection<StartingPosition>('startingPositions').createIndex({ gameId: 1, playerId: 1 }, { unique: true });
+  await db.collection<StartingPosition>('startingPositions').createIndex({ gameId: 1 });
+  await db.collection<MapMetadata>('mapMetadata').createIndex({ gameId: 1 }, { unique: true });
 
   return db;
 }
@@ -47,6 +55,18 @@ export function getChallengesCollection(): Collection<Challenge> {
 
 export function getGamesCollection(): Collection<Game> {
   return getDatabase().collection<Game>('games');
+}
+
+export function getMapTilesCollection(): Collection<MapTile> {
+  return getDatabase().collection<MapTile>('mapTiles');
+}
+
+export function getStartingPositionsCollection(): Collection<StartingPosition> {
+  return getDatabase().collection<StartingPosition>('startingPositions');
+}
+
+export function getMapMetadataCollection(): Collection<MapMetadata> {
+  return getDatabase().collection<MapMetadata>('mapMetadata');
 }
 
 export async function closeDatabase(): Promise<void> {
