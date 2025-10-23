@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 	"time"
 
 	"github.com/anicolao/simciv/simulation/pkg/models"
@@ -195,8 +196,12 @@ func (g *Generator) calculateElevation(x, y int, circles []models.GreatCircle) i
 		}
 		distance := math.Abs(math.Asin(dotProduct))
 
-		// Apply Gaussian influence function with tighter spread
-		influence := circle.Weight * math.Exp(-(distance*distance)/(circle.Radius*circle.Radius*0.05))
+		// Use a smoother falloff function instead of tight Gaussian
+		// Influence decreases linearly within radius, then drops to zero
+		influence := 0.0
+		if distance < circle.Radius {
+			influence = circle.Weight * (1.0 - distance/circle.Radius)
+		}
 		totalElevation += influence * circle.HeightModifier
 	}
 
@@ -243,17 +248,8 @@ func (g *Generator) calculateSeaLevel(elevationGrid [][]int) int {
 		}
 	}
 
-	// Sort to find percentile
-	// Simple insertion sort for small arrays, would use better sort for production
-	for i := 1; i < len(elevations); i++ {
-		key := elevations[i]
-		j := i - 1
-		for j >= 0 && elevations[j] > key {
-			elevations[j+1] = elevations[j]
-			j--
-		}
-		elevations[j+1] = key
-	}
+	// Sort using Go's built-in sort (much faster than insertion sort)
+	sort.Ints(elevations)
 
 	// Use 35th percentile instead of median for more land
 	percentileIndex := len(elevations) * 35 / 100

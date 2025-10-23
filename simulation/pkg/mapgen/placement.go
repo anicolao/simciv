@@ -34,6 +34,7 @@ func (g *Generator) findStartingPositions(tiles []*models.MapTile, playerIDs []s
 
 	for playerIdx, playerID := range playerIDs {
 		var bestCandidate *candidateRegion
+		var bestCandidateIdx int
 		bestScore := -1.0
 
 		for idx, candidate := range candidates {
@@ -63,7 +64,7 @@ func (g *Generator) findStartingPositions(tiles []*models.MapTile, playerIDs []s
 			if combinedScore > bestScore {
 				bestScore = combinedScore
 				bestCandidate = candidate
-				usedCandidates[idx] = true
+				bestCandidateIdx = idx
 			}
 		}
 
@@ -72,10 +73,15 @@ func (g *Generator) findStartingPositions(tiles []*models.MapTile, playerIDs []s
 			for idx, candidate := range candidates {
 				if !usedCandidates[idx] {
 					bestCandidate = candidate
-					usedCandidates[idx] = true
+					bestCandidateIdx = idx
 					break
 				}
 			}
+		}
+
+		// Mark this candidate as used
+		if bestCandidate != nil {
+			usedCandidates[bestCandidateIdx] = true
 		}
 
 		// Create starting position
