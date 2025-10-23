@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Register from './lib/Register.svelte';
   import Login from './lib/Login.svelte';
+  import GameLobby from './lib/GameLobby.svelte';
   import { getSessionStatus, logout } from './utils/api';
   import { getSessionGuid } from './utils/storage';
 
@@ -57,9 +58,13 @@
 
   {#if isAuthenticated}
     <div class="authenticated">
-      <h2>Welcome!</h2>
-      <p>You are logged in as: <strong>{currentUser}</strong></p>
-      <button on:click={handleLogout}>Logout</button>
+      <div class="header">
+        <div class="user-info">
+          <h2>Welcome, {currentUser}!</h2>
+        </div>
+        <button on:click={handleLogout} class="logout-btn">Logout</button>
+      </div>
+      <GameLobby {currentUser} />
     </div>
   {:else}
     <div class="tabs">
@@ -156,26 +161,26 @@
   }
 
   .authenticated {
-    text-align: center;
-    padding: 40px 20px;
+    padding: 0;
   }
 
-  .authenticated h2 {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f5f5f5;
+    border-bottom: 2px solid #ddd;
+  }
+
+  .user-info h2 {
     color: #388e3c;
-    margin-bottom: 20px;
+    margin: 0;
+    font-size: 20px;
   }
 
-  .authenticated p {
-    font-size: 16px;
-    margin-bottom: 30px;
-  }
-
-  .authenticated strong {
-    color: #4CAF50;
-  }
-
-  .authenticated button {
-    padding: 10px 30px;
+  .logout-btn {
+    padding: 10px 20px;
     background: #f44336;
     color: white;
     border: none;
@@ -184,7 +189,7 @@
     font-size: 14px;
   }
 
-  .authenticated button:hover {
+  .logout-btn:hover {
     background: #d32f2f;
   }
 </style>

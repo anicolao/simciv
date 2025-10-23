@@ -71,7 +71,21 @@ SimCiv is designed around several core principles:
 
 ## Current Status
 
-SimCiv is currently in early development. 
+SimCiv is in active development with two major milestones completed.
+
+### Version 0.0002 - Game Creation System ✅
+
+The second implementation milestone is complete:
+
+- ✅ **Game Management**: Create, list, join, and view multiplayer games
+- ✅ **Lobby System**: Browse available games with real-time updates
+- ✅ **Auto-Start**: Games automatically start when player quota is met
+- ✅ **Time Progression**: 1 year per real second, starting at 5000 BC
+- ✅ **Go Simulation Engine**: Continuous tick processing for active games
+- ✅ **Svelte UI**: Interactive game lobby with create/join functionality
+- ✅ **Comprehensive Testing**: 50 passing tests (unit + integration)
+
+See [docs/GAME_CREATION.md](docs/GAME_CREATION.md) for detailed documentation and [0.0002creategame.md](0.0002creategame.md) for the complete design specification.
 
 ### Version 0.0001 - Authentication System ✅
 
@@ -88,37 +102,46 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed documentation 
 
 ### Getting Started
 
-To run the authentication system locally:
+To run SimCiv locally:
 
 ```bash
 # Install dependencies
 npm install
 
-# Build the client
-npm run build:client
+# Build the application
+npm run build
 
 # Start MongoDB (required)
-# Use Docker: docker run -d -p 27017:27017 mongo:latest
-# Or install locally
+docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0
 
 # Run development server
 npm run dev
 
+# In a separate terminal, start the Go simulation engine
+cd simulation
+go build -o simciv-sim main.go
+./simciv-sim
+
 # Access the application
 # Navigate to http://localhost:3000
+# Register/login, then create or join games!
 
 # Run tests
 npm test
 
 # Run tests with external MongoDB (if mongodb-memory-server has issues)
-# Start MongoDB: docker run -d --name test-mongo -p 27017:27017 mongo:7.0
 TEST_MONGO_URI="mongodb://localhost:27017" npm test
 
-# Run E2E tests (requires running server)
+# Run Go tests
+cd simulation && go test ./...
+
+# Run E2E tests (requires running server and simulation engine)
 npm run test:e2e
 ```
 
-For more details, see the [Authentication Documentation](docs/AUTHENTICATION.md).
+For more details:
+- [Authentication Documentation](docs/AUTHENTICATION.md)
+- [Game Creation Documentation](docs/GAME_CREATION.md)
 
 ### Next Steps
 
