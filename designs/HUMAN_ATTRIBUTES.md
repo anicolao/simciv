@@ -316,18 +316,48 @@ food_hours = total_work_hours * food_ratio
 science_hours = total_work_hours * science_ratio
 ```
 
-**Default Behavior (No Player Direction):**
-```
-Autonomous groups use threshold-based allocation:
+**Player-Set Allocation:**
 
-If (average_health < 40):
-  food_ratio = 90%  (survival mode)
-Else If (average_health < 60):
-  food_ratio = 70%  (cautious)
-Else If (average_health < 80):
-  food_ratio = 50%  (balanced)
-Else:
-  food_ratio = 30%  (prosperity focus on advancement)
+Players always set the food allocation ratio (default: 80%):
+```
+food_ratio = 80%  (default, player-adjustable 0-100%)
+science_ratio = 100% - food_ratio
+```
+
+**Population Feedback System:**
+
+The system provides feedback to help players understand food safety status:
+
+```
+Calculate population-wide food status:
+
+  food_per_person = total_food / population
+  food_required = 2.0 units/person
+  food_ratio_actual = food_per_person / food_required
+  
+  avg_health = average(all_humans.health)
+
+Feedback to Player:
+
+  If avg_health < 30 OR food_ratio_actual < 0.5:
+    Status: CRITICAL FOOD SHORTAGE
+    Message: "Population is starving. Increase food allocation immediately."
+    UI: Red warning indicator
+  
+  Else If avg_health < 50 OR food_ratio_actual < 0.8:
+    Status: FOOD SAFETY RISK
+    Message: "Food supply is inadequate. Consider increasing food allocation."
+    UI: Yellow warning indicator
+  
+  Else If avg_health > 80 AND food_ratio_actual > 1.5:
+    Status: FOOD ABUNDANCE
+    Message: "Surplus food available. You can reduce food allocation to advance science."
+    UI: Green positive indicator
+  
+  Else:
+    Status: ADEQUATE
+    Message: "Food supply is stable."
+    UI: Neutral indicator
 ```
 
 ### Food Acquisition System
@@ -425,21 +455,90 @@ Example progression:
 
 ## Behavioral Decision-Making Formulas
 
+### Group Influence and Urgency Multipliers
+
+Before individual humans make decisions, the group's collective state is evaluated to create urgency multipliers that influence individual behavior. This represents how the overall situation affects everyone's priorities.
+
+**Group State Evaluation:**
+
+```
+Calculate population-wide attribute averages:
+
+  avg_health = average(all_humans.health)
+  avg_shelter = average(all_humans.shelter)
+  avg_safety = average(all_humans.safety)
+  avg_belonging = average(all_humans.belonging)
+  avg_luxury = average(all_humans.luxury)
+```
+
+**Urgency Multipliers:**
+
+These multipliers are applied to individual action urgency scores to amplify or dampen certain behaviors based on group-level needs.
+
+```
+Health Urgency Multiplier (affects food gathering):
+  If avg_health < 30:
+    health_urgency_multiplier = 3.0 (crisis - everyone focuses on food)
+  Else If avg_health < 50:
+    health_urgency_multiplier = 1.5 (elevated concern)
+  Else If avg_health < 70:
+    health_urgency_multiplier = 1.0 (normal)
+  Else:
+    health_urgency_multiplier = 0.7 (abundance - less pressure)
+
+Safety Urgency Multiplier (affects defense actions):
+  If avg_safety < 30:
+    safety_urgency_multiplier = 2.5 (crisis - all hands to defense)
+  Else If avg_safety < 50:
+    safety_urgency_multiplier = 1.3 (heightened alert)
+  Else:
+    safety_urgency_multiplier = 1.0 (normal vigilance)
+
+Shelter Urgency Multiplier (affects shelter building):
+  If avg_shelter < 30 AND weather_severe:
+    shelter_urgency_multiplier = 2.0 (emergency construction)
+  Else If avg_shelter < 50:
+    shelter_urgency_multiplier = 1.2 (priority improvement)
+  Else:
+    shelter_urgency_multiplier = 1.0 (normal maintenance)
+
+Belonging Urgency Multiplier (affects social activities):
+  If avg_belonging < 40:
+    belonging_urgency_multiplier = 1.3 (morale crisis)
+  Else:
+    belonging_urgency_multiplier = 1.0 (stable)
+
+Luxury Urgency Multiplier (affects science/crafting):
+  If avg_health > 70 AND avg_safety > 60:
+    luxury_urgency_multiplier = 1.3 (conditions favor advancement)
+  Else If avg_health < 40 OR avg_safety < 40:
+    luxury_urgency_multiplier = 0.3 (survival takes priority)
+  Else:
+    luxury_urgency_multiplier = 1.0 (balanced)
+```
+
+**Application:**
+
+These multipliers are calculated once per simulation cycle and applied to all individuals' action urgency calculations, creating emergent group behavior while maintaining individual decision-making.
+
 ### Individual Action Priorities
 
-Each human evaluates their needs every simulation cycle and chooses actions based on attribute deficiencies and available options.
+Each human evaluates their needs every simulation cycle and chooses actions based on attribute deficiencies, available options, and group urgency multipliers.
 
 **Action Priority Calculation:**
 
 ```
 For each possible action (gathering food, seeking shelter, defending, socializing, etc.):
 
-  Calculate urgency score:
-    urgency = sum(attribute_deficiency * attribute_weight)
+  Calculate base urgency score:
+    base_urgency = sum(attribute_deficiency * attribute_weight)
   
   Where:
     attribute_deficiency = max(0, 50 - attribute_value) / 50
     attribute_weight varies by action type
+  
+  Apply group urgency multiplier:
+    final_urgency = base_urgency * action_urgency_multiplier
 
 Action Weights by Type:
 
@@ -449,6 +548,7 @@ Food Gathering Action:
   safety_weight = 0.1 (minor consideration)
   belonging_weight = 0.2 (group activity)
   luxury_weight = 0.0
+  urgency_multiplier = health_urgency_multiplier
 
 Defense Action:
   health_weight = 0.5
@@ -456,6 +556,7 @@ Defense Action:
   safety_weight = 4.0 (primary)
   belonging_weight = 1.0 (group defense)
   luxury_weight = 0.0
+  urgency_multiplier = safety_urgency_multiplier
 
 Shelter Building:
   health_weight = 0.3
@@ -463,6 +564,7 @@ Shelter Building:
   safety_weight = 0.5
   belonging_weight = 0.5
   luxury_weight = 0.2
+  urgency_multiplier = shelter_urgency_multiplier
 
 Social Activity:
   health_weight = 0.0
@@ -470,6 +572,7 @@ Social Activity:
   safety_weight = 0.0
   belonging_weight = 3.0 (primary)
   luxury_weight = 1.0
+  urgency_multiplier = belonging_urgency_multiplier
 
 Science/Tool-making:
   health_weight = 0.1
@@ -477,60 +580,24 @@ Science/Tool-making:
   safety_weight = 0.2
   belonging_weight = 0.3
   luxury_weight = 2.0 (primary)
+  urgency_multiplier = luxury_urgency_multiplier
 ```
 
 **Decision Algorithm:**
 
 ```
 Each simulation hour:
-  1. Calculate urgency score for each available action
-  2. Apply situational modifiers:
+  1. Calculate base urgency score for each available action
+  2. Apply group urgency multiplier for that action type
+  3. Apply situational modifiers:
      - Cannot gather food if no food sources nearby (* 0.0)
      - Cannot build shelter without materials (* 0.5 or 0.0)
      - Defense only if threats present (* 0.0 if no threats)
      - Science only if basic needs met (* 0.0 if health < 30)
-  3. Add random variation (±10%) to avoid deterministic behavior
-  4. Select action with highest urgency score
-  5. Execute action for 1 hour (or until interrupted)
-  6. Update attributes based on action results
-```
-
-### Group-Level Decision-Making
-
-Beyond individual actions, groups make collective decisions affecting resource allocation:
-
-**Collective Priorities:**
-
-```
-Group evaluates population-wide attribute averages:
-
-  avg_health = average(all_humans.health)
-  avg_shelter = average(all_humans.shelter)
-  avg_safety = average(all_humans.safety)
-  avg_belonging = average(all_humans.belonging)
-  avg_luxury = average(all_humans.luxury)
-
-Critical Thresholds:
-  If avg_health < 30:
-    → Emergency food gathering (90% labor to food)
-    → Reduce all other activities
-  
-  If avg_safety < 30:
-    → Emergency defense posture
-    → 50% of able-bodied to defense/weapons
-  
-  If avg_shelter < 30 AND weather_severe:
-    → Emergency shelter building
-    → 40% of labor to shelter construction
-
-Normal Operations:
-  If all attributes > 40:
-    → Follow player-set allocation ratio
-    → Balance between food and science per strategy
-  
-  If any attribute < 40:
-    → Increase allocation to address deficiency
-    → Temporarily reduce science investment if needed
+  4. Add random variation (±10%) to avoid deterministic behavior
+  5. Select action with highest final urgency score
+  6. Execute action for 1 hour (or until interrupted)
+  7. Update attributes based on action results
 ```
 
 ---
@@ -669,28 +736,34 @@ Typical ranges:
 - Average health: 30 (critical)
 - Food supply: 0.5 units per person per day
 - Population: 40 humans
+- Player food allocation: 80% (default)
 
 **Behavioral Response:**
 
 ```
-Individual Actions:
-  - 95% of population attempts food gathering (high urgency)
+Group Influences:
+  - avg_health = 30 → health_urgency_multiplier = 3.0 (crisis)
+  - System feedback: "CRITICAL FOOD SHORTAGE - Population is starving"
+
+Individual Actions (influenced by 3.0x food urgency multiplier):
+  - 95% of population attempts food gathering (urgency massively amplified)
   - 5% maintain minimal defense (safety urgency still present)
-  - 0% engage in science/tool-making (luxury at bottom priority)
+  - 0% engage in science/tool-making (luxury urgency suppressed to 0.3x)
   - Social activities minimal (belonging sacrificed for survival)
 
-Group Decision:
-  - food_ratio = 90% (emergency allocation)
-  - All non-essential activities suspended
-  - Defensive structures abandoned if no immediate threat
+Player Action:
+  - Receives red warning indicator
+  - Recommended to increase food_ratio to 95%+ if not already
+  - May adjust allocation based on feedback
 
 Outcomes after 30 days:
-  If food production increases to 1.5 units/person:
+  If player maintains high food allocation and production increases to 1.5 units/person:
     - health increases to 45 (stabilizing)
+    - health_urgency_multiplier drops to 1.5
     - mortality rate drops from 20%/month to 10%/month
     - Can begin considering other needs
   
-  If food production stays at 0.5 units/person:
+  If player doesn't adjust or production stays at 0.5 units/person:
     - health declines to 20 (critical)
     - 30-40% mortality over 30 days
     - Population collapse likely
@@ -703,31 +776,38 @@ Outcomes after 30 days:
 - Average health: 55 (adequate food)
 - Predator presence: 3 large predators nearby
 - Weapons: None (stone age)
+- Player food allocation: 80%
 
 **Behavioral Response:**
 
 ```
-Individual Actions:
-  - 40% prioritize weapon-making (high safety urgency)
-  - 40% continue food gathering (health maintenance)
+Group Influences:
+  - avg_safety = 25 → safety_urgency_multiplier = 2.5 (crisis)
+  - avg_health = 55 → health_urgency_multiplier = 1.0 (normal)
+  - System does not provide food warnings (health adequate)
+
+Individual Actions (influenced by 2.5x safety urgency multiplier):
+  - 40% prioritize weapon-making and defense (urgency amplified)
+  - 40% continue food gathering (normal urgency)
   - 15% focus on defensive positions (group safety)
   - 5% maintain social cohesion (belonging)
 
-Group Decision:
-  - Temporarily reduce food_ratio to 60% (from 70%)
-  - Allocate 40% to weapons/defense (split from science)
-  - Accelerate stone tool development for weapons
+Player Awareness:
+  - No automatic food warnings (health stable)
+  - May notice population focusing on defense through UI
+  - Can adjust food_ratio down if desired to allocate more to science/weapons
 
 Outcomes after 14 days:
   With basic weapons developed:
     - safety increases to 45 (threat manageable)
     - 2-3 predators killed or driven off
-    - Can return to normal food/science balance
+    - safety_urgency_multiplier returns to 1.0 (normal)
+    - Population can return to normal activities
   
   Without weapons (if science too slow):
     - safety remains at 25
     - 5-10% population lost to predator attacks
-    - Continued defensive posture necessary
+    - Continued high safety_urgency_multiplier (2.5x)
 ```
 
 ### Scenario 3: Prosperity and Advancement
@@ -739,21 +819,28 @@ Outcomes after 14 days:
 - Average belonging: 80 (strong community)
 - Population: 80 humans
 - Technology: Stone tools, fire control
+- Player food allocation: 70%
 
 **Behavioral Response:**
 
 ```
-Individual Actions:
-  - 30% food gathering (maintenance level)
-  - 40% science/tool-making (high luxury interest)
+Group Influences:
+  - avg_health = 75 → health_urgency_multiplier = 0.7 (abundance)
+  - avg_safety = 65 → safety_urgency_multiplier = 1.0 (normal)
+  - avg_health > 70 AND avg_safety > 60 → luxury_urgency_multiplier = 1.3 (favor advancement)
+  - System feedback: "FOOD ABUNDANCE - You can reduce food allocation to advance science"
+
+Individual Actions (influenced by 1.3x luxury urgency, 0.7x food urgency):
+  - 30% food gathering (reduced urgency, maintenance level)
+  - 40% science/tool-making (amplified urgency for advancement)
   - 15% social/cultural activities (belonging abundant)
   - 10% craft luxury items (art, decorations)
   - 5% teaching/knowledge transfer
 
-Group Decision:
-  - food_ratio = 35% (minimal for maintenance)
-  - science_ratio = 65% (maximize advancement)
-  - Focus on cultural technologies
+Player Action:
+  - Receives green positive indicator
+  - Can reduce food_ratio to 50-60% to maximize science
+  - Adjusts to food_ratio = 50%, science_ratio = 50%
 
 Outcomes after 60 days:
   Technology unlocked:
@@ -763,7 +850,7 @@ Outcomes after 60 days:
   
   Attribute changes:
     - luxury increases from 30 to 50 (better quality of life)
-    - health stable at 75 (food adequate)
+    - health stable at 75 (food adequate even at 50% allocation)
     - Population growth +20% (good conditions)
   
   Strategic position:
@@ -779,25 +866,32 @@ Outcomes after 60 days:
 - All other attributes: 40-50 (adequate but not comfortable)
 - Population: 50 humans
 - Resources: Moderate, seasonal variation
+- Player food allocation: 80% (default)
 
 **Behavioral Response:**
 
 ```
-Individual Actions:
-  - 50% food gathering (equal priority with health at threshold)
+Group Influences:
+  - avg_health = 50 → health_urgency_multiplier = 1.0 (normal)
+  - All attributes in 40-50 range → all multipliers near 1.0 (balanced)
+  - System feedback: "ADEQUATE - Food supply is stable"
+
+Individual Actions (all urgencies near baseline):
+  - 50% food gathering (balanced priority with health at threshold)
   - 30% science/crafting (moderate advancement)
   - 10% shelter maintenance
   - 5% defense
   - 5% social activities
 
-Group Decision:
-  - food_ratio = 55% (slightly favor food for stability)
-  - science_ratio = 45% (maintain steady progress)
-  - Adaptive strategy: increase food in lean seasons
+Player Strategy:
+  - Maintains default 80% food allocation
+  - Receives neutral feedback indicator
+  - May adjust slightly based on seasonal variations observed
 
 Outcomes after 90 days:
   Resource cycling:
     - Health fluctuates 45-60 with seasons
+    - health_urgency_multiplier varies 1.0-1.5 with seasons
     - Science progresses steadily but slowly
     - Population stable (births ≈ deaths)
   
@@ -809,6 +903,7 @@ Outcomes after 90 days:
     - Sustainable but not thriving
     - Vulnerable to shocks (disaster, attack)
     - Needs breakthrough to advance to next level
+    - Player could optimize allocation for faster progress
 ```
 
 ---
@@ -915,29 +1010,39 @@ interface CivilizationResources {
      - Update belonging (social interactions)
      - Update luxury (tech level, surplus)
 
-5. Process Individual Decisions:
+5. Calculate Group Influences:
+   - Calculate population-wide attribute averages
+   - Compute urgency multipliers based on group state:
+     * health_urgency_multiplier (food gathering priority)
+     * safety_urgency_multiplier (defense priority)
+     * shelter_urgency_multiplier (shelter building priority)
+     * belonging_urgency_multiplier (social activity priority)
+     * luxury_urgency_multiplier (science advancement priority)
+   - These multipliers influence all individual decisions this cycle
+
+6. Process Individual Decisions:
    - Each human evaluates action priorities
+   - Apply group urgency multipliers to action scores
    - Execute chosen actions
    - Update current activity
 
-6. Process Life Events:
+7. Process Life Events:
    - Check fertility and conception
    - Progress pregnancies
    - Check mortality (age, health, environment)
    - Process births and deaths
 
-7. Update Group State:
+8. Update Group State:
    - Recalculate population statistics
    - Update averages for all attributes
-   - Check for group-level decisions
-   - Adjust allocation ratios if needed
+   - Generate feedback for player (food status, warnings)
 
-8. Technology Progression:
+9. Technology Progression:
    - Check if tech unlocked (science points threshold)
    - Apply tech bonuses to relevant systems
    - Unlock new possibilities
 
-9. Save State:
+10. Save State:
    - Update database with all changes
    - Record event log for UI
    - Prepare state for next cycle
