@@ -1,6 +1,6 @@
 # Testing Instructions for GitHub Copilot
 
-This document provides instructions for running tests in the SimCiv project.
+This document provides complete instructions for running all tests in the SimCiv project, based on proven workflows from prior completed PRs.
 
 ## Test Types
 
@@ -8,6 +8,31 @@ The project has three types of tests:
 1. **Go Unit Tests** - Test the simulation engine and map generation logic
 2. **TypeScript Integration Tests** - Test the API endpoints and database interactions
 3. **Playwright E2E Tests** - Test the full user interface and workflows
+
+## MongoDB Setup for Tests
+
+MongoDB is required for integration tests and e2e tests. Use the `bin/mongo` script that manages MongoDB in Docker:
+
+```bash
+# Get the mongo management script from main branch
+git show main:bin/mongo > /tmp/mongo-script.sh
+chmod +x /tmp/mongo-script.sh
+
+# Start MongoDB in Docker container
+/tmp/mongo-script.sh start
+
+# Check status
+/tmp/mongo-script.sh status
+
+# Stop when done
+/tmp/mongo-script.sh stop
+```
+
+**What this script does:**
+- Starts a MongoDB 7.0 Docker container named `simciv-mongo`
+- Exposes it on `localhost:27017`
+- Works on both Linux and macOS (using Colima on macOS)
+- Automatically handles Docker availability checks
 
 ## Running Go Unit Tests
 
@@ -38,25 +63,26 @@ go test ./pkg/models -v
 
 ## Running TypeScript Integration Tests
 
-TypeScript integration tests require MongoDB to be running. There are two options:
+TypeScript integration tests require MongoDB to be running.
 
-### Option 1: Use External MongoDB (Recommended)
-
-If MongoDB is running on localhost:
+### Recommended Approach: Use External MongoDB
 
 ```bash
+# Start MongoDB first (see MongoDB Setup section above)
+/tmp/mongo-script.sh start
+
+# Run integration tests
 TEST_MONGO_URI="mongodb://localhost:27017" npm test
 ```
 
-### Option 2: Use MongoDB Memory Server
-
-The tests will attempt to use `mongodb-memory-server` by default if `TEST_MONGO_URI` is not set:
+### Alternative: Use MongoDB Memory Server
 
 ```bash
+# This is slower and may have download issues in some environments
 npm test
 ```
 
-**Note:** MongoDB Memory Server may have download issues in some environments. If tests timeout or fail with download errors, use Option 1 with an external MongoDB instance.
+**Note:** MongoDB Memory Server may timeout or fail with download errors in CI environments. The external MongoDB approach is more reliable.
 
 **Expected Results:**
 - Integration tests for map API endpoints should pass
@@ -65,153 +91,242 @@ npm test
 
 ## Running Playwright E2E Tests
 
-E2E tests require both the server and simulation to be running.
+**IMPORTANT:** E2E tests generate screenshot PNG files that MUST be committed to the repository. Screenshots document the user workflow and validate UI layout.
 
-### Setup
+### Complete E2E Test Workflow
 
-1. Start MongoDB:
+This is the proven workflow from prior PRs (#9, #11, #14):
+
+#### 1. Start MongoDB
+
 ```bash
-mongod --dbpath /path/to/data
+# Get script from main branch (if not already done)
+git show main:bin/mongo > /tmp/mongo-script.sh
+chmod +x /tmp/mongo-script.sh
+
+# Start MongoDB in Docker
+/tmp/mongo-script.sh start
+
+# Verify it's running
+/tmp/mongo-script.sh status
 ```
 
-2. Start the simulation engine:
+#### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+#### 3. Build the Project
+
+```bash
+npm run build
+```
+
+This compiles TypeScript and builds the Svelte client.
+
+#### 4. Start the Simulation Engine
+
 ```bash
 cd simulation
-./simulation
+go build -o simulation
+./simulation &
+SIMULATION_PID=$!
+cd ..
 ```
 
-3. Start the web server:
+The simulation engine runs in the background and processes game ticks.
+
+#### 5. Start the Web Server
+
 ```bash
-npm start
+npm start &
+SERVER_PID=$!
 ```
 
-### Run Tests
+#### 6. Wait for Server to Be Ready
 
-In a new terminal:
+```bash
+sleep 5
+curl -s http://localhost:3000 > /dev/null && echo "✅ Server ready" || echo "❌ Server not ready"
+```
+
+#### 7. Install Playwright Browsers (First Time Only)
+
+```bash
+npx playwright install chromium --with-deps
+```
+
+**Note:** Playwright browser installation downloads Chromium and system dependencies. This may fail in some CI environments due to:
+- Network connectivity issues
+- Missing system packages
+- Disk space limitations
+
+If browser installation fails, e2e tests cannot run and screenshots cannot be generated.
+
+#### 8. Run the E2E Tests
 
 ```bash
 npm run test:e2e
 ```
 
-To run specific test files:
+This runs all e2e tests in the `e2e/` directory. Tests will:
+- Launch Chromium browser
+- Navigate through user workflows (auth, game creation, map viewing)
+- Capture screenshots at key UI states
+- Save screenshots to `e2e-screenshots/` directory
+
+#### 9. Verify and Commit Generated Screenshots
 
 ```bash
+# Check that new screenshots were generated
+ls -la e2e-screenshots/*.png
+
+# View git status to see new screenshots
+git status
+
+# Stage and commit all screenshots
+git add e2e-screenshots/*.png
+git add e2e-screenshots/README.md
+```
+
+**CRITICAL:** Screenshots MUST be committed. They serve as:
+- Visual documentation of user workflows
+- Regression test baselines for UI changes
+- Evidence that e2e tests were successfully run
+
+#### 10. Cleanup (Stop Services)
+
+```bash
+# Stop server and simulation
+kill $SERVER_PID $SIMULATION_PID
+
+# Stop MongoDB
+/tmp/mongo-script.sh stop
+```
+
+### Running Specific Test Files
+
+```bash
+# Run only authentication tests
+npx playwright test e2e/auth.spec.ts
+
+# Run only game creation tests
+npx playwright test e2e/game-creation.spec.ts  
+
+# Run only map view tests
 npx playwright test e2e/map-view.spec.ts
 ```
 
-To run with UI mode (interactive):
+### Debugging E2E Test Failures
 
+If tests fail:
+
+1. **Check that all services are running:**
 ```bash
-npx playwright test --ui
+# MongoDB should be running
+/tmp/mongo-script.sh status
+
+# Server should be accessible
+curl http://localhost:3000
+
+# Simulation should have log output
+# Check wherever you're logging simulation output
 ```
 
-**Expected Results:**
-- E2E tests should pass with screenshots captured in `e2e-screenshots/`
-- Map view tests verify that maps are displayed correctly in the browser
-- Tests verify starting city markers, resource markers, and terrain rendering
+2. **Run tests in headed mode to see the browser:**
+```bash
+npx playwright test --headed
+```
 
-## Test Coverage
+3. **Check Playwright logs for errors:**
+```bash
+npx playwright test --debug
+```
 
-### Go Tests
+4. **Verify Chromium is installed:**
+```bash
+npx playwright  --version
+ls -la ~/.cache/ms-playwright/
+```
 
-**Map Generation (`simulation/pkg/mapgen/generator_test.go`)**
-- `TestNewGenerator` - Verifies map dimensions based on player count
-- `TestGenerateMap_Basic` - Tests basic map generation succeeds
-- `TestGenerateMap_Deterministic` - Verifies same seed produces same map
-- `TestGenerateMap_TerrainVariety` - Checks for diverse terrain types
-- `TestGenerateMap_ResourceDistribution` - Verifies resources are placed
-- `TestGenerateMap_StartingPositions` - Tests player placement algorithm
-- `TestGenerateMap_TileVisibility` - Verifies visibility tracking
+## Test Coverage Summary
 
-**Engine (`simulation/pkg/engine/engine_test.go`)**
-- `TestGameEngine_ProcessTick` - Tests game tick processing
-- `TestGameEngine_SkipWaitingGames` - Verifies waiting games don't tick
-- `TestGameEngine_MultipleGames` - Tests handling multiple games
-- `TestGameEngine_YearProgression` - Tests time advancement
-- `TestGameEngine_TickTiming` - Tests tick timing logic
-- `TestGameEngine_MapGenerationOnFirstTick` - Verifies map generates on game start
-- `TestGameEngine_MapGenerationOnlyOnFirstTick` - Verifies map only generates once
+### Go Unit Tests (simulation/pkg/)
+- **mapgen/generator_test.go** (7 tests)
+  - Map generation with different player counts
+  - Deterministic generation with same seed
+  - Terrain variety and distribution
+  - Resource distribution
+  - Player starting position placement and spacing
+  - Tile visibility
 
-### TypeScript Integration Tests
+- **engine/engine_test.go** (7 tests)
+  - Game tick processing
+  - Map generation on first tick when game starts
+  - Game state transitions
+  - Time progression
 
-**Map API (`src/__tests__/integration/map.test.ts`)**
-- Tests for `GET /api/map/:gameId/metadata`
-  - Returns metadata for authenticated users
-  - Returns 401 for unauthenticated users
-  - Returns 404 for non-existent games
-- Tests for `GET /api/map/:gameId/tiles`
-  - Returns visible tiles for authenticated users
-  - Returns 401 for unauthenticated users
-  - Returns empty array when player has no visible tiles
-- Tests for `GET /api/map/:gameId/starting-position`
-  - Returns starting position for authenticated users
-  - Returns 401 for unauthenticated users
-  - Returns 404 when player has no starting position
+- **models/** (4 tests)
+  - Data model validation
 
-### Playwright E2E Tests
+### TypeScript Integration Tests (src/__tests__/integration/)
+- **map.test.ts** (9 tests)
+  - GET /api/map/:gameId/metadata endpoint
+  - GET /api/map/:gameId/tiles endpoint with visibility filtering
+  - GET /api/map/:gameId/starting-position endpoint
+  - Authentication and authorization checks
+  - Error handling (401, 404 responses)
 
-**Map View (`e2e/map-view.spec.ts`)**
-- `should display map when game is started` - Verifies map renders in browser
-- `should show starting city marker on map` - Tests city marker display
-- `should show resource markers on tiles with resources` - Tests resource indicators
-- `should not show map for waiting games` - Verifies map only shows for started games
+### Playwright E2E Tests (e2e/)
+- **auth.spec.ts** (multiple tests)
+  - User registration workflow
+  - User login workflow
+  - Session management
+  - Error handling
+  - Screenshots: 01-08
+
+- **game-creation.spec.ts** (multiple tests)
+  - Create new game
+  - Join existing game
+  - Start game
+  - Game time progression
+  - Game details modal
+  - Screenshots: 09-18
+
+- **map-view.spec.ts** (4 tests)
+  - Map display in started games
+  - Starting city marker visibility
+  - Resource markers on tiles
+  - Conditional rendering (no map when game waiting)
+  - Screenshots: 19-23
 
 ## Troubleshooting
 
-### MongoDB Memory Server Issues
+### "Cannot find module 'mongodb'" or similar errors
+Run `npm install` to install all dependencies.
 
-If you see errors like:
-```
-DownloadError: Download failed for url "https://fastdl.mongodb.org/..."
-```
+### "MongoDB connection refused"
+Start MongoDB using the mongo script: `/tmp/mongo-script.sh start`
 
-Use external MongoDB instead:
-```bash
-TEST_MONGO_URI="mongodb://localhost:27017" npm test
-```
+### "Playwright browser not installed"
+Run `npx playwright install chromium --with-deps`
 
-### E2E Test Timeouts
+### "Browser download failed"
+This is a known issue in some CI environments. Playwright may not be able to download browsers due to network restrictions or missing dependencies. If this occurs:
+- Try the installation command again
+- Check internet connectivity
+- Verify disk space availability  
+- Check system dependencies are installed
 
-If E2E tests timeout:
-1. Verify MongoDB is running
-2. Verify the simulation engine is running
-3. Verify the web server is running on port 3000
-4. Check that no other process is using port 3000
+### "Tests timeout waiting for server"
+- Verify server is running: `curl http://localhost:3000`
+- Check server logs for errors
+- Ensure MongoDB is running
+- Ensure simulation engine is running
 
-### Go Test Failures
-
-If Go tests fail:
-1. Ensure Go 1.21+ is installed
-2. Run `go mod tidy` to update dependencies
-3. Check that the simulation code compiles: `go build`
-
-## Test Maintenance
-
-When adding new features:
-
-1. **Add Go unit tests** for new simulation logic in `simulation/pkg/*/`
-2. **Add TypeScript integration tests** for new API endpoints in `src/__tests__/integration/`
-3. **Add E2E tests** for new UI features in `e2e/`
-4. **Update this document** if new test types or procedures are added
-
-## Continuous Integration
-
-Tests should be run automatically in CI/CD pipelines:
-
-```yaml
-# Example GitHub Actions workflow
-- name: Run Go tests
-  run: cd simulation && go test ./...
-
-- name: Run TypeScript tests
-  run: TEST_MONGO_URI=${{ secrets.MONGO_URI }} npm test
-
-- name: Run E2E tests
-  run: npm run test:e2e
-```
-
-Always ensure:
-- All unit tests pass before merging
-- Integration tests pass with external MongoDB
-- E2E tests pass with screenshots captured
-- No tests are skipped or disabled without justification
+### "Screenshots not generated"
+- Verify e2e tests completed successfully
+- Check `e2e-screenshots/` directory exists
+- Verify Playwright browser is installed
+- Run tests with `--debug` flag to see detailed output
