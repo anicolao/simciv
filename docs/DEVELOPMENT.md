@@ -43,41 +43,37 @@ nix develop
 
 #### Using direnv (Recommended)
 
-If you have [direnv](https://direnv.net/) installed, the repository includes a `.envrc` file that will automatically:
-- Load the Nix environment when you enter the directory
-- Start Colima and MongoDB automatically (macOS only)
-- Stop MongoDB when you leave the directory
+If you have [direnv](https://direnv.net/) installed, the repository includes a `.envrc` file that will automatically load the Nix environment and add the `bin` directory to your PATH.
 
 ```bash
 # Allow direnv for this directory (first time only)
 direnv allow
 
-# Now when you cd into the directory, everything starts automatically
+# Now when you cd into the directory, the environment loads
 cd simciv
-# 🚀 Starting Colima...
-# 🍃 Starting MongoDB container...
-# ✅ MongoDB started on localhost:27017
-
-# When you leave the directory, MongoDB stops automatically
-cd ..
-# 🧹 Stopping MongoDB container...
-# ✅ MongoDB stopped
+# 💡 MongoDB Management:
+#    mongo start   - Start MongoDB
+#    mongo stop    - Stop MongoDB
+#    mongo status  - Check MongoDB status
+#    mongo restart - Restart MongoDB
 ```
 
-#### Manual Setup (Without direnv)
+#### MongoDB Management
 
-If you prefer not to use direnv or need to manually control services:
+The repository includes a `mongo` script (in the `bin` directory) for easy MongoDB management. When using direnv, this script is automatically added to your PATH.
 
 ```bash
-# Start Colima VM (macOS)
-colima start --cpu 2 --memory 4 --arch $(uname -m)
+# Start MongoDB (starts Colima automatically on macOS if needed)
+mongo start
 
-# Run MongoDB in a container
-docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0
+# Check MongoDB status
+mongo status
 
-# When done, stop MongoDB and Colima:
-docker stop simciv-mongo && docker rm simciv-mongo
-colima stop
+# Stop MongoDB
+mongo stop
+
+# Restart MongoDB
+mongo restart
 ```
 
 #### Customizing the Nix Environment

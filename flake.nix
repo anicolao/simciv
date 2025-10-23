@@ -70,36 +70,27 @@
             ${if isDarwin then ''
             echo "  Colima:   $(colima version 2>/dev/null || echo 'not running')"
             echo "  Docker:   $(docker --version 2>/dev/null || echo 'requires Colima')"
-            echo ""
-            echo "Note: When using direnv, MongoDB starts automatically in Colima."
-            echo "      It will stop when you leave the directory."
-            echo ""
-            echo "Manual controls (if needed):"
-            echo "  Start:  colima start && docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
-            echo "  Stop:   docker stop simciv-mongo && docker rm simciv-mongo"
-            echo "  Status: docker ps | grep simciv-mongo"
             '' else ''
             echo "  MongoDB:  $(mongod --version | head -n1)"
             ''}
             echo ""
+            echo "MongoDB Management:"
+            echo "  mongo start   - Start MongoDB container"
+            echo "  mongo stop    - Stop MongoDB container"
+            echo "  mongo status  - Check MongoDB status"
+            echo "  mongo restart - Restart MongoDB container"
+            echo ""
             echo "Quick start:"
-            echo "  1. npm install          - Install Node.js dependencies"
-            echo "  2. npm run build        - Build the application"
-            echo "  3. npm run dev          - Start development server"
-            echo "  4. cd simulation && go build -o simciv-sim main.go - Build simulation engine"
+            echo "  1. mongo start          - Start MongoDB"
+            echo "  2. npm install          - Install Node.js dependencies"
+            echo "  3. npm run build        - Build the application"
+            echo "  4. npm run dev          - Start development server"
+            echo "  5. cd simulation && go build -o simciv-sim main.go - Build simulation engine"
             echo ""
             echo "Testing:"
             echo "  npm test                - Run unit tests"
             echo "  npm run test:e2e        - Run E2E tests"
             echo "  cd simulation && go test ./... - Run Go tests"
-            echo ""
-            ${if isDarwin then ''
-            echo "MongoDB is managed automatically by .envrc when using direnv."
-            '' else ''
-            echo "MongoDB:"
-            echo "  Local:  mongod --dbpath ./data/db (create data/db directory first)"
-            echo "  Docker: docker run -d --name simciv-mongo -p 27017:27017 mongo:7.0"
-            ''}
             echo ""
           '';
 
