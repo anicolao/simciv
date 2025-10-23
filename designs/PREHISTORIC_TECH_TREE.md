@@ -21,7 +21,7 @@ This document specifies the design for SimCiv's prehistoric technology tree, cov
 - Balance between immediate survival needs and long-term civilization building
 - Integration with map terrain types and resource availability
 
-This design establishes the technological foundation for early human civilization, providing players with strategic choices from the earliest moments of human development.
+This design establishes the technological foundation that will bridge into the Ancient Era tech tree, providing players with strategic choices from the earliest moments of human development.
 
 ---
 
@@ -885,7 +885,7 @@ Players must research **at least 4 Level 2 technologies** before Level 3 technol
 
 ### Core Philosophy
 
-Level 3 represents the culmination of the prehistoric era and the threshold of civilization. These technologies enable urban centers, specialized economies, organized warfare, and the infrastructure necessary for advanced civilizations. Players must choose technologies that will define their civilization's character as they transition into recorded history.
+Level 3 represents the culmination of the prehistoric era and the threshold of civilization. These technologies enable urban centers, specialized economies, organized warfare, and the infrastructure necessary for the Ancient Era that follows. Players must choose technologies that will define their civilization's character as they transition into recorded history.
 
 ### Technology Tree: Level 3
 
@@ -1208,7 +1208,7 @@ Level 3 represents the culmination of the prehistoric era and the threshold of c
 2. **Military Expansion Strategy**:
    - Organized Warfare → Copper Working → Mining Technology → Granaries & Storage
    - Focus: Military superiority and territorial conquest
-   - Enables: Aggressive expansion and territorial dominance
+   - Enables: Aggressive expansion into Ancient Era
    - Victory Path: Domination through superior forces
    - Best for: Resource-rich, defensible starting positions
 
@@ -1294,7 +1294,7 @@ These requirements ensure technologies are unlocked as civilization populations 
 - Level 0: 60-120 research points (early game, quick progression)
 - Level 1: 120-220 research points (mid early game)
 - Level 2: 260-400 research points (late early game)
-- Level 3: 500-700 research points (end of prehistoric era)
+- Level 3: 500-700 research points (transition to Ancient Era)
 
 ### Technology Prerequisites
 
@@ -1407,6 +1407,33 @@ Players face meaningful choices at each technology level:
 
 ---
 
+## Transition to Ancient Era
+
+### Bridging Technologies
+
+Level 3 technologies serve as bridges to the Ancient Era (4,000 BCE - 500 CE) tech tree:
+
+**Ancient Era Prerequisites** (Future):
+- Bronze Working: Requires Copper Working (Level 3) + Mining Technology (Level 3)
+- Professional Army: Requires Organized Warfare (Level 3) + Copper Working (Level 3)
+- Code of Laws: Requires Written Language (Level 3) + Organized Religion (Level 3)
+- Mathematics: Requires Written Language (Level 3) + Calendars & Astronomy (Level 3)
+- Monarchy: Requires Urban Planning (Level 3) + Organized Religion (Level 3)
+
+### Victory Conditions at Prehistoric Era End
+
+While formal victory conditions are defined for later eras, civilizations at the end of Level 3 can be evaluated on:
+
+**Survival Victory**: Successfully reaching 4,000 BCE with stable population
+**Dominance Leader**: Largest territory and military power
+**Cultural Leader**: Highest cultural influence and happiness
+**Economic Leader**: Most resources and trade value
+**Scientific Leader**: Fastest research rate and most technologies
+
+These informal "victories" provide benchmarks for player performance and set the stage for Ancient Era competition.
+
+---
+
 ## Balance Considerations
 
 ### Technology Cost Balancing
@@ -1505,6 +1532,7 @@ The client should display:
 - **VISION.md**: Overall game vision and strategic gameplay goals
 - **version0.0001.md**: Authentication and session management system
 - **MAP_GENERATION.md**: Terrain generation and resource distribution
+- **Future: ANCIENT_ERA_TECH_TREE.md**: Continuation of technology progression
 
 ---
 
@@ -1516,6 +1544,7 @@ The client should display:
 - 47 total technologies spanning 196,000 years
 - Multiple strategic paths with meaningful dependencies
 - Integration with existing game systems
+- Bridge to Ancient Era technologies
 
 ---
 
