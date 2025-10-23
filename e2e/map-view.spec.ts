@@ -1,44 +1,50 @@
-import { test, expect } from '@playwright/test';
-import { 
-  createTestUser, 
-  seedTestUser, 
-  cleanupTestUser,
-  getLocalStorageInjectionCode, 
-  getSessionCookie,
-  authenticateSession
-} from './helpers';
+import { test, expect, Page } from '@playwright/test';
+
+// Helper to register and login a user
+async function registerAndLogin(page: Page, alias: string, password: string): Promise<void> {
+  // Navigate to page
+  await page.goto('/');
+  
+  // Wait for redirect to session GUID URL
+  await page.waitForURL(/\/id=[a-f0-9-]+/);
+
+  // Fill registration form
+  await page.fill('input[id="alias"]', alias);
+  await page.fill('input[id="password"]', password);
+  await page.fill('input[id="passwordConfirm"]', password);
+  
+  // Submit registration
+  await page.locator('form button[type="submit"]').first().click();
+
+  // Wait for registration to complete
+  await expect(page.locator('.message.success')).toContainText('Registration successful', {
+    timeout: 30000
+  });
+
+  // Should be authenticated now
+  await expect(page.locator('.authenticated')).toBeVisible();
+}
 
 test.describe('Map View E2E Tests', () => {
   test('should display map and verify all components when game is started', async ({ browser }) => {
+    test.setTimeout(240000); // 4 minutes - registration takes time
+    
     const timestamp = Date.now();
-    const user1 = createTestUser(`mapuser1_${timestamp}`, 'TestPassword123!');
-    const user2 = createTestUser(`mapuser2_${timestamp}`, 'TestPassword123!');
+    const alias1 = `mapuser1_${timestamp}`;
+    const alias2 = `mapuser2_${timestamp}`;
+    const password = 'TestPassword123!';
+    
+    // Create two browser contexts for two users
+    const context1 = await browser.newContext();
+    const context2 = await browser.newContext();
+    
+    const page1 = await context1.newPage();
+    const page2 = await context2.newPage();
     
     try {
-      // Seed both users in database
-      await seedTestUser(user1);
-      await seedTestUser(user2);
-      
-      // Authenticate both users
-      await authenticateSession(user1.sessionGuid, user1.alias);
-      await authenticateSession(user2.sessionGuid, user2.alias);
-      
-      // Create two browser contexts for two users
-      const context1 = await browser.newContext();
-      const context2 = await browser.newContext();
-      
-      const page1 = await context1.newPage();
-      const page2 = await context2.newPage();
-      
-      // Set up user 1
-      await context1.addCookies([getSessionCookie(user1.sessionGuid)]);
-      await page1.goto(`/id=${user1.sessionGuid}`);
-      await page1.evaluate(getLocalStorageInjectionCode(user1));
-      
-      // Set up user 2
-      await context2.addCookies([getSessionCookie(user2.sessionGuid)]);
-      await page2.goto(`/id=${user2.sessionGuid}`);
-      await page2.evaluate(getLocalStorageInjectionCode(user2));
+      // Register and login both users
+      await registerAndLogin(page1, alias1, password);
+      await registerAndLogin(page2, alias2, password);
       
       // Player 1: Create game
       await expect(page1.locator('h2:has-text("Game Lobby")')).toBeVisible();
@@ -85,29 +91,23 @@ test.describe('Map View E2E Tests', () => {
       
       await context1.close();
       await context2.close();
-    } finally {
-      // Cleanup
-      await cleanupTestUser(user1.alias);
-      await cleanupTestUser(user2.alias);
+    } catch (error) {
+      await context1.close();
+      await context2.close();
+      throw error;
     }
   });
 
-  test('should not show map for waiting games', async ({ page, context }) => {
+  test('should not show map for waiting games', async ({ page }) => {
     const timestamp = Date.now();
-    const user = createTestUser(`mapuser_waiting_${timestamp}`, 'TestPassword123!');
+    const alias = `mapuser_waiting_${timestamp}`;
+    const password = 'TestPassword123!';
     
-    try {
-      // Seed and authenticate user
-      await seedTestUser(user);
-      await authenticateSession(user.sessionGuid, user.alias);
-      
-      // Set up user
-      await context.addCookies([getSessionCookie(user.sessionGuid)]);
-      await page.goto(`/id=${user.sessionGuid}`);
-      await page.evaluate(getLocalStorageInjectionCode(user));
-      
-      // Create game but don't start it
-      await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
+    // Register and login user
+    await registerAndLogin(page, alias, password);
+    
+    // Create game but don't start it
+    await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
       await page.click('button:has-text("Create New Game")');
       await expect(page.locator('h3:has-text("Create New Game")')).toBeVisible();
       await page.selectOption('select#maxPlayers', '2');
@@ -122,9 +122,5 @@ test.describe('Map View E2E Tests', () => {
       
       // Screenshot 23: No map for waiting game
       await page.screenshot({ path: 'e2e-screenshots/23-game-waiting-no-map.png', fullPage: true });
-    } finally {
-      // Cleanup
-      await cleanupTestUser(user.alias);
-    }
   });
 });

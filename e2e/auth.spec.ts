@@ -39,7 +39,7 @@ test.describe('SimCiv Authentication', () => {
     
     // Should be authenticated now
     await expect(page.locator('.authenticated')).toBeVisible();
-    await expect(page.locator('.authenticated strong')).toContainText(alias);
+    await expect(page.locator('.user-info h2')).toContainText(alias);
     
     // Take screenshot of authenticated state
     await page.screenshot({ path: 'e2e-screenshots/03-authenticated.png', fullPage: true });
@@ -141,7 +141,7 @@ test.describe('SimCiv Authentication', () => {
     
     // Verify authenticated
     await expect(page.locator('.authenticated')).toBeVisible();
-    await expect(page.locator('.authenticated strong')).toContainText(alias);
+    await expect(page.locator('.user-info h2')).toContainText(alias);
     
     // Logout - this will redirect to a NEW session
     await page.getByRole('button', { name: 'Logout' }).click();
@@ -178,7 +178,7 @@ test.describe('SimCiv Authentication', () => {
     
     // Should be authenticated again
     await expect(page.locator('.authenticated')).toBeVisible();
-    await expect(page.locator('.authenticated strong')).toContainText(alias);
+    await expect(page.locator('.user-info h2')).toContainText(alias);
     
     // Take screenshot of successful login
     await page.screenshot({ path: 'e2e-screenshots/08-login-success.png', fullPage: true });
