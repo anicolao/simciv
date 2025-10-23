@@ -1,3 +1,23 @@
+# Nix flake for SimCiv development environment
+#
+# This flake provides a reproducible development environment with all tools needed
+# for SimCiv development on NixOS and macOS with nix-darwin.
+#
+# Usage:
+#   nix develop          - Enter development shell
+#   nix flake update     - Update all inputs to latest versions
+#
+# The flake provides:
+#   - Node.js 20.x for server and client
+#   - Go (latest stable) for simulation engine  
+#   - MongoDB 7.0 for database
+#   - Git for version control
+#
+# Environment variables are automatically set:
+#   - MONGO_URI=mongodb://localhost:27017
+#   - DB_NAME=simciv
+#   - PORT=3000
+#
 {
   description = "SimCiv - A SimCity/Civilization Mashup";
 
