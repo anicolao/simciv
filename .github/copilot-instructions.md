@@ -135,7 +135,19 @@ src/
 public/              # Static client files
 ├── index.html       # Client UI
 └── client.js        # Client-side logic
+
+designs/             # Design documentation
+├── version0.0001.md # Authentication system design
+├── MAP_GENERATION.md # Map generation design
+└── ...              # Other design specifications
 ```
+
+### Documentation Organization
+- **ALL design documents MUST be placed in the `designs/` folder**
+- Design documents should follow the established format (see existing designs)
+- Include version number, status, purpose, and last updated date
+- Reference related design documents in the "Related Documents" section
+- Keep root-level markdown files for project-wide documentation only (README, VISION, etc.)
 
 ## Common Tasks
 
