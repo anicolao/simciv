@@ -2,7 +2,7 @@
 
 ## Issue Resolution
 
-Successfully resolved the Playwright Chromium download issue that prevented e2e tests from running by using Playwright's built-in 'chrome' channel feature.
+Successfully resolved the Playwright Chromium download issue that prevented e2e tests from running by patching Playwright's download code to handle CDN redirects with Content-Length: 0.
 
 ## Root Cause Analysis
 
@@ -32,43 +32,49 @@ Content-Length: 182333649  # <-- This is correct but not used
 
 ## Solution Implemented
 
-Configured Playwright to use system-installed Chrome/Chromium via the `channel: 'chrome'` configuration option instead of downloading its own bundled browser.
+Applied patches to Playwright's download code to fix two related issues:
+1. Progress bar crash when totalBytes is 0
+2. Size mismatch validation failure when totalBytes is 0
 
 ### Components Modified
 
-1. **playwright.config.ts**
-   - Simplified configuration to use `channel: 'chrome'`
-   - Removed complex conditional logic for `CHROMIUM_PATH`
-   - Playwright automatically finds system Chrome/Chromium
+1. **scripts/patch-playwright.js** (NEW)
+   - Automatic patching script that fixes Playwright's download code
+   - Applied via `postinstall` npm script
+   - Patches `browserFetcher.js` to handle totalBytes=0 in progress bar
+   - Patches `oopDownloadBrowserMain.js` to skip validation when totalBytes=0
 
-2. **bin/e2e-setup**
-   - Simplified to check for system Chrome/Chromium
-   - Removed `CHROMIUM_PATH` export logic
-   - Fails early with helpful message if no browser found
-
-3. **package.json**
+2. **package.json**
+   - Added `postinstall` script to automatically apply patches
    - Simplified `test:e2e` script to just run `playwright test`
-   - Removed complex bash script for detecting Chrome path
 
-4. **.envrc and .env.example**
-   - Added `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` to prevent automatic downloads during `npm install`
+3. **playwright.config.ts**
+   - Uses Playwright's bundled Chromium browser
+   - No special configuration needed
 
-5. **docs/E2E_TEST_SETUP.md**
-   - Updated to reflect the simpler solution
-   - Documented the `channel: 'chrome'` approach
+4. **bin/e2e-setup**
+   - Simplified to just run `npx playwright install chromium`
+   - No browser detection or path configuration needed
+
+5. **docs/PLAYWRIGHT_DOWNLOAD_FIX.md** (NEW)
+   - Comprehensive documentation of the fix
+   - Technical details and implementation guide
 
 ## Usage
 
 ### Simple workflow:
 ```bash
-# Setup once
+# Install dependencies (patches are applied automatically)
+npm install
+
+# Setup E2E environment (installs Playwright browsers)
 bash bin/e2e-setup
 
-# Run tests (automatically uses system Chrome)
+# Run tests (uses Playwright's bundled Chromium)
 npm run test:e2e
 ```
 
-No environment variables needed!
+No environment variables or system browsers needed!
 
 ## Test Results
 
@@ -102,41 +108,45 @@ No environment variables needed!
 - Could bypass the redirect by pointing directly to Microsoft CDN
 - Testing showed this still fails with the same size mismatch error
 - Doesn't actually solve the underlying issue
+- The progress bar crash masked this fact initially
 
-### Option 3: Use CHROMIUM_PATH with executablePath (PREVIOUS SOLUTION)
-- ✅ Worked but required complex environment variable detection
-- ⚠️  Required manual path detection in multiple places
-- ⚠️  More error-prone and harder to maintain
+### Option 3: Use system Chrome with 'chrome' channel
+- ✅ Works reliably without patching
+- ✅ Simple configuration
+- ⚠️  Requires Chrome/Chromium to be installed
+- ⚠️  Browser version varies by environment
+- ⚠️  Not ideal for consistent testing
 
-### Option 4: Use Playwright's 'chrome' channel (CURRENT SOLUTION)
-- ✅ Built-in Playwright feature for using system browsers
-- ✅ Automatic browser detection by Playwright
-- ✅ Much simpler configuration
-- ✅ No environment variables required
-- ✅ Easier to understand and maintain
-- ⚠️  Requires Chrome/Chromium to be installed (usually already available)
+### Option 4: Patch Playwright's download code (CURRENT SOLUTION)
+- ✅ Fixes the root cause of both issues
+- ✅ Uses Playwright's bundled browsers as intended
+- ✅ Automatic via postinstall script
+- ✅ Consistent browser version across environments
+- ✅ No external dependencies
+- ✅ Defensive patches that don't break existing functionality
+- ⚠️  Requires patching node_modules (automatically reapplied on install)
 
 ## Future Improvements
 
-If the Playwright download issue gets fixed upstream:
-- The `channel: 'chrome'` approach will continue to work
-- Using system browsers is actually a best practice for E2E testing
-- No changes would be needed unless we want to switch to bundled browsers
+If Playwright fixes the download issue upstream:
+- The patch script will detect that fixes are no longer needed
+- We can eventually remove `scripts/patch-playwright.js` and the postinstall script
+- Using bundled browsers is better for consistent testing across environments
 
 ## Related Files
 
-- `playwright.config.ts` - Simplified Playwright configuration
+- `scripts/patch-playwright.js` - Automatic patching script (NEW)
+- `docs/PLAYWRIGHT_DOWNLOAD_FIX.md` - Comprehensive fix documentation (NEW)
+- `playwright.config.ts` - Playwright configuration (uses bundled Chromium)
 - `bin/e2e-setup` - E2E test setup script (simplified)
-- `package.json` - npm scripts (simplified test:e2e)
-- `.envrc` - Added PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
-- `.env.example` - Added PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+- `package.json` - npm scripts with postinstall hook
 - `docs/E2E_TEST_SETUP.md` - Comprehensive setup guide (updated)
 - `e2e/` - E2E test files
 - `e2e-screenshots/` - Test screenshots
 
 ## System Requirements
 
-- Chrome or Chromium installed at system level (any recent version)
-- MongoDB running on localhost:27017
 - Node.js with npm
+- MongoDB running on localhost:27017
 - Server running on localhost:3000
+- No system browser required (Playwright downloads its own)

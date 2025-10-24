@@ -27,39 +27,38 @@ Error: Download failed: size mismatch, file size: 182333649, expected size: 0
 
 **Root Cause**: The Playwright CDN (cdn.playwright.dev) returns a 307 redirect with `Content-Length: 0` in the redirect response. Playwright's download code reads this header value instead of the final response's content-length (182333649 bytes), causing the validation to fail even though the download completed successfully.
 
-**Solution**: The project is configured to use Playwright's built-in `channel: 'chrome'` feature, which automatically uses the system-installed Chrome or Chromium browser instead of downloading Playwright's bundled browser.
+**Solution**: The project applies automatic patches to Playwright's download code to fix the issues. These patches are applied during `npm install` via a postinstall script.
 
 ### How It Works
 
-1. **Playwright Configuration**: The `playwright.config.ts` file specifies `channel: 'chrome'`, which tells Playwright to use the system-installed Chrome/Chromium browser.
+The fix involves two patches applied automatically after `npm install`:
 
-2. **Automatic Browser Detection**: Playwright automatically finds Chrome/Chromium at standard system locations:
-   - Linux: `/usr/bin/google-chrome`, `/usr/bin/chromium-browser`, `/usr/bin/chromium`
-   - macOS: `/Applications/Google Chrome.app`
-   - Windows: Standard Chrome installation paths
+1. **Progress Bar Fix** (`browserFetcher.js`): 
+   - Handles the case where `totalBytes` is 0 (from redirect with Content-Length: 0)
+   - Prevents the "Invalid count value: Infinity" crash
+   - Shows simple "Downloading..." message instead of percentage
 
-3. **Skip Downloads**: The `.envrc` and `.env.example` files set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` to prevent automatic browser downloads during `npm install`.
+2. **Size Validation Fix** (`oopDownloadBrowserMain.js`):
+   - Skips size validation when `totalBytes` is 0
+   - Allows the download to complete successfully
+   - The file downloads correctly despite the incorrect Content-Length header
 
-4. **Simple Configuration**: No environment variables or manual configuration needed - it just works!
+3. **Automatic Application**:
+   - Patches are applied via `scripts/patch-playwright.js`
+   - Runs automatically during `npm install` (postinstall script)
+   - Idempotent - safe to run multiple times
 
-## Manual Setup
+For full technical details, see `docs/PLAYWRIGHT_DOWNLOAD_FIX.md`.
 
-If you don't have Chrome or Chromium installed:
+## Manual Patch Application
 
-### Ubuntu/Debian
+If you need to reapply the patches manually (e.g., after reinstalling node_modules):
+
 ```bash
-sudo apt-get install chromium-browser
-# or
-sudo apt-get install google-chrome-stable
+node scripts/patch-playwright.js
 ```
 
-### macOS
-```bash
-brew install --cask google-chrome
-```
-
-### Windows
-Download and install from: https://www.google.com/chrome/
+This will apply both patches to Playwright's download code.
 
 ## Running Specific Tests
 
@@ -82,37 +81,35 @@ npx playwright test --headed
 
 ### Tests fail with "browserType.launch: Executable doesn't exist"
 
-This means Chrome/Chromium is not installed. Install it using the instructions in the Manual Setup section above.
-
-### System Chrome/Chromium version incompatibility
-
-The system Chrome/Chromium should be reasonably recent (version 90+). Check version:
+This means Playwright browsers are not installed. Run:
 ```bash
-google-chrome --version
-# or
-chromium-browser --version
+npx playwright install chromium
 ```
 
-If your system browser is too old:
-1. Update your system packages
-2. Install a newer version manually
+### Download still fails after patches
 
-## Alternative: Using Playwright's Bundled Browsers
+If browser downloads still fail:
+1. Check that patches were applied: `node scripts/patch-playwright.js`
+2. Verify node_modules exists and is complete
+3. Try removing node_modules and reinstalling: `rm -rf node_modules && npm install`
 
-If the Playwright download issue gets fixed upstream, you can switch back to bundled browsers by:
+## Understanding the Fix
 
-1. Remove `channel: 'chrome'` from `playwright.config.ts`
-2. Remove `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` from `.envrc` and `.env.example`
-3. Run `npx playwright install chromium`
+The patches make two simple changes to Playwright's code:
 
-However, using system browsers is actually a best practice for E2E testing as it tests against real-world browser installations.
+1. **When displaying download progress**, check if `totalBytes` is 0 and show a simple message instead of calculating percentages
+2. **When validating download size**, skip validation if `totalBytes` is 0 since the download actually completed
+
+These are defensive patches that don't change Playwright's normal behavior - they only handle the edge case of CDN redirects with incorrect Content-Length headers.
+
+For complete technical details, see `docs/PLAYWRIGHT_DOWNLOAD_FIX.md`.
 
 ## System Requirements
 
 - **MongoDB**: Must be running on localhost:27017 (managed by `bin/mongo` script)
 - **Node.js**: Version specified in project requirements
-- **Chrome/Chromium**: Any recent version (90+)
 - **Server**: Must be running on localhost:3000
+- **No system browser required**: Playwright downloads and uses its own bundled Chromium
 
 ## E2E Test Architecture
 

@@ -17,9 +17,9 @@ export default defineConfig({
       name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],
-        // Use 'chrome' channel to use system-installed Chrome/Chromium
-        // This avoids the Playwright download issue entirely
-        channel: 'chrome',
+        // Use Playwright's bundled Chromium browser
+        // The download issue has been fixed with patches to node_modules
+        headless: true,
       },
     },
   ],
