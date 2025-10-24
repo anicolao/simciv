@@ -16,7 +16,33 @@ SimCiv is a strategy game combining city-building mechanics with grand strategy 
 
 **CRITICAL: Use the persistent Nix shell for all development work EXCEPT E2E tests.**
 
+### One-Time Nix Setup (Required First)
+
+Before using the persistent shell, set up Nix on your development machine:
+
+```bash
+# Run the setup script (one-time only)
+./SETUP_NIX_BIN.sh
+
+# Log out and log back in (required for group membership to take effect)
+
+# After logging back in, navigate to project and allow direnv
+cd simciv
+direnv allow
+```
+
+This setup:
+- Installs `nix-bin` and `direnv` from apt (Ubuntu/Debian)
+- Configures Nix to enable flakes
+- Adds you to the `nix-users` group
+- Sets up direnv hook in your shell
+
+**You only need to do this once per machine.**
+
 ### Persistent Nix Shell Usage
+
+After completing the one-time setup above:
+
 - **ALWAYS** use `bin/nix-shell-persistent exec <command>` to run commands in the Nix environment
 - Initialize once per session: `bin/nix-shell-persistent init` (takes 1-2 minutes first time)
 - Run commands instantly: `bin/nix-shell-persistent exec npm install`, `bin/nix-shell-persistent exec npm run build`, etc.
@@ -252,6 +278,8 @@ NODE_ENV=development
 ```
 
 ## Running the Application
+
+**Prerequisites**: Complete the one-time Nix setup from the "Development Environment" section before running these commands.
 
 **Use persistent Nix shell for all commands except E2E tests:**
 
