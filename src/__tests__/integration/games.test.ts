@@ -232,7 +232,8 @@ describe('Game Integration Tests', () => {
     expect(gameResponse.body.game.state).toBe('started');
     expect(gameResponse.body.game.currentPlayers).toBe(2);
     expect(gameResponse.body.game.startedAt).toBeDefined();
-    expect(gameResponse.body.game.lastTickAt).toBeDefined();
+    // lastTickAt should be undefined initially - simulation engine will set it on first tick
+    expect(gameResponse.body.game.lastTickAt).toBeUndefined();
   });
 
   it('should prevent joining a started game', async () => {
