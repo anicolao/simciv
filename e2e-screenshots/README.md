@@ -32,7 +32,7 @@ When `npm run test:e2e` is executed, the following screenshots are automatically
 19. `19-map-section-visible.png` - Map section visible in started game
 20. `20-map-view-complete.png` - Complete map view with tiles and legend
 21. `21-map-starting-city-marker.png` - Starting city marker on map
-22. `22-map-resource-markers.png` - Resource markers on map tiles
+22. `22-map-with-resources.png` - Map showing resource markers on tiles
 23. `23-game-waiting-no-map.png` - Waiting game without map section
 
 ## Purpose
