@@ -1,4 +1,10 @@
 import { test, expect, Page } from '@playwright/test';
+import { clearDatabase } from './global-setup';
+
+// Clear database before each test to prevent data carryover between retries
+test.beforeEach(async () => {
+  await clearDatabase();
+});
 
 // Helper to register and login a user
 async function registerAndLogin(page: Page, alias: string, password: string): Promise<void> {
