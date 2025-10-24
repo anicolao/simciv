@@ -18,9 +18,7 @@ export default defineConfig({
       name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],
-        launchOptions: {
-          executablePath: '/usr/bin/chromium-browser',
-        },
+        // Let Playwright use its bundled Chromium
       },
     },
   ],
