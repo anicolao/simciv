@@ -18,16 +18,14 @@ export default defineConfig({
       name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],
-        launchOptions: {
-          executablePath: '/usr/bin/chromium-browser',
-        },
+        // Let Playwright use its bundled Chromium
       },
     },
   ],
   webServer: {
     command: 'MONGO_URI=mongodb://localhost:27017 DB_NAME=simciv-test npm start',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true, // Server should already be running from e2e-setup
     timeout: 120 * 1000,
   },
 });
