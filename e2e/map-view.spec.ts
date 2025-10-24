@@ -94,13 +94,13 @@ test.describe('Map View E2E Tests', () => {
       console.log('[E2E] Waiting 3 seconds for map generation...');
       await page2.waitForTimeout(3000);
       
-      // Click on the specific started game to open details modal
+      // Click the View button to open details modal
       console.log('[E2E] Opening game details modal...');
-      await gameCard.click();
+      await gameCard.locator('button:has-text("View")').click();
       
       // Wait for map section in modal
       console.log('[E2E] Waiting for map section to appear...');
-      await expect(page2.locator('h3:has-text("Map")')).toBeVisible({ timeout: 10000 });
+      await expect(page2.locator('h3:has-text("Game Map")')).toBeVisible({ timeout: 10000 });
       console.log('[E2E] Map section visible');
       
       // Screenshot 19: Map section visible
@@ -109,7 +109,7 @@ test.describe('Map View E2E Tests', () => {
       
       // Verify map components
       console.log('[E2E] Verifying map legend...');
-      await expect(page2.locator('.map-legend')).toBeVisible();
+      await expect(page2.locator('.legend')).toBeVisible();
       console.log('[E2E] Verifying map tiles...');
       await expect(page2.locator('.map-tile').first()).toBeVisible();
       
@@ -158,11 +158,11 @@ test.describe('Map View E2E Tests', () => {
       await page.click('button:has-text("Create Game")');
       await page.waitForSelector('.game-card', { timeout: 10000 });
       
-      // Click on the waiting game to open details
-      await page.locator('.game-card').first().click();
+      // Click the View button to open details
+      await page.locator('.game-card').first().locator('button:has-text("View")').click();
       
-      // Map section should NOT be visible for waiting games
-      await expect(page.locator('h3:has-text("Map")')).not.toBeVisible();
+      // Map section should NOT be visible for waiting games (should show "Game Map" if it were)
+      await expect(page.locator('h3:has-text("Game Map")')).not.toBeVisible();
       
       // Screenshot 23: No map for waiting game
       await page.screenshot({ path: 'e2e-screenshots/23-game-waiting-no-map.png', fullPage: true });
