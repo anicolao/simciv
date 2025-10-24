@@ -21,7 +21,7 @@ describe('Map API Integration Tests', () => {
     
     // Use external MongoDB if TEST_MONGO_URI is set
     if (process.env.TEST_MONGO_URI) {
-      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test');
+      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test-map');
       // Clean up existing data
       await getGamesCollection().deleteMany({});
       await getUsersCollection().deleteMany({});
@@ -32,7 +32,7 @@ describe('Map API Integration Tests', () => {
     } else {
       mongoServer = await MongoMemoryServer.create();
       const uri = mongoServer.getUri();
-      await connectToDatabase(uri, 'simciv-test');
+      await connectToDatabase(uri, 'simciv-test-map');
     }
 
     // Create test user
