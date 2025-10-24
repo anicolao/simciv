@@ -53,7 +53,7 @@ func (e *GameEngine) processTick(ctx context.Context) error {
 
 	for _, game := range games {
 		// Check if map needs to be generated (new game just started)
-		if game.CurrentYear == -4000 && game.LastTickAt == nil {
+		if game.CurrentYear == -5000 && game.LastTickAt == nil {
 			// Generate map for new game
 			if err := e.generateMapForGame(ctx, game); err != nil {
 				log.Printf("Error generating map for game %s: %v", game.GameID, err)
@@ -118,6 +118,24 @@ func (e *GameEngine) generateMapForGame(ctx context.Context, game *models.Game) 
 			position.PlayerID = game.PlayerList[i]
 			position.GameID = game.GameID
 			position.CreatedAt = time.Now()
+		}
+	}
+
+	// Initialize tile visibility for all players
+	// Each player can see tiles around their starting position
+	for _, position := range positions {
+		if position.PlayerID == "" {
+			continue
+		}
+		// Make tiles within vision range visible to this player
+		visionRange := 3 // tiles around starting position
+		for _, tile := range tiles {
+			dx := tile.X - position.CenterX
+			dy := tile.Y - position.CenterY
+			distanceSquared := dx*dx + dy*dy
+			if distanceSquared <= visionRange*visionRange {
+				tile.VisibleTo = append(tile.VisibleTo, position.PlayerID)
+			}
 		}
 	}
 

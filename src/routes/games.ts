@@ -171,7 +171,8 @@ router.post('/:gameId/join', async (req: Request, res: Response): Promise<void> 
     if (newPlayerCount >= game.maxPlayers) {
       update.state = 'started';
       update.startedAt = new Date();
-      update.lastTickAt = new Date();
+      // Don't set lastTickAt - let it remain undefined so simulation engine
+      // recognizes this as a new game and generates the map
     }
 
     const result = await gamesCollection.updateOne(

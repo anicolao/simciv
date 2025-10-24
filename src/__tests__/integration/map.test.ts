@@ -16,9 +16,12 @@ describe('Map API Integration Tests', () => {
   let testGameId: string;
 
   beforeEach(async () => {
+    // Close any existing connection first
+    await closeDatabase();
+    
     // Use external MongoDB if TEST_MONGO_URI is set
     if (process.env.TEST_MONGO_URI) {
-      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test');
+      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test-map');
       // Clean up existing data
       await getGamesCollection().deleteMany({});
       await getUsersCollection().deleteMany({});
@@ -29,7 +32,7 @@ describe('Map API Integration Tests', () => {
     } else {
       mongoServer = await MongoMemoryServer.create();
       const uri = mongoServer.getUri();
-      await connectToDatabase(uri, 'simciv-test');
+      await connectToDatabase(uri, 'simciv-test-map');
     }
 
     // Create test user
@@ -42,8 +45,8 @@ describe('Map API Integration Tests', () => {
     };
     await getUsersCollection().insertOne(user);
 
-    // Create test session
-    testSessionGuid = 'test-session-guid';
+    // Create test session with valid UUID format
+    testSessionGuid = '12345678-1234-4123-8123-123456789abc';
     const session: Session = {
       sessionGuid: testSessionGuid,
       userId: testUserId,
@@ -143,7 +146,7 @@ describe('Map API Integration Tests', () => {
     it('should return map metadata for authenticated user', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/metadata`)
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.metadata).toBeDefined();
@@ -163,7 +166,7 @@ describe('Map API Integration Tests', () => {
     it('should return 404 for non-existent game', async () => {
       const response = await request(app)
         .get('/api/map/non-existent-game/metadata')
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(404);
     });
@@ -173,7 +176,7 @@ describe('Map API Integration Tests', () => {
     it('should return visible tiles for authenticated user', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/tiles`)
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
@@ -197,7 +200,7 @@ describe('Map API Integration Tests', () => {
     it('should return empty array for game with no visible tiles', async () => {
       // Create another user with no visible tiles
       const otherUserId = 'otheruser';
-      const otherSessionGuid = 'other-session-guid';
+      const otherSessionGuid = '22345678-2234-4223-8223-223456789abc';
       
       await getUsersCollection().insertOne({
         alias: otherUserId,
@@ -217,7 +220,7 @@ describe('Map API Integration Tests', () => {
 
       const response = await request(app)
         .get(`/api/map/${testGameId}/tiles`)
-        .set('Cookie', [`sessionGuid=${otherSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${otherSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
@@ -229,7 +232,7 @@ describe('Map API Integration Tests', () => {
     it('should return starting position for authenticated user', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/starting-position`)
-        .set('Cookie', [`sessionGuid=${testSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
 
       expect(response.status).toBe(200);
       expect(response.body.position).toBeDefined();
@@ -250,7 +253,7 @@ describe('Map API Integration Tests', () => {
     it('should return 404 for user with no starting position', async () => {
       // Create another user with no starting position
       const otherUserId = 'otheruser2';
-      const otherSessionGuid = 'other-session-guid2';
+      const otherSessionGuid = '32345678-3234-4323-8323-323456789abc';
       
       await getUsersCollection().insertOne({
         alias: otherUserId,
@@ -270,7 +273,7 @@ describe('Map API Integration Tests', () => {
 
       const response = await request(app)
         .get(`/api/map/${testGameId}/starting-position`)
-        .set('Cookie', [`sessionGuid=${otherSessionGuid}`]);
+        .set('Cookie', [`simciv_session=${otherSessionGuid}`]);
 
       expect(response.status).toBe(404);
     });
