@@ -74,10 +74,20 @@
       startingPosition = positionResponse.position;
       metadata = metadataResponse.metadata;
 
+      // Debug logging
+      console.log('[MapView] Loaded map data:', {
+        tileCount: tiles.length,
+        firstTile: tiles[0],
+        terrainTypes: [...new Set(tiles.map(t => t.terrainType))].join(', '),
+        startingPosition,
+        metadata
+      });
+
       // Center view on starting position
       if (startingPosition) {
         viewOffsetX = startingPosition.centerX - Math.floor(viewportTilesX / 2);
         viewOffsetY = startingPosition.centerY - Math.floor(viewportTilesY / 2);
+        console.log('[MapView] View centered at:', { viewOffsetX, viewOffsetY });
       }
 
       loading = false;
