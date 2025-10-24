@@ -35,6 +35,13 @@ sudo apt-get install -y nix-bin direnv
 
 echo ""
 echo "⚙️  Step 2: Configuring Nix to enable flakes..."
+
+# Backup existing config if it exists
+if [ -f /etc/nix/nix.conf ]; then
+    sudo cp /etc/nix/nix.conf /etc/nix/nix.conf.backup
+    echo "📋 Backed up existing /etc/nix/nix.conf to /etc/nix/nix.conf.backup"
+fi
+
 sudo bash -c 'cat > /etc/nix/nix.conf << EOF
 # see https://nixos.org/manual/nix/stable/command-ref/conf-file
 
@@ -77,13 +84,17 @@ case "$SHELL_NAME" in
 esac
 
 if [ -n "$RC_FILE" ]; then
-    if grep -q "direnv hook" "$RC_FILE" 2>/dev/null; then
+    # Check if direnv hook is already configured using a more specific pattern
+    if grep -qE '^\s*eval.*direnv hook' "$RC_FILE" 2>/dev/null; then
         echo "✅ direnv hook already configured in $RC_FILE"
     else
         echo "$HOOK_LINE" >> "$RC_FILE"
         echo "✅ Added direnv hook to $RC_FILE"
     fi
 fi
+
+# Get the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
 echo "✅ Setup complete!"
@@ -92,7 +103,7 @@ echo "⚠️  IMPORTANT: You must log out and log back in for the group membersh
 echo ""
 echo "After logging back in, run these commands to start developing:"
 echo ""
-echo "  cd $(pwd)"
+echo "  cd \"$SCRIPT_DIR\""
 echo "  direnv allow"
 echo "  e2e-setup"
 echo "  npm run test:e2e"
