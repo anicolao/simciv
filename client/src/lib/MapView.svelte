@@ -48,7 +48,12 @@
   const viewportTilesY = 15;
 
   onMount(async () => {
-    await loadTileset();
+    try {
+      await loadTileset();
+    } catch (err) {
+      console.error('[MapView] Failed to load tileset in onMount:', err);
+      // Continue anyway - will show error or fallback rendering
+    }
     await loadMap();
   });
 
@@ -61,11 +66,15 @@
         console.log('[MapView] Tileset loaded:', img.width, 'x', img.height);
         resolve();
       };
-      img.onerror = () => {
-        console.error('[MapView] Failed to load tileset');
-        reject(new Error('Failed to load tileset'));
+      img.onerror = (err) => {
+        const errorMsg = 'Failed to load tileset image';
+        console.error('[MapView]', errorMsg, err);
+        error = errorMsg;
+        loading = false;
+        reject(new Error(errorMsg));
       };
       img.src = '/assets/freeciv/trident/tiles.png';
+      console.log('[MapView] Loading tileset from:', img.src);
     });
   }
 
@@ -105,7 +114,9 @@
       // Render the map once data is loaded
       renderMap();
     } catch (err: any) {
-      error = err.message || 'Failed to load map';
+      const errorMsg = err.message || 'Failed to load map';
+      console.error('[MapView] Error loading map:', errorMsg, err);
+      error = errorMsg;
       loading = false;
     }
   }
