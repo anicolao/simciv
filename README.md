@@ -134,12 +134,21 @@ cd simciv
 direnv allow
 
 # The environment will be automatically loaded when you enter the directory
-# Run the e2e setup and tests
+
+# Inside Nix: Build and test
+npm install
+npm run build
+npm test
+
+# OUTSIDE Nix: E2E tests (due to Playwright binary compatibility)
+# Exit direnv environment first (e.g., cd /tmp && cd -)
 e2e-setup
 npm run test:e2e
 ```
 
-See [docs/NIX_BIN_SETUP.md](docs/NIX_BIN_SETUP.md) for detailed instructions and troubleshooting.
+**Important Note:** SimCiv uses a **two-tier development environment** where most work happens in Nix, but Playwright E2E tests must run outside Nix due to binary compatibility. See [docs/ENVIRONMENT_STRUCTURE.md](docs/ENVIRONMENT_STRUCTURE.md) for the complete explanation and [docs/DEVELOPMENT_RECIPES.md](docs/DEVELOPMENT_RECIPES.md) for quick-start commands.
+
+For detailed setup instructions, see [docs/NIX_BIN_SETUP.md](docs/NIX_BIN_SETUP.md).
 
 #### Standard Setup
 
