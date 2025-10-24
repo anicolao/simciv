@@ -1,4 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { clearDatabase } from './global-setup';
+
+// Clear database before each test to prevent data carryover between retries
+test.beforeEach(async () => {
+  await clearDatabase();
+});
 
 test.describe('SimCiv Authentication', () => {
   test('user can register an account and login', async ({ page }) => {
