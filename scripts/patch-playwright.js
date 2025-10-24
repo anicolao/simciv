@@ -62,7 +62,7 @@ const browserFetcherPatches = [
     if (row > lastRow) {
       lastRow = row;
       const percentageString = String(percentage * 100 | 0).padStart(3);
-      console.log(\`|\${"\u25A0".repeat(row * stepWidth)}\${" ".repeat((totalRows - row) * stepWidth)}| \${percentageString}% of \${toMegabytes(totalBytes)}\`);
+      console.log(\`|\${"\\u25A0".repeat(row * stepWidth)}\${" ".repeat((totalRows - row) * stepWidth)}| \${percentageString}% of \${toMegabytes(totalBytes)}\`);
     }
   };`,
     replace: `  return (downloadedBytes, totalBytes) => {
@@ -80,7 +80,7 @@ const browserFetcherPatches = [
     if (row > lastRow) {
       lastRow = row;
       const percentageString = String(percentage * 100 | 0).padStart(3);
-      console.log(\`|\${"\u25A0".repeat(row * stepWidth)}\${" ".repeat((totalRows - row) * stepWidth)}| \${percentageString}% of \${toMegabytes(totalBytes)}\`);
+      console.log(\`|\${"\\u25A0".repeat(row * stepWidth)}\${" ".repeat((totalRows - row) * stepWidth)}| \${percentageString}% of \${toMegabytes(totalBytes)}\`);
     }
   };`
   }
