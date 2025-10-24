@@ -133,9 +133,8 @@ The current implementation includes:
 ## How to Run E2E Tests
 
 ### Prerequisites
-1. MongoDB running: `bin/mongo start`
-2. Simulation engine: `cd simulation && go build && ./simulation &`
-3. Web server: `npm run build && npm start &`
+1. Run setup script: `e2e-setup` (or `bash bin/e2e-setup`)
+   - This script handles everything: npm install, Playwright browsers, building, MongoDB, and server
 
 ### Running E2E Tests
 ```bash
