@@ -133,7 +133,7 @@ The current implementation includes:
 ## How to Run E2E Tests
 
 ### Prerequisites
-1. System Chrome/Chromium installed (automatically detected by Playwright)
+1. Run setup script: `e2e-setup` (or `bash bin/e2e-setup`)
 2. MongoDB running: `bin/mongo start`
 3. Simulation engine: `cd simulation && go build && ./simulation &`
 4. Web server: `npm run build && npm start &`
@@ -151,13 +151,10 @@ npx playwright test e2e/ --headed --debug
 ```
 
 ### Common Issues
-- Chrome/Chromium not installed: Install system Chrome or Chromium (see docs/E2E_TEST_SETUP.md)
+- Browsers not installed: `npx playwright install chromium`
 - Tests timeout: Increase timeout or check services are running
 - Authentication fails: Verify session cookies are being set correctly
 - Screenshots blank: Wait for elements to be visible before capturing
-
-### Note on Playwright Browser Downloads
-The project uses Playwright's `channel: 'chrome'` feature to use system-installed Chrome/Chromium instead of downloading bundled browsers. This avoids the Playwright download issue and is a best practice for E2E testing. See `docs/E2E_TEST_FIX_SUMMARY.md` for details.
 
 ### File Organization
 ```

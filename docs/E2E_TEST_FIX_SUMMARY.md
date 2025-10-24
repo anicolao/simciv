@@ -68,7 +68,7 @@ Applied patches to Playwright's download code to fix two related issues:
 npm install
 
 # Setup E2E environment (installs Playwright browsers)
-bash bin/e2e-setup
+e2e-setup
 
 # Run tests (uses Playwright's bundled Chromium)
 npm run test:e2e
