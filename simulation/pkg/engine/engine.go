@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"log"
+	"os"
 	"time"
 
 	"github.com/anicolao/simciv/simulation/pkg/mapgen"
@@ -93,12 +94,21 @@ func (e *GameEngine) processGameTick(ctx context.Context, game *models.Game) err
 func (e *GameEngine) generateMapForGame(ctx context.Context, game *models.Game) error {
 	log.Printf("Generating map for game %s with %d players", game.GameID, game.MaxPlayers)
 
-	// Generate random seed
-	seedBytes := make([]byte, 16)
-	if _, err := rand.Read(seedBytes); err != nil {
-		return err
+	// Generate seed
+	var seed string
+	testSeed := os.Getenv("TEST_MAP_SEED")
+	if testSeed != "" {
+		// Use deterministic seed for testing
+		seed = testSeed
+		log.Printf("Using test seed: %s", seed)
+	} else {
+		// Generate random seed for production
+		seedBytes := make([]byte, 16)
+		if _, err := rand.Read(seedBytes); err != nil {
+			return err
+		}
+		seed = hex.EncodeToString(seedBytes)
 	}
-	seed := hex.EncodeToString(seedBytes)
 
 	// Create generator
 	generator := mapgen.NewGenerator(seed, game.MaxPlayers)

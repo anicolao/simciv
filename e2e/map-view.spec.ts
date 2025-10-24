@@ -123,6 +123,21 @@ test.describe('Map View E2E Tests', () => {
       console.log('[E2E] Taking screenshot 20...');
       await page2.screenshot({ path: 'e2e-screenshots/20-map-view-complete.png', fullPage: true });
       
+      // Verify that we have tiles filling the viewport (20x15 = 300 tiles)
+      console.log('[E2E] Verifying viewport has sufficient tiles...');
+      const mapTileCount = await page2.locator('.map-tile').count();
+      const viewportTileCount = 20 * 15; // viewportTilesX * viewportTilesY from MapView.svelte
+      console.log(`[E2E] Found ${mapTileCount} map tiles, expected ${viewportTileCount}`);
+      expect(mapTileCount).toBe(viewportTileCount);
+      
+      // Count how many are NOT hidden (have actual tile data)
+      const visibleTileCount = await page2.locator('.map-tile:not(.hidden)').count();
+      console.log(`[E2E] Found ${visibleTileCount} visible (non-hidden) tiles`);
+      // We should have a substantial number of visible tiles
+      // The actual number depends on where the starting position is on the map
+      // If near edges, we'll have fewer tiles. The minimum we've seen is ~80 tiles.
+      expect(visibleTileCount).toBeGreaterThan(70); // At minimum, should have most of viewport filled
+      
       // Screenshot 21: Starting city marker
       console.log('[E2E] Looking for city marker...');
       const cityMarker = page2.locator('.map-tile .city-marker');

@@ -10,6 +10,7 @@
     creatorUserId: string;
     maxPlayers: number;
     currentPlayers: number;
+    playerList?: string[];
     state: 'waiting' | 'started';
     currentYear: number;
     createdAt: string;

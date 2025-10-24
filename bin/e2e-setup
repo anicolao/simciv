@@ -77,6 +77,38 @@ else
     fi
 fi
 
+# Build and start the game engine with test seed
+echo ""
+echo "🎮 Setting up game engine..."
+cd "${PROJECT_ROOT}/simulation"
+
+# Build the engine if not already built or if source changed
+if [ ! -f engine ] || [ pkg/engine/engine.go -nt engine ]; then
+    echo "🏗️  Building game engine..."
+    go build -o engine main.go
+fi
+
+# Check if engine is already running
+if pgrep -f "simulation/engine" >/dev/null; then
+    echo "✅ Game engine is already running"
+else
+    echo "🚀 Starting game engine with deterministic test seed..."
+    export TEST_MAP_SEED="simciv-balanced-test-map"
+    export MONGO_URI="${MONGO_URI:-mongodb://localhost:27017}"
+    export DB_NAME="${DB_NAME:-simciv}"
+    ./engine > /tmp/engine-e2e.log 2>&1 &
+    ENGINE_PID=$!
+    sleep 2
+    if pgrep -f "simulation/engine" >/dev/null; then
+        echo "✅ Game engine is running (PID: $ENGINE_PID)"
+        echo "   Using deterministic seed for consistent map generation"
+    else
+        echo "❌ Game engine failed to start"
+        echo "Check /tmp/engine-e2e.log for details"
+        exit 1
+    fi
+fi
+
 echo ""
 echo "✅ E2E test environment is ready!"
 echo ""

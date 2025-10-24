@@ -173,7 +173,7 @@ describe('Map API Integration Tests', () => {
   });
 
   describe('GET /api/map/:gameId/tiles', () => {
-    it('should return visible tiles for authenticated user', async () => {
+    it('should return ALL tiles for authenticated user (no fog of war on server)', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/tiles`)
         .set('Cookie', [`simciv_session=${testSessionGuid}`]);
@@ -181,13 +181,67 @@ describe('Map API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
       expect(Array.isArray(response.body.tiles)).toBe(true);
-      expect(response.body.tiles.length).toBe(100); // 10x10 tiles we created
+      expect(response.body.tiles.length).toBe(100); // 10x10 tiles we created - ALL tiles, not just visible ones
       
       // Check tile properties
       const firstTile = response.body.tiles[0];
       expect(firstTile.gameId).toBe(testGameId);
       expect(firstTile.terrainType).toBe('GRASSLAND');
-      expect(firstTile.visibleTo).toContain(testUserId);
+      // Tiles should have visibleTo property but server doesn't filter by it
+      expect(firstTile.visibleTo).toBeDefined();
+    });
+
+    it('should return tiles with valid terrain data (not blank/invisible)', async () => {
+      const response = await request(app)
+        .get(`/api/map/${testGameId}/tiles`)
+        .set('Cookie', [`simciv_session=${testSessionGuid}`]);
+
+      expect(response.status).toBe(200);
+      expect(response.body.tiles.length).toBe(100);
+
+      // Log first few tiles to verify content
+      console.log('\n=== Tile Data Verification ===');
+      console.log(`Total tiles returned: ${response.body.tiles.length}`);
+      console.log('\nFirst 5 tiles:');
+      response.body.tiles.slice(0, 5).forEach((tile: any, idx: number) => {
+        console.log(`  Tile ${idx}: (${tile.x},${tile.y}) terrainType=${tile.terrainType} elevation=${tile.elevation} visibleTo=${JSON.stringify(tile.visibleTo)}`);
+      });
+
+      // Verify all tiles have valid terrain types
+      const validTerrainTypes = [
+        'OCEAN', 'SHALLOW_WATER', 'MOUNTAIN', 'HILLS', 
+        'GRASSLAND', 'PLAINS', 'FOREST', 'JUNGLE', 
+        'DESERT', 'TUNDRA', 'ICE'
+      ];
+      
+      response.body.tiles.forEach((tile: any) => {
+        expect(tile.terrainType).toBeDefined();
+        expect(validTerrainTypes).toContain(tile.terrainType);
+        expect(tile.elevation).toBeDefined();
+        expect(typeof tile.elevation).toBe('number');
+        expect(tile.x).toBeDefined();
+        expect(tile.y).toBeDefined();
+      });
+
+      // Count terrain type distribution
+      const terrainCounts: Record<string, number> = {};
+      response.body.tiles.forEach((tile: any) => {
+        terrainCounts[tile.terrainType] = (terrainCounts[tile.terrainType] || 0) + 1;
+      });
+      console.log('\nTerrain type distribution:');
+      Object.entries(terrainCounts).forEach(([terrain, count]) => {
+        console.log(`  ${terrain}: ${count} tiles`);
+      });
+      
+      // Check if tiles have coordinates that would be visible in a viewport
+      const tilesInViewport = response.body.tiles.filter((tile: any) => 
+        tile.x >= 0 && tile.x < 20 && tile.y >= 0 && tile.y < 15
+      );
+      console.log(`\nTiles in viewport (0-20, 0-15): ${tilesInViewport.length}/100`);
+      console.log('=== End Tile Data Verification ===\n');
+      
+      // Ensure we have tiles that would be visible in a typical viewport
+      expect(tilesInViewport.length).toBeGreaterThan(0);
     });
 
     it('should return 401 for unauthenticated user', async () => {
@@ -197,8 +251,8 @@ describe('Map API Integration Tests', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return empty array for game with no visible tiles', async () => {
-      // Create another user with no visible tiles
+    it('should return all tiles even for users not in visibleTo list (no server-side fog of war)', async () => {
+      // Create another user with no visible tiles in the visibleTo array
       const otherUserId = 'otheruser';
       const otherSessionGuid = '22345678-2234-4223-8223-223456789abc';
       
@@ -224,7 +278,8 @@ describe('Map API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
-      expect(response.body.tiles.length).toBe(0);
+      // Server returns ALL tiles, not filtered by visibleTo
+      expect(response.body.tiles.length).toBe(100);
     });
   });
 
