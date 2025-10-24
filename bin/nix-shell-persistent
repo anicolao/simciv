@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+# Persistent Nix Shell Manager
+# Maintains a long-running shell with Nix environment using GNU Screen
+#
+# This avoids the overhead of repeatedly loading direnv for each command.
+# The shell session persists until explicitly terminated.
+
+set -e
+
+SESSION_NAME="simciv-nix-shell"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Initialize persistent shell with Nix environment
+init() {
+    echo "🔧 Initializing persistent Nix shell..."
+    
+    # Terminate existing session if any
+    screen -S "$SESSION_NAME" -X quit 2>/dev/null || true
+    sleep 0.5
+    
+    # Start a new detached screen session with nix-users group
+    if ! sg nix-users "screen -dmS '$SESSION_NAME' bash"; then
+        echo "❌ Failed to start screen session"
+        echo "   Make sure you're in the nix-users group"
+        return 1
+    fi
+    
+    sleep 1
+    
+    # Initialize the shell environment
+    echo "⏳ Setting up environment..."
+    
+    # Change to project directory
+    screen -S "$SESSION_NAME" -X stuff "cd '$PROJECT_DIR'\n"
+    sleep 0.3
+    
+    # Initialize direnv
+    screen -S "$SESSION_NAME" -X stuff 'eval "$(direnv hook bash)"'
+    screen -S "$SESSION_NAME" -X stuff $'\n'
+    sleep 0.3
+    
+    # Allow direnv (this loads the Nix environment)
+    screen -S "$SESSION_NAME" -X stuff 'direnv allow'
+    screen -S "$SESSION_NAME" -X stuff $'\n'
+    
+    # Wait for direnv to finish loading
+    # First time may take 1-2 minutes to download packages
+    echo "⏳ Loading Nix environment (first time may take 1-2 minutes)..."
+    sleep 90  # Give direnv time to complete
+    
+    # Clear any prompts
+    screen -S "$SESSION_NAME" -X stuff $'\n'
+    sleep 0.3
+    
+    echo ""
+    echo "✅ Persistent Nix shell ready!"
+    echo "   Session name: $SESSION_NAME"
+    echo "   Project directory: $PROJECT_DIR"
+    echo ""
+    echo "💡 Tips:"
+    echo "   - Use: $(basename $0) exec <command>   to run commands"
+    echo "   - Use: $(basename $0) attach           to attach interactively"
+    echo "   - Use: $(basename $0) cleanup          to terminate"
+}
+
+# Execute a command in the persistent shell
+exec_cmd() {
+    # Check if session exists
+    if ! screen -list 2>/dev/null | grep -q "$SESSION_NAME"; then
+        echo "❌ Persistent shell not running. Initialize with: $0 init" >&2
+        return 1
+    fi
+    
+    # Use a unique temporary file for output
+    local output_file="/tmp/screen-cmd-$$-$RANDOM.txt"
+    local done_marker="__COMMAND_COMPLETE_$$__"
+    
+    # Build the command with output redirection and completion marker
+    local full_cmd="($*) > '$output_file' 2>&1; echo '$done_marker' >> '$output_file'"
+    
+    # Send command to screen session
+    screen -S "$SESSION_NAME" -X stuff "$full_cmd"
+    screen -S "$SESSION_NAME" -X stuff $'\n'
+    
+    # Wait for completion marker
+    local count=0
+    local max_wait=600  # 60 seconds (0.1s intervals)
+    while ! grep -q "$done_marker" "$output_file" 2>/dev/null; do
+        sleep 0.1
+        count=$((count + 1))
+        if [ $count -gt $max_wait ]; then
+            echo "❌ Command timeout (60s exceeded)" >&2
+            rm -f "$output_file"
+            return 1
+        fi
+    done
+    
+    # Output the result (excluding the done marker)
+    grep -v "$done_marker" "$output_file" || true
+    
+    # Cleanup
+    rm -f "$output_file"
+}
+
+# Terminate the persistent shell
+cleanup() {
+    if screen -list 2>/dev/null | grep -q "$SESSION_NAME"; then
+        screen -S "$SESSION_NAME" -X quit
+        echo "✓ Persistent shell terminated"
+    else
+        echo "No persistent shell session found"
+    fi
+}
+
+# Show status
+status() {
+    if screen -list 2>/dev/null | grep -q "$SESSION_NAME"; then
+        echo "✅ Persistent Nix shell is running"
+        screen -list | grep "$SESSION_NAME" || true
+        return 0
+    else
+        echo "❌ Persistent Nix shell is not running"
+        echo "   Initialize with: $0 init"
+        return 1
+    fi
+}
+
+# Attach to the session interactively
+attach() {
+    if ! screen -list 2>/dev/null | grep -q "$SESSION_NAME"; then
+        echo "❌ Persistent shell not running. Initialize with: $0 init"
+        return 1
+    fi
+    
+    echo "Attaching to $SESSION_NAME (use Ctrl-A then d to detach)..."
+    screen -r "$SESSION_NAME"
+}
+
+# Show usage
+usage() {
+    cat << 'EOF'
+Persistent Nix Shell Manager
+
+Maintains a long-running shell with Nix environment loaded to avoid
+the overhead of repeatedly initializing direnv.
+
+Usage: nix-shell-persistent {init|exec|cleanup|status|attach}
+
+Commands:
+    init              Initialize persistent Nix shell session
+    exec <command>    Execute command in the persistent shell
+    cleanup           Terminate the persistent shell
+    status            Check if persistent shell is running
+    attach            Attach to shell interactively (Ctrl-A d to detach)
+
+Examples:
+    # Initialize once
+    $ nix-shell-persistent init
+    
+    # Execute commands efficiently (no direnv overhead)
+    $ nix-shell-persistent exec which go
+    $ nix-shell-persistent exec go version
+    $ nix-shell-persistent exec npm install
+    
+    # Check status
+    $ nix-shell-persistent status
+    
+    # Attach for interactive use
+    $ nix-shell-persistent attach
+    
+    # Cleanup when done
+    $ nix-shell-persistent cleanup
+
+Note: Requires GNU Screen. Install with: sudo apt-get install screen
+EOF
+}
+
+# Main command dispatcher
+case "${1:-}" in
+    init)
+        init
+        ;;
+    exec)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Error: No command specified"
+            echo "Usage: $0 exec <command>"
+            exit 1
+        fi
+        exec_cmd "$@"
+        ;;
+    cleanup)
+        cleanup
+        ;;
+    status)
+        status
+        ;;
+    attach)
+        attach
+        ;;
+    help|--help|-h)
+        usage
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
