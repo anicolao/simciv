@@ -27,45 +27,39 @@ Error: Download failed: size mismatch, file size: 182333649, expected size: 0
 
 **Root Cause**: The Playwright CDN (cdn.playwright.dev) returns a 307 redirect with `Content-Length: 0` in the redirect response. Playwright's download code reads this header value instead of the final response's content-length (182333649 bytes), causing the validation to fail even though the download completed successfully.
 
-**Workaround**: The project is configured to use the system-installed Chromium browser instead of downloading Playwright's bundled version.
+**Solution**: The project is configured to use Playwright's built-in `channel: 'chrome'` feature, which automatically uses the system-installed Chrome or Chromium browser instead of downloading Playwright's bundled browser.
 
 ### How It Works
 
-1. **Automatic Detection**: The `bin/e2e-setup` script automatically detects if Chromium is installed at common locations:
-   - `/usr/bin/chromium-browser`
-   - `/usr/bin/chromium`
-   - `/usr/bin/google-chrome`
+1. **Playwright Configuration**: The `playwright.config.ts` file specifies `channel: 'chrome'`, which tells Playwright to use the system-installed Chrome/Chromium browser.
 
-2. **Environment Variable**: If a system browser is found, the `CHROMIUM_PATH` environment variable is set to its path.
+2. **Automatic Browser Detection**: Playwright automatically finds Chrome/Chromium at standard system locations:
+   - Linux: `/usr/bin/google-chrome`, `/usr/bin/chromium-browser`, `/usr/bin/chromium`
+   - macOS: `/Applications/Google Chrome.app`
+   - Windows: Standard Chrome installation paths
 
-3. **Playwright Configuration**: The `playwright.config.ts` file checks for the `CHROMIUM_PATH` environment variable:
-   - If set: Uses the system browser with `launchOptions.executablePath` and `--headless=new` flag
-   - If not set: Falls back to attempting to use Playwright's bundled Chromium (which may fail with the download issue)
+3. **Skip Downloads**: The `.envrc` and `.env.example` files set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` to prevent automatic browser downloads during `npm install`.
 
-4. **npm Script**: The `test:e2e` script in `package.json` automatically detects and sets `CHROMIUM_PATH` if a system browser is available.
+4. **Simple Configuration**: No environment variables or manual configuration needed - it just works!
 
 ## Manual Setup
 
-If you prefer to manually configure the environment:
+If you don't have Chrome or Chromium installed:
 
-1. Find your Chromium installation:
-   ```bash
-   which chromium-browser
-   # or
-   which chromium
-   # or
-   which google-chrome
-   ```
+### Ubuntu/Debian
+```bash
+sudo apt-get install chromium-browser
+# or
+sudo apt-get install google-chrome-stable
+```
 
-2. Set the environment variable:
-   ```bash
-   export CHROMIUM_PATH=/path/to/your/chromium
-   ```
+### macOS
+```bash
+brew install --cask google-chrome
+```
 
-3. Run tests:
-   ```bash
-   npm run test:e2e
-   ```
+### Windows
+Download and install from: https://www.google.com/chrome/
 
 ## Running Specific Tests
 
@@ -86,47 +80,38 @@ npx playwright test --headed
 
 ## Troubleshooting
 
-### Tests fail with "Executable doesn't exist"
+### Tests fail with "browserType.launch: Executable doesn't exist"
 
-Make sure `CHROMIUM_PATH` is set correctly:
+This means Chrome/Chromium is not installed. Install it using the instructions in the Manual Setup section above.
+
+### System Chrome/Chromium version incompatibility
+
+The system Chrome/Chromium should be reasonably recent (version 90+). Check version:
 ```bash
-echo $CHROMIUM_PATH
-# Should print the path to chromium
-
-# Test it works:
-$CHROMIUM_PATH --version
-```
-
-### System Chromium version incompatibility
-
-The system Chromium should be reasonably recent (version 90+). Check version:
-```bash
+google-chrome --version
+# or
 chromium-browser --version
 ```
 
-If your system Chromium is too old, you may need to:
+If your system browser is too old:
 1. Update your system packages
 2. Install a newer version manually
-3. Try to fix the Playwright download issue (see below)
 
-## Attempting to Fix the Playwright Download Issue
+## Alternative: Using Playwright's Bundled Browsers
 
-If you want to try to use Playwright's bundled browsers instead of system Chromium:
+If the Playwright download issue gets fixed upstream, you can switch back to bundled browsers by:
 
-1. The issue appears to be related to how Playwright handles HTTP redirects in its download code
-2. The CDN redirect (307) has `Content-Length: 0` but the final response has the correct size
-3. Potential fixes (would require changes to `node_modules/playwright-core/lib/server/registry/oopDownloadBrowserMain.js`):
-   - Follow redirects and read content-length from final response
-   - Use a different HTTP client that handles redirects properly
-   - Skip content-length validation if it's 0
+1. Remove `channel: 'chrome'` from `playwright.config.ts`
+2. Remove `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` from `.envrc` and `.env.example`
+3. Run `npx playwright install chromium`
 
-For now, using system Chromium is the recommended approach.
+However, using system browsers is actually a best practice for E2E testing as it tests against real-world browser installations.
 
 ## System Requirements
 
 - **MongoDB**: Must be running on localhost:27017 (managed by `bin/mongo` script)
 - **Node.js**: Version specified in project requirements
-- **Chromium/Chrome**: Version 90+ recommended
+- **Chrome/Chromium**: Any recent version (90+)
 - **Server**: Must be running on localhost:3000
 
 ## E2E Test Architecture

@@ -17,17 +17,9 @@ export default defineConfig({
       name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],
-        // Use system chromium to avoid playwright download issues
-        // When CHROMIUM_PATH is set, use that path with new headless mode
-        ...(process.env.CHROMIUM_PATH ? {
-          launchOptions: {
-            executablePath: process.env.CHROMIUM_PATH,
-            args: ['--headless=new'],
-          },
-        } : {
-          // Default: use playwright's bundled chromium with headless mode
-          headless: true,
-        }),
+        // Use 'chrome' channel to use system-installed Chrome/Chromium
+        // This avoids the Playwright download issue entirely
+        channel: 'chrome',
       },
     },
   ],
