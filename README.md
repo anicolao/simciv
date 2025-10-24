@@ -119,6 +119,28 @@ nix develop
 # Then follow the standard setup steps below
 ```
 
+#### Using nix-bin with direnv (Ubuntu/Debian)
+
+For a lighter-weight alternative on Ubuntu/Debian systems, you can use `nix-bin` from apt with direnv for automatic environment activation:
+
+```bash
+# Run the setup script
+./SETUP_NIX_BIN.sh
+
+# Log out and log back in for group membership to take effect
+
+# Then allow direnv in the project directory
+cd simciv
+direnv allow
+
+# The environment will be automatically loaded when you enter the directory
+# Run the e2e setup and tests
+e2e-setup
+npm run test:e2e
+```
+
+See [docs/NIX_BIN_SETUP.md](docs/NIX_BIN_SETUP.md) for detailed instructions and troubleshooting.
+
 #### Standard Setup
 
 To run SimCiv locally:
