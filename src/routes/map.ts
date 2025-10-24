@@ -26,7 +26,7 @@ router.get('/:gameId/metadata', async (req: Request, res: Response) => {
   }
 });
 
-// Get map tiles for a game (filtered by player visibility)
+// Get map tiles for a game (no server-side fog of war)
 router.get('/:gameId/tiles', async (req: Request, res: Response) => {
   try {
     const { gameId } = req.params;
@@ -36,12 +36,10 @@ router.get('/:gameId/tiles', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    // Get only visible tiles for this player
+    // Return ALL tiles for the game - no server-side fog of war
+    // Client will handle visibility/fog of war if needed
     const tiles = await getMapTilesCollection()
-      .find({
-        gameId,
-        visibleTo: userId
-      })
+      .find({ gameId })
       .toArray();
 
     res.json({ tiles });

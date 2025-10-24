@@ -173,7 +173,7 @@ describe('Map API Integration Tests', () => {
   });
 
   describe('GET /api/map/:gameId/tiles', () => {
-    it('should return visible tiles for authenticated user', async () => {
+    it('should return ALL tiles for authenticated user (no fog of war on server)', async () => {
       const response = await request(app)
         .get(`/api/map/${testGameId}/tiles`)
         .set('Cookie', [`simciv_session=${testSessionGuid}`]);
@@ -181,13 +181,14 @@ describe('Map API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
       expect(Array.isArray(response.body.tiles)).toBe(true);
-      expect(response.body.tiles.length).toBe(100); // 10x10 tiles we created
+      expect(response.body.tiles.length).toBe(100); // 10x10 tiles we created - ALL tiles, not just visible ones
       
       // Check tile properties
       const firstTile = response.body.tiles[0];
       expect(firstTile.gameId).toBe(testGameId);
       expect(firstTile.terrainType).toBe('GRASSLAND');
-      expect(firstTile.visibleTo).toContain(testUserId);
+      // Tiles should have visibleTo property but server doesn't filter by it
+      expect(firstTile.visibleTo).toBeDefined();
     });
 
     it('should return 401 for unauthenticated user', async () => {
@@ -197,8 +198,8 @@ describe('Map API Integration Tests', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return empty array for game with no visible tiles', async () => {
-      // Create another user with no visible tiles
+    it('should return all tiles even for users not in visibleTo list (no server-side fog of war)', async () => {
+      // Create another user with no visible tiles in the visibleTo array
       const otherUserId = 'otheruser';
       const otherSessionGuid = '22345678-2234-4223-8223-223456789abc';
       
@@ -224,7 +225,8 @@ describe('Map API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.tiles).toBeDefined();
-      expect(response.body.tiles.length).toBe(0);
+      // Server returns ALL tiles, not filtered by visibleTo
+      expect(response.body.tiles.length).toBe(100);
     });
   });
 
