@@ -8,6 +8,7 @@ public/*
 !public/assets/
 public/assets/*.js
 public/assets/*.css
+public/assets/freeciv/
 *.js
 *.js.map
 *.d.ts
