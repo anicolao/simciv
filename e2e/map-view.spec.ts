@@ -2,6 +2,7 @@ import { test, expect, Page, Browser } from '@playwright/test';
 
 // Helper to register and login a user
 async function registerAndLogin(page: Page, alias: string, password: string): Promise<void> {
+  console.log(`[E2E] Registering user: ${alias}`);
   // Navigate to page
   await page.goto('/');
   
@@ -14,15 +15,19 @@ async function registerAndLogin(page: Page, alias: string, password: string): Pr
   await page.fill('input[id="passwordConfirm"]', password);
   
   // Submit registration
+  console.log(`[E2E] Submitting registration for ${alias}...`);
   await page.locator('form button[type="submit"]').first().click();
 
   // Wait for registration to complete
+  console.log(`[E2E] Waiting for key generation for ${alias}...`);
   await expect(page.locator('.message.success')).toContainText('Registration successful', {
     timeout: 90000 // 90 seconds for key generation (can be slow in CI)
   });
+  console.log(`[E2E] Registration successful for ${alias}`);
 
   // Should be authenticated now
   await expect(page.locator('.authenticated')).toBeVisible();
+  console.log(`[E2E] ${alias} is authenticated`);
 }
 
 // Register two users in parallel to save time
@@ -50,11 +55,14 @@ test.describe('Map View E2E Tests', () => {
     const alias2 = `mapuser2_${timestamp}`;
     const password = 'TestPassword123!';
     
+    console.log('[E2E] Starting parallel user registration...');
     // Register both users in parallel
     const { context1, context2, page1, page2 } = await registerTwoUsersParallel(browser, alias1, alias2, password);
+    console.log('[E2E] User registration complete');
     
     try {
       // Player 1: Create game
+      console.log('[E2E] Player 1: Creating game...');
       await expect(page1.locator('h2:has-text("Game Lobby")')).toBeVisible();
       await page1.click('button:has-text("Create New Game")');
       await expect(page1.locator('h3:has-text("Create New Game")')).toBeVisible();
@@ -65,46 +73,65 @@ test.describe('Map View E2E Tests', () => {
       // Get the game ID from the game card created by player 1
       const gameIdText = await page1.locator('.game-card').first().locator('.game-id').textContent();
       const gameId = gameIdText?.replace('Game #', '').trim();
+      console.log(`[E2E] Game created with ID: ${gameId}`);
       
       // Player 2: Join the specific game created by player 1
+      console.log('[E2E] Player 2: Joining game...');
       await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
       
       // Find the game card that matches the game ID
       const gameCard = page2.locator('.game-card').filter({ hasText: `Game #${gameId}` });
       await expect(gameCard).toBeVisible({ timeout: 10000 });
       await gameCard.locator('button:has-text("Join")').click();
+      console.log('[E2E] Player 2: Join button clicked');
       
       // Wait longer for game to transition to started state
+      console.log('[E2E] Waiting for game to start...');
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
+      console.log('[E2E] Game started');
       
       // Wait for map to be generated (game engine processes first tick)
+      console.log('[E2E] Waiting 3 seconds for map generation...');
       await page2.waitForTimeout(3000);
       
       // Click on started game to open details modal
+      console.log('[E2E] Opening game details modal...');
       await page2.locator('.game-card.started').first().click();
       
       // Wait for map section in modal
+      console.log('[E2E] Waiting for map section to appear...');
       await expect(page2.locator('h3:has-text("Map")')).toBeVisible({ timeout: 10000 });
+      console.log('[E2E] Map section visible');
       
       // Screenshot 19: Map section visible
+      console.log('[E2E] Taking screenshot 19...');
       await page2.screenshot({ path: 'e2e-screenshots/19-map-section-visible.png', fullPage: true });
       
       // Verify map components
+      console.log('[E2E] Verifying map legend...');
       await expect(page2.locator('.map-legend')).toBeVisible();
+      console.log('[E2E] Verifying map tiles...');
       await expect(page2.locator('.map-tile').first()).toBeVisible();
       
       // Screenshot 20: Complete map view with legend and tiles
+      console.log('[E2E] Taking screenshot 20...');
       await page2.screenshot({ path: 'e2e-screenshots/20-map-view-complete.png', fullPage: true });
       
       // Screenshot 21: Starting city marker
+      console.log('[E2E] Looking for city marker...');
       const cityMarker = page2.locator('.map-tile .city-marker');
       await expect(cityMarker).toBeVisible({ timeout: 5000 });
+      console.log('[E2E] Taking screenshot 21...');
       await page2.screenshot({ path: 'e2e-screenshots/21-map-starting-city-marker.png', fullPage: true });
       
       // Screenshot 22: Resource markers
+      console.log('[E2E] Looking for resource markers...');
       const resourceMarkers = page2.locator('.map-tile .resource-marker');
       await expect(resourceMarkers.first()).toBeVisible({ timeout: 5000 });
+      console.log('[E2E] Taking screenshot 22...');
       await page2.screenshot({ path: 'e2e-screenshots/22-map-resource-markers.png', fullPage: true });
+      
+      console.log('[E2E] Test completed successfully!');
       
       await context1.close();
       await context2.close();
