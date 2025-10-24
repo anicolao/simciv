@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getMapTiles, getStartingPosition, getMapMetadata } from '../utils/api';
+  import { getTerrainSprite } from './terrainSprites';
 
   export let gameId: string;
 
@@ -36,28 +37,37 @@
   let error = '';
   let viewOffsetX = 0;
   let viewOffsetY = 0;
-  const tileSize = 32; // pixels
+  let canvas: HTMLCanvasElement;
+  let ctx: CanvasRenderingContext2D | null = null;
+  let tilesetImage: HTMLImageElement | null = null;
+  let imageLoaded = false;
+  
+  const TILE_SIZE = 30; // FreeCiv Trident tiles are 30x30
+  const DISPLAY_TILE_SIZE = 32; // Display at slightly larger size
   const viewportTilesX = 20;
   const viewportTilesY = 15;
 
-  // Terrain type to color mapping
-  const terrainColors: Record<string, string> = {
-    'OCEAN': '#1e40af',
-    'SHALLOW_WATER': '#3b82f6',
-    'MOUNTAIN': '#78716c',
-    'HILLS': '#a8a29e',
-    'GRASSLAND': '#22c55e',
-    'PLAINS': '#84cc16',
-    'FOREST': '#166534',
-    'JUNGLE': '#14532d',
-    'DESERT': '#eab308',
-    'TUNDRA': '#e5e7eb',
-    'ICE': '#f3f4f6'
-  };
-
   onMount(async () => {
+    await loadTileset();
     await loadMap();
   });
+
+  async function loadTileset() {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        tilesetImage = img;
+        imageLoaded = true;
+        console.log('[MapView] Tileset loaded:', img.width, 'x', img.height);
+        resolve();
+      };
+      img.onerror = () => {
+        console.error('[MapView] Failed to load tileset');
+        reject(new Error('Failed to load tileset'));
+      };
+      img.src = '/assets/freeciv/trident/tiles.png';
+    });
+  }
 
   async function loadMap() {
     loading = true;
@@ -91,10 +101,107 @@
       }
 
       loading = false;
+      
+      // Render the map once data is loaded
+      renderMap();
     } catch (err: any) {
       error = err.message || 'Failed to load map';
       loading = false;
     }
+  }
+
+  function renderMap() {
+    if (!canvas || !imageLoaded || !tilesetImage) {
+      console.log('[MapView] Cannot render: canvas or tileset not ready');
+      return;
+    }
+
+    ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('[MapView] Failed to get canvas context');
+      return;
+    }
+
+    // Enable pixelated rendering for crisp tiles
+    ctx.imageSmoothingEnabled = false;
+
+    // Clear canvas
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Render each tile
+    for (let row = 0; row < viewportTilesY; row++) {
+      for (let col = 0; col < viewportTilesX; col++) {
+        const tileX = viewOffsetX + col;
+        const tileY = viewOffsetY + row;
+        const tile = getTileAt(tileX, tileY);
+
+        if (tile) {
+          renderTile(ctx, tile, col * DISPLAY_TILE_SIZE, row * DISPLAY_TILE_SIZE);
+        }
+      }
+    }
+
+    // Render starting city marker
+    if (startingPosition) {
+      const cityCol = startingPosition.startingCityX - viewOffsetX;
+      const cityRow = startingPosition.startingCityY - viewOffsetY;
+      
+      if (cityCol >= 0 && cityCol < viewportTilesX && cityRow >= 0 && cityRow < viewportTilesY) {
+        renderCityMarker(ctx, cityCol * DISPLAY_TILE_SIZE, cityRow * DISPLAY_TILE_SIZE);
+      }
+    }
+  }
+
+  function renderTile(ctx: CanvasRenderingContext2D, tile: MapTile, x: number, y: number) {
+    const sprite = getTerrainSprite(tile.terrainType);
+    
+    if (sprite && tilesetImage) {
+      // Draw the terrain sprite from the tileset
+      ctx.drawImage(
+        tilesetImage,
+        sprite.x, sprite.y, TILE_SIZE, TILE_SIZE,  // Source rectangle
+        x, y, DISPLAY_TILE_SIZE, DISPLAY_TILE_SIZE  // Destination rectangle
+      );
+
+      // Draw resource marker if present
+      if (tile.resources.length > 0) {
+        renderResourceMarker(ctx, tile.resources[0], x, y);
+      }
+    } else {
+      // Fallback: draw a colored rectangle
+      ctx.fillStyle = getTerrainColor(tile.terrainType);
+      ctx.fillRect(x, y, DISPLAY_TILE_SIZE, DISPLAY_TILE_SIZE);
+    }
+  }
+
+  function renderResourceMarker(ctx: CanvasRenderingContext2D, resource: string, x: number, y: number) {
+    // Draw a small circle with the first letter of the resource
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.arc(x + DISPLAY_TILE_SIZE - 8, y + 8, 6, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 8px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(resource.charAt(0), x + DISPLAY_TILE_SIZE - 8, y + 8);
+  }
+
+  function renderCityMarker(ctx: CanvasRenderingContext2D, x: number, y: number) {
+    // Draw a star marker for the starting city
+    ctx.font = '20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw shadow
+    ctx.fillStyle = '#000';
+    ctx.fillText('⭐', x + DISPLAY_TILE_SIZE / 2 + 1, y + DISPLAY_TILE_SIZE / 2 + 1);
+    
+    // Draw star
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText('⭐', x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2);
   }
 
   function getTileAt(x: number, y: number): MapTile | undefined {
@@ -102,13 +209,25 @@
   }
 
   function getTerrainColor(terrainType: string): string {
-    return terrainColors[terrainType] || '#9ca3af';
+    const colors: Record<string, string> = {
+      'OCEAN': '#1e40af',
+      'SHALLOW_WATER': '#3b82f6',
+      'MOUNTAIN': '#78716c',
+      'HILLS': '#a8a29e',
+      'GRASSLAND': '#22c55e',
+      'PLAINS': '#84cc16',
+      'FOREST': '#166534',
+      'JUNGLE': '#14532d',
+      'DESERT': '#eab308',
+      'TUNDRA': '#e5e7eb',
+      'ICE': '#f3f4f6'
+    };
+    return colors[terrainType] || '#9ca3af';
   }
 
-  function getResourceIcon(resources: string[]): string {
-    if (resources.length === 0) return '';
-    // Show first letter of first resource
-    return resources[0].charAt(0);
+  // Re-render when canvas is mounted
+  $: if (canvas && imageLoaded && tiles.length > 0) {
+    renderMap();
   }
 </script>
 
@@ -129,42 +248,19 @@
         {/if}
       </div>
       
-      <div class="map-grid">
-        {#each Array(viewportTilesY) as _, row}
-          <div class="map-row">
-            {#each Array(viewportTilesX) as _, col}
-              {@const tileX = viewOffsetX + col}
-              {@const tileY = viewOffsetY + row}
-              {@const tile = getTileAt(tileX, tileY)}
-              <div 
-                class="map-tile"
-                class:hidden={!tile}
-                class:coastal={tile?.isCoastal}
-                class:river={tile?.hasRiver}
-                style="background-color: {tile ? getTerrainColor(tile.terrainType) : '#000'}"
-                title={tile ? `${tile.terrainType} (${tileX},${tileY})` : 'Hidden'}
-              >
-                {#if tile && tile.resources.length > 0}
-                  <span class="resource-marker">{getResourceIcon(tile.resources)}</span>
-                {/if}
-                {#if startingPosition && tileX === startingPosition.startingCityX && tileY === startingPosition.startingCityY}
-                  <span class="city-marker">⭐</span>
-                {/if}
-              </div>
-            {/each}
-          </div>
-        {/each}
+      <div class="canvas-container">
+        <canvas
+          bind:this={canvas}
+          width={viewportTilesX * DISPLAY_TILE_SIZE}
+          height={viewportTilesY * DISPLAY_TILE_SIZE}
+          class="map-canvas"
+        ></canvas>
       </div>
 
       <div class="legend">
-        <h4>Legend</h4>
-        <div class="legend-items">
-          {#each Object.entries(terrainColors) as [terrain, color]}
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: {color}"></div>
-              <span>{terrain}</span>
-            </div>
-          {/each}
+        <h4>Terrain Legend</h4>
+        <div class="legend-text">
+          Map rendered using FreeCiv Trident tileset (30x30 pixel sprites)
         </div>
       </div>
     </div>
@@ -213,62 +309,17 @@
     font-size: 14px;
   }
 
-  .map-grid {
+  .canvas-container {
     display: flex;
-    flex-direction: column;
-    border: 1px solid #999;
-    width: fit-content;
-    margin: 0 auto;
-  }
-
-  .map-row {
-    display: flex;
-  }
-
-  .map-tile {
-    width: 32px;
-    height: 32px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    position: relative;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 10px;
-    color: white;
-    text-shadow: 0 0 2px black;
+    border: 2px solid #999;
+    background: #000;
   }
 
-  .map-tile.hidden {
-    background-color: #000 !important;
-  }
-
-  .map-tile.coastal {
-    border: 1px solid #60a5fa;
-  }
-
-  .map-tile.river {
-    box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.5);
-  }
-
-  .resource-marker {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    font-size: 8px;
-    font-weight: bold;
-    background: rgba(255, 255, 255, 0.8);
-    color: #000;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .city-marker {
-    font-size: 16px;
-    filter: drop-shadow(0 0 2px black);
+  .map-canvas {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
   }
 
   .legend {
@@ -284,22 +335,8 @@
     color: #555;
   }
 
-  .legend-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-  }
-
-  .legend-color {
-    width: 20px;
-    height: 20px;
-    border: 1px solid #999;
+  .legend-text {
+    color: #666;
+    font-size: 14px;
   }
 </style>
