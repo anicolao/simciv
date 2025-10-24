@@ -94,9 +94,9 @@ test.describe('Map View E2E Tests', () => {
       console.log('[E2E] Waiting 3 seconds for map generation...');
       await page2.waitForTimeout(3000);
       
-      // Click on started game to open details modal
+      // Click on the specific started game to open details modal
       console.log('[E2E] Opening game details modal...');
-      await page2.locator('.game-card.started').first().click();
+      await gameCard.click();
       
       // Wait for map section in modal
       console.log('[E2E] Waiting for map section to appear...');
