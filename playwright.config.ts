@@ -11,13 +11,23 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'on',
-    headless: true,
   },
   projects: [
     {
       name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],
+        // Use system chromium to avoid playwright download issues
+        // When CHROMIUM_PATH is set, use that path with new headless mode
+        ...(process.env.CHROMIUM_PATH ? {
+          launchOptions: {
+            executablePath: process.env.CHROMIUM_PATH,
+            args: ['--headless=new'],
+          },
+        } : {
+          // Default: use playwright's bundled chromium with headless mode
+          headless: true,
+        }),
       },
     },
   ],
