@@ -101,8 +101,17 @@ fi
 echo ""
 echo "✅ E2E test environment is ready!"
 echo ""
-echo "To run tests:"
-echo "  npm run test:e2e"
+if [ -n "$CHROMIUM_PATH" ]; then
+    echo "To run tests with system Chromium:"
+    echo "  CHROMIUM_PATH=$CHROMIUM_PATH npm run test:e2e"
+    echo ""
+    echo "Or export the variable first:"
+    echo "  export CHROMIUM_PATH=$CHROMIUM_PATH"
+    echo "  npm run test:e2e"
+else
+    echo "To run tests:"
+    echo "  npm run test:e2e"
+fi
 echo ""
 echo "To run tests in UI mode:"
 echo "  npx playwright test --ui"

@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "bash -c 'export CHROMIUM_PATH=${CHROMIUM_PATH:-$(command -v chromium-browser || command -v chromium || command -v google-chrome || echo \"\")}; playwright test'"
   },
   "keywords": [],
   "author": "",
