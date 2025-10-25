@@ -441,12 +441,17 @@
   function clampViewOffset() {
     if (!metadata) return;
     
-    // Calculate max offset in pixels
-    const maxOffsetX = Math.max(0, (metadata.width - viewportTilesX) * DISPLAY_TILE_SIZE);
-    const maxOffsetY = Math.max(0, (metadata.height - viewportTilesY) * DISPLAY_TILE_SIZE);
+    // Allow panning as long as at least one tile is visible
+    // Maximum offset is when the last tile is at the top-left corner of viewport
+    const maxOffsetX = metadata.width * DISPLAY_TILE_SIZE - DISPLAY_TILE_SIZE;
+    const maxOffsetY = metadata.height * DISPLAY_TILE_SIZE - DISPLAY_TILE_SIZE;
     
-    viewOffsetX = Math.max(0, Math.min(viewOffsetX, maxOffsetX));
-    viewOffsetY = Math.max(0, Math.min(viewOffsetY, maxOffsetY));
+    // Minimum offset is when the first tile is at the bottom-right corner of viewport
+    const minOffsetX = -(640 - DISPLAY_TILE_SIZE);
+    const minOffsetY = -(480 - DISPLAY_TILE_SIZE);
+    
+    viewOffsetX = Math.max(minOffsetX, Math.min(viewOffsetX, maxOffsetX));
+    viewOffsetY = Math.max(minOffsetY, Math.min(viewOffsetY, maxOffsetY));
   }
 
   // Re-render when canvas is mounted, tiles are loaded, or view changes
