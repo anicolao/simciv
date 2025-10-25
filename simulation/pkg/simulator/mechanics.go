@@ -20,7 +20,7 @@ const (
 	HealthHalfWork = 30.0
 
 	// Food production
-	FoodBaseRate = 0.3 // Food units per hour
+	FoodBaseRate = 1.0 // Food units per hour (viability threshold found via testing)
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production

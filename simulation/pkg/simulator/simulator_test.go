@@ -204,16 +204,17 @@ func TestProduceFood(t *testing.T) {
 		terrainMultiplier float64
 		expected          float64
 	}{
-		{"Base production", 100, false, 1.0, 30.0}, // 100 * 0.3 * 1.0 * 1.0
-		{"With Fire Mastery", 100, true, 1.0, 34.5}, // 100 * 0.3 * 1.15 * 1.0
-		{"Harsh terrain", 100, false, 0.6, 18.0}, // 100 * 0.3 * 1.0 * 0.6
-		{"Good terrain", 100, false, 1.5, 45.0}, // 100 * 0.3 * 1.0 * 1.5
+		{"Base production", 100, false, 1.0, 100.0}, // 100 * 1.0 * 1.0 * 1.0
+		{"With Fire Mastery", 100, true, 1.0, 115.0}, // 100 * 1.0 * 1.15 * 1.0
+		{"Harsh terrain", 100, false, 0.6, 60.0}, // 100 * 1.0 * 1.0 * 0.6
+		{"Good terrain", 100, false, 1.5, 150.0}, // 100 * 1.0 * 1.0 * 1.5
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := produceFood(tt.foodHours, tt.hasFireMastery, tt.terrainMultiplier)
-			if result != tt.expected {
+			epsilon := 0.0001
+			if result < tt.expected-epsilon || result > tt.expected+epsilon {
 				t.Errorf("Expected %f food, got %f", tt.expected, result)
 			}
 		})
