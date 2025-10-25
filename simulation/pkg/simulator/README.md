@@ -17,11 +17,11 @@ This package implements the minimal viable simulator as specified in `designs/MI
 ## Parameter Adjustments (Latest)
 
 **Current Configuration** (as of latest commit):
-- **Science Rate**: 0.002 (reduced by 500x from original 1.0)
+- **Science Rate**: 0.01 (reduced by 100x from original 1.0)
 - **Age Distribution**: 25% children, 60% adults, 15% elders (adjusted from 30/50/20)
 
 These parameters were adjusted to:
-1. Slow down Fire Mastery unlock to realistic timeframes (~3500 days / 9.6 years)
+1. Test different science production rates (tested 500x and 100x slower)
 2. Increase working adult population for better productivity
 3. Reduce non-productive population segments
 
@@ -53,32 +53,37 @@ These parameters were adjusted to:
 - **Average Time to Fire Mastery**: 7.9 days (for successful runs)
 - **Common Failure**: Population extinction or health decline before Fire Mastery
 
-### Adjusted Parameters (Science Rate = 0.002, Age 25/60/15)
+### Adjusted Parameters Comparison
 
-**Viability Comparison**:
+**Viability Comparison Across Different Science Rates**:
 
-| Metric | Original | Adjusted |
-|--------|----------|----------|
-| Science Rate | 1.0 | 0.002 (500x slower) |
-| Age Distribution | 30/50/20 | 25/60/15 |
-| Fire Mastery Time | 7-10 days | ~3500 days (>5 year limit) |
-| Viable Seeds | 16/50 (32%) | 0/50 (0%)* |
-| Surviving Populations | N/A | 48/50 (96%) |
-| Final Population (avg) | N/A | 4.0 (20% of start) |
-| Final Science (avg) | N/A | 0.24 points (0.24% of goal) |
+| Metric | Original | 500x Slower | 100x Slower |
+|--------|----------|-------------|-------------|
+| Science Rate | 1.0 | 0.002 | 0.01 |
+| Age Distribution | 30/50/20 | 25/60/15 | 25/60/15 |
+| Fire Mastery Time | 7-10 days | ~3500 days* | ~150,000 days* |
+| Viable Seeds | 16/50 (32%) | 0/50 (0%) | 0/50 (0%) |
+| Surviving Populations | N/A | 48/50 (96%) | 48/50 (96%) |
+| Final Population (avg) | N/A | 4.0 (20% of start) | 4.0 (20% of start) |
+| Final Science (avg) | N/A | 0.24 (0.24%) | 1.22 (1.2%) |
 
-\* No positions are "viable" by Fire Mastery criteria since it requires >5 years
+\* Exceeds the 5-year (1825-day) simulation limit
 
 **Impact of Adjustments**:
-1. **Science Production**: 500x slower means Fire Mastery requires ~3500 days (9.6 years), which exceeds the 5-year simulation limit
+1. **Science Production Comparison**:
+   - **500x slower (0.002)**: Accumulates ~0.24 science in 5 years, would need ~300 years for Fire Mastery
+   - **100x slower (0.01)**: Accumulates ~1.2 science in 5 years, would need ~200-300 years for Fire Mastery
+   - Both rates are still far too slow due to population decline stopping science production
 2. **Age Distribution**: More adults (60% vs 50%) improves workforce but doesn't prevent long-term decline
-3. **Survival vs Thriving**: 96% of populations survive but decline to ~20% of starting size
+3. **Survival vs Thriving**: 96% of populations survive but decline to ~20% of starting size regardless of science rate
 4. **Key Insight**: Default 80/20 food allocation is not sustainable long-term without science progression
 
 **Analysis**:
 With slow science production, the simulation reveals fundamental game balance issues:
 - Populations can survive but cannot thrive with 80/20 allocation
 - Without Fire Mastery (+15% food production), populations slowly starve
+- Population decline causes health to drop to 0, halting all science production
+- Even at 100x slower (vs 500x), populations accumulate only 1.2% of needed science in 5 years
 - Higher food allocation (90-95%) would be needed for sustainable growth
 - The adjusted age distribution helps survival but doesn't solve the core food shortage
 

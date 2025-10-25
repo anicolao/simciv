@@ -234,9 +234,9 @@ func TestProduceScience(t *testing.T) {
 		minExpected   float64
 		maxExpected   float64
 	}{
-		// With ScienceBaseRate = 0.002 (500x slower than original)
-		{"Healthy population", 10, population20, avgHealthy, 0.024, 0.028}, // ~0.026
-		{"Unhealthy population", 10, population20, avgUnhealthy, 0.012, 0.015}, // ~0.013 (halved)
+		// With ScienceBaseRate = 0.01 (100x slower than original)
+		{"Healthy population", 10, population20, avgHealthy, 0.120, 0.140}, // ~0.13
+		{"Unhealthy population", 10, population20, avgUnhealthy, 0.060, 0.070}, // ~0.065 (halved)
 		{"Zero hours", 0, population20, avgHealthy, 0, 0},
 	}
 
