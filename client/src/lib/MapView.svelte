@@ -60,6 +60,7 @@
   $: viewportTilesY = Math.floor(480 / DISPLAY_TILE_SIZE);
   
   let wheelHandler: ((e: WheelEvent) => void) | null = null;
+  let wheelListenerAdded = false;
 
   onMount(async () => {
     try {
@@ -69,16 +70,17 @@
       // Continue anyway - will show error or fallback rendering
     }
     await loadMap();
-    
-    // Add wheel event listener after mount
-    if (canvas) {
-      wheelHandler = (e: WheelEvent) => {
-        handleWheel(e);
-      };
-      canvas.addEventListener('wheel', wheelHandler, { passive: false });
-      console.log('[MapView] Wheel event listener added');
-    }
   });
+  
+  // Add wheel event listener when canvas is available
+  $: if (canvas && !wheelListenerAdded) {
+    wheelHandler = (e: WheelEvent) => {
+      handleWheel(e);
+    };
+    canvas.addEventListener('wheel', wheelHandler, { passive: false });
+    wheelListenerAdded = true;
+    console.log('[MapView] Wheel event listener added');
+  }
   
   onDestroy(() => {
     // Cleanup
