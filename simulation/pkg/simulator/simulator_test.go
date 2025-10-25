@@ -1,6 +1,7 @@
 package simulator
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -235,9 +236,9 @@ func TestProduceScience(t *testing.T) {
 		minExpected   float64
 		maxExpected   float64
 	}{
-		// With ScienceBaseRate = 0.01 (100x slower than original)
-		{"Healthy population", 10, population20, avgHealthy, 0.120, 0.140}, // ~0.13
-		{"Unhealthy population", 10, population20, avgUnhealthy, 0.060, 0.070}, // ~0.065 (halved)
+		// With ScienceBaseRate = 0.001 (1000x slower than original)
+		{"Healthy population", 10, population20, avgHealthy, 0.012, 0.014}, // ~0.013
+		{"Unhealthy population", 10, population20, avgUnhealthy, 0.006, 0.007}, // ~0.0065 (halved)
 		{"Zero hours", 0, population20, avgHealthy, 0, 0},
 	}
 
@@ -525,30 +526,83 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 	viableCount := stats["viable_count"].(int)
 	viabilityRate := stats["viability_rate"].(float64)
 	
-	t.Logf("Viability results across %d seeds:", len(VIABILITY_TEST_SEEDS))
-	t.Logf("  Viable: %d/%d (%.1f%%)", viableCount, len(results), viabilityRate*100)
+	// Print comprehensive statistics table
+	separator := strings.Repeat("=", 80)
+	dashedLine := strings.Repeat("-", 80)
+	t.Logf("\n%s", separator)
+	t.Logf("VIABILITY RESULTS ACROSS %d SEEDS", len(VIABILITY_TEST_SEEDS))
+	t.Logf("%s", separator)
+	t.Logf("\n%-40s %10s %15s", "Metric", "Average", "Std Dev")
+	t.Logf("%s", dashedLine)
 	
-	if fireMasteryCount, ok := stats["fire_mastery_count"].(int); ok && fireMasteryCount > 0 {
-		t.Logf("  Fire Mastery unlocked: %d/%d", fireMasteryCount, len(results))
+	// Viability metrics
+	t.Logf("%-40s %10d / %d (%.1f%%)", "Viable Seeds", 
+		viableCount, len(results), viabilityRate*100)
+	
+	if fireMasteryCount, ok := stats["fire_mastery_count"].(int); ok {
+		t.Logf("%-40s %10d / %d (%.1f%%)", "Fire Mastery Unlocked", 
+			fireMasteryCount, len(results), 
+			float64(fireMasteryCount)/float64(len(results))*100)
+		
 		if avgDays, ok := stats["avg_days_to_fire_mastery"].(float64); ok {
-			t.Logf("  Average days to Fire Mastery: %.1f (%.1f years)", avgDays, avgDays/365.0)
+			stdDays := 0.0
+			if sd, ok := stats["stddev_days_to_fire_mastery"].(float64); ok {
+				stdDays = sd
+			}
+			t.Logf("%-40s %10.1f %15.1f", "Days to Fire Mastery", avgDays, stdDays)
+			if avgYears, ok := stats["avg_years_to_fire_mastery"].(float64); ok {
+				t.Logf("%-40s %10.2f %15.2f", "Years to Fire Mastery", avgYears, stdDays/365.0)
+			}
 		}
 	}
 	
-	// With 500x slower science and adjusted population distribution (25/60/15),
-	// Fire Mastery requires ~3500 days, which exceeds the 5-year (1825-day) limit.
-	// So we focus on population survival as the viability measure instead.
+	t.Logf("")
+	
+	// Population metrics
+	if avgPop, ok := stats["avg_population"].(float64); ok {
+		stdPop := 0.0
+		if sd, ok := stats["stddev_population"].(float64); ok {
+			stdPop = sd
+		}
+		t.Logf("%-40s %10.1f %15.1f", "Final Population", avgPop, stdPop)
+	}
+	
+	if avgBirths, ok := stats["avg_births"].(float64); ok {
+		t.Logf("%-40s %10.1f", "Total Births", avgBirths)
+	}
+	
+	t.Logf("")
+	
+	// Science and health metrics
+	if avgScience, ok := stats["avg_science"].(float64); ok {
+		stdScience := 0.0
+		if sd, ok := stats["stddev_science"].(float64); ok {
+			stdScience = sd
+		}
+		t.Logf("%-40s %10.1f %15.1f", "Final Science Points", avgScience, stdScience)
+		t.Logf("%-40s %10.1f%%", "Science Progress (% of 100)", avgScience)
+	}
+	
+	if avgHealth, ok := stats["avg_health"].(float64); ok {
+		t.Logf("%-40s %10.1f", "Average Health", avgHealth)
+	}
+	
+	t.Logf("%s\n", separator)
+	
+	// Check survival count
 	survivingCount := 0
 	for _, r := range results {
 		if r.FinalPopulation > 0 {
 			survivingCount++
 		}
 	}
-	t.Logf("  Populations surviving: %d/%d (%.1f%%)", survivingCount, len(results), float64(survivingCount)/float64(len(results))*100)
+	t.Logf("Populations surviving: %d/%d (%.1f%%)\n", survivingCount, len(results), 
+		float64(survivingCount)/float64(len(results))*100)
 	
-	// Expect most populations to at least survive (not go extinct)
-	if survivingCount < len(results)/2 {
-		t.Errorf("Expected at least half of populations to survive, got %d/%d", survivingCount, len(results))
+	// Expect all populations to be viable with 100 starting population
+	if viableCount < len(results) {
+		t.Errorf("Expected 100%% viability with 100 starting population, got %d/%d (%.1f%%)", 
+			viableCount, len(results), viabilityRate*100)
 	}
 	
 	// Check that results are variable (not all identical)

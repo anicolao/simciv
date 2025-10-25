@@ -24,7 +24,7 @@ const (
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production
-	ScienceBaseRate = 0.01 // Science points per hour (reduced by 100x per feedback)
+	ScienceBaseRate = 0.001 // Science points per hour (reduced by 1000x from original)
 	ScienceHealthThreshold = 50.0
 	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
 

@@ -289,6 +289,8 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		IsViable:            len(failures) == 0,
 		FailureReasons:      failures,
 		FinalPopulation:     lastDay.Population,
+		FinalScience:        lastDay.SciencePoints,
+		AverageHealth:       avgHealthOverTime,
 		DaysToFireMastery:   fireMasteryDay,
 		DaysToNonViable:     daysToNonViable,
 		FinalAverageHealth:  lastDay.AverageHealth,
@@ -310,15 +312,32 @@ func GetStatistics(results []ViabilityResult) map[string]interface{} {
 	viableCount := 0
 	totalDaysToFire := 0
 	fireMasteryCount := 0
+	totalPopulation := 0
+	totalScience := 0.0
+	totalBirths := 0
+	totalHealth := 0.0
+	
+	// For variance calculations
+	populations := make([]float64, len(results))
+	sciences := make([]float64, len(results))
+	daysToFire := make([]float64, 0, len(results))
 
-	for _, r := range results {
+	for i, r := range results {
 		if r.IsViable {
 			viableCount++
 		}
 		if r.FireMasteryUnlocked {
 			fireMasteryCount++
 			totalDaysToFire += r.DaysToFireMastery
+			daysToFire = append(daysToFire, float64(r.DaysToFireMastery))
 		}
+		totalPopulation += r.FinalPopulation
+		totalScience += r.FinalScience
+		totalBirths += r.TotalBirths
+		totalHealth += r.AverageHealth
+		
+		populations[i] = float64(r.FinalPopulation)
+		sciences[i] = r.FinalScience
 	}
 
 	stats := map[string]interface{}{
@@ -326,13 +345,47 @@ func GetStatistics(results []ViabilityResult) map[string]interface{} {
 		"viable_count":       viableCount,
 		"viability_rate":     float64(viableCount) / float64(len(results)),
 		"fire_mastery_count": fireMasteryCount,
+		"avg_population":     float64(totalPopulation) / float64(len(results)),
+		"avg_science":        totalScience / float64(len(results)),
+		"avg_births":         float64(totalBirths) / float64(len(results)),
+		"avg_health":         totalHealth / float64(len(results)),
 	}
 
 	if fireMasteryCount > 0 {
-		stats["avg_days_to_fire_mastery"] = float64(totalDaysToFire) / float64(fireMasteryCount)
+		avgDays := float64(totalDaysToFire) / float64(fireMasteryCount)
+		stats["avg_days_to_fire_mastery"] = avgDays
+		stats["avg_years_to_fire_mastery"] = avgDays / 365.0
+		stats["stddev_days_to_fire_mastery"] = calculateStdDev(daysToFire)
 	}
+	
+	// Calculate standard deviations
+	stats["stddev_population"] = calculateStdDev(populations)
+	stats["stddev_science"] = calculateStdDev(sciences)
 
 	return stats
+}
+
+// calculateStdDev calculates standard deviation of a slice of float64
+func calculateStdDev(values []float64) float64 {
+	if len(values) == 0 {
+		return 0
+	}
+	
+	// Calculate mean
+	sum := 0.0
+	for _, v := range values {
+		sum += v
+	}
+	mean := sum / float64(len(values))
+	
+	// Calculate variance
+	varianceSum := 0.0
+	for _, v := range values {
+		diff := v - mean
+		varianceSum += diff * diff
+	}
+	
+	return math.Sqrt(varianceSum / float64(len(values)))
 }
 
 // CalculatePopulationVariance calculates variance in final populations across runs
