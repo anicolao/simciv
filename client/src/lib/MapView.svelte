@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { getMapTiles, getStartingPosition, getMapMetadata } from '../utils/api';
   import { getTerrainSprite } from './terrainSprites';
 
@@ -58,6 +58,8 @@
   $: DISPLAY_TILE_SIZE = Math.round(BASE_DISPLAY_TILE_SIZE * zoomLevel);
   $: viewportTilesX = Math.floor(640 / DISPLAY_TILE_SIZE);
   $: viewportTilesY = Math.floor(480 / DISPLAY_TILE_SIZE);
+  
+  let wheelHandler: ((e: WheelEvent) => void) | null = null;
 
   onMount(async () => {
     try {
@@ -67,6 +69,23 @@
       // Continue anyway - will show error or fallback rendering
     }
     await loadMap();
+    
+    // Add wheel event listener after mount
+    if (canvas) {
+      wheelHandler = (e: WheelEvent) => {
+        handleWheel(e);
+      };
+      canvas.addEventListener('wheel', wheelHandler, { passive: false });
+      console.log('[MapView] Wheel event listener added');
+    }
+  });
+  
+  onDestroy(() => {
+    // Cleanup
+    if (canvas && wheelHandler) {
+      canvas.removeEventListener('wheel', wheelHandler);
+      console.log('[MapView] Wheel event listener removed');
+    }
   });
 
   async function loadTileset() {
@@ -352,7 +371,8 @@
     e.preventDefault();
     
     // Determine zoom direction (negative deltaY = zoom in)
-    const zoomDelta = -e.deltaY / 1000;
+    // deltaY is typically ~100 per scroll tick
+    const zoomDelta = -e.deltaY / 100;
     updateZoomLevel(zoomDelta);
   }
 
@@ -365,25 +385,32 @@
 
   // Utility: Update zoom level
   function updateZoomLevel(delta: number) {
+    console.log('[MapView] updateZoomLevel called with delta:', delta);
     const oldZoom = zoomLevel;
     
     // Discrete zoom levels: 0.5, 0.75, 1.0, 1.5, 2.0
     const zoomLevels = [0.5, 0.75, 1.0, 1.5, 2.0];
     const currentIndex = zoomLevels.findIndex(z => Math.abs(z - zoomLevel) < 0.01);
+    console.log('[MapView] Current zoom index:', currentIndex, 'zoom:', zoomLevel);
     
     let newIndex = currentIndex;
-    if (delta > 0.1) {
+    if (delta > 0.5) {
       // Zoom in
       newIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
-    } else if (delta < -0.1) {
+      console.log('[MapView] Zooming in, newIndex:', newIndex);
+    } else if (delta < -0.5) {
       // Zoom out
       newIndex = Math.max(currentIndex - 1, 0);
+      console.log('[MapView] Zooming out, newIndex:', newIndex);
     }
     
     if (newIndex !== currentIndex) {
       zoomLevel = zoomLevels[newIndex];
+      console.log('[MapView] Zoom level changed to:', zoomLevel);
       clampViewOffset();
       renderMap();
+    } else {
+      console.log('[MapView] Zoom level not changed');
     }
   }
 
@@ -440,7 +467,6 @@
           on:touchstart={handleTouchStart}
           on:touchmove={handleTouchMove}
           on:touchend={handleTouchEnd}
-          on:wheel={handleWheel}
         ></canvas>
       </div>
 
