@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { getMapTiles, getStartingPosition, getMapMetadata } from '../utils/api';
   import { getTerrainSprite } from './terrainSprites';
 
@@ -35,17 +35,32 @@
   let metadata: MapMetadata | null = null;
   let loading = true;
   let error = '';
-  let viewOffsetX = 0;
-  let viewOffsetY = 0;
+  let viewOffsetX = 0; // Pixel offset, not tile offset
+  let viewOffsetY = 0; // Pixel offset, not tile offset
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
   let tilesetImage: HTMLImageElement | null = null;
   let imageLoaded = false;
   
   const TILE_SIZE = 30; // FreeCiv Trident tiles are 30x30
-  const DISPLAY_TILE_SIZE = 32; // Display at slightly larger size
-  const viewportTilesX = 20;
-  const viewportTilesY = 15;
+  const BASE_DISPLAY_TILE_SIZE = 32; // Base display size at 1.0x zoom
+  
+  // Interaction state
+  let zoomLevel = 1.0; // Current zoom multiplier (0.5 to 2.0)
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragStartOffsetX = 0;
+  let dragStartOffsetY = 0;
+  let lastTouchDistance = 0; // For pinch zoom
+  
+  // Computed values based on zoom
+  $: DISPLAY_TILE_SIZE = Math.round(BASE_DISPLAY_TILE_SIZE * zoomLevel);
+  $: viewportTilesX = Math.floor(640 / DISPLAY_TILE_SIZE);
+  $: viewportTilesY = Math.floor(480 / DISPLAY_TILE_SIZE);
+  
+  let wheelHandler: ((e: WheelEvent) => void) | null = null;
+  let wheelListenerAdded = false;
 
   onMount(async () => {
     try {
@@ -55,6 +70,24 @@
       // Continue anyway - will show error or fallback rendering
     }
     await loadMap();
+  });
+  
+  // Add wheel event listener when canvas is available
+  $: if (canvas && !wheelListenerAdded) {
+    wheelHandler = (e: WheelEvent) => {
+      handleWheel(e);
+    };
+    canvas.addEventListener('wheel', wheelHandler, { passive: false });
+    wheelListenerAdded = true;
+    console.log('[MapView] Wheel event listener added');
+  }
+  
+  onDestroy(() => {
+    // Cleanup
+    if (canvas && wheelHandler) {
+      canvas.removeEventListener('wheel', wheelHandler);
+      console.log('[MapView] Wheel event listener removed');
+    }
   });
 
   async function loadTileset() {
@@ -100,10 +133,10 @@
         metadata
       });
 
-      // Center view on starting position
+      // Center view on starting position (now in pixels)
       if (startingPosition) {
-        viewOffsetX = startingPosition.centerX - Math.floor(viewportTilesX / 2);
-        viewOffsetY = startingPosition.centerY - Math.floor(viewportTilesY / 2);
+        viewOffsetX = (startingPosition.centerX - Math.floor(viewportTilesX / 2)) * DISPLAY_TILE_SIZE;
+        viewOffsetY = (startingPosition.centerY - Math.floor(viewportTilesY / 2)) * DISPLAY_TILE_SIZE;
         console.log('[MapView] View centered at:', { viewOffsetX, viewOffsetY });
       }
 
@@ -138,26 +171,41 @@
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Render each tile
-    for (let row = 0; row < viewportTilesY; row++) {
-      for (let col = 0; col < viewportTilesX; col++) {
-        const tileX = viewOffsetX + col;
-        const tileY = viewOffsetY + row;
+    // Calculate which tiles are visible (convert pixel offset to tile coordinates)
+    const startTileX = Math.floor(viewOffsetX / DISPLAY_TILE_SIZE);
+    const startTileY = Math.floor(viewOffsetY / DISPLAY_TILE_SIZE);
+    
+    // Calculate pixel offset within the first tile
+    // Use proper modulo that works with negative numbers
+    const pixelOffsetX = ((viewOffsetX % DISPLAY_TILE_SIZE) + DISPLAY_TILE_SIZE) % DISPLAY_TILE_SIZE;
+    const pixelOffsetY = ((viewOffsetY % DISPLAY_TILE_SIZE) + DISPLAY_TILE_SIZE) % DISPLAY_TILE_SIZE;
+
+    // Render tiles with sub-pixel positioning for smooth scrolling
+    // Need to render one extra tile in each direction to fill the canvas
+    for (let row = 0; row <= viewportTilesY + 1; row++) {
+      for (let col = 0; col <= viewportTilesX + 1; col++) {
+        const tileX = startTileX + col;
+        const tileY = startTileY + row;
         const tile = getTileAt(tileX, tileY);
 
         if (tile) {
-          renderTile(ctx, tile, col * DISPLAY_TILE_SIZE, row * DISPLAY_TILE_SIZE);
+          // Position tiles with sub-pixel accuracy
+          const screenX = col * DISPLAY_TILE_SIZE - pixelOffsetX;
+          const screenY = row * DISPLAY_TILE_SIZE - pixelOffsetY;
+          renderTile(ctx, tile, screenX, screenY);
         }
       }
     }
 
     // Render starting city marker
     if (startingPosition) {
-      const cityCol = startingPosition.startingCityX - viewOffsetX;
-      const cityRow = startingPosition.startingCityY - viewOffsetY;
+      const cityScreenX = (startingPosition.startingCityX - startTileX) * DISPLAY_TILE_SIZE - pixelOffsetX;
+      const cityScreenY = (startingPosition.startingCityY - startTileY) * DISPLAY_TILE_SIZE - pixelOffsetY;
       
-      if (cityCol >= 0 && cityCol < viewportTilesX && cityRow >= 0 && cityRow < viewportTilesY) {
-        renderCityMarker(ctx, cityCol * DISPLAY_TILE_SIZE, cityRow * DISPLAY_TILE_SIZE);
+      // Only render if visible on screen
+      if (cityScreenX >= -DISPLAY_TILE_SIZE && cityScreenX < canvas.width &&
+          cityScreenY >= -DISPLAY_TILE_SIZE && cityScreenY < canvas.height) {
+        renderCityMarker(ctx, cityScreenX, cityScreenY);
       }
     }
   }
@@ -239,8 +287,181 @@
     return colors[terrainType] || '#9ca3af';
   }
 
-  // Re-render when canvas is mounted or tiles are loaded
+  // Pan: Mouse event handlers
+  function handleMouseDown(e: MouseEvent) {
+    if (!canvas) return;
+    isDragging = true;
+    const rect = canvas.getBoundingClientRect();
+    dragStartX = e.clientX - rect.left;
+    dragStartY = e.clientY - rect.top;
+    dragStartOffsetX = viewOffsetX;
+    dragStartOffsetY = viewOffsetY;
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (!isDragging || !canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    const deltaX = currentX - dragStartX;
+    const deltaY = currentY - dragStartY;
+    
+    // Update view offset directly in pixels (1:1 movement)
+    viewOffsetX = dragStartOffsetX - deltaX;
+    viewOffsetY = dragStartOffsetY - deltaY;
+    
+    clampViewOffset();
+    renderMap();
+  }
+
+  function handleMouseUp() {
+    isDragging = false;
+  }
+
+  function handleMouseLeave() {
+    isDragging = false;
+  }
+
+  // Pan: Touch event handlers
+  function handleTouchStart(e: TouchEvent) {
+    if (!canvas) return;
+    
+    if (e.touches.length === 1) {
+      // Single touch: pan
+      e.preventDefault();
+      isDragging = true;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      dragStartX = touch.clientX - rect.left;
+      dragStartY = touch.clientY - rect.top;
+      dragStartOffsetX = viewOffsetX;
+      dragStartOffsetY = viewOffsetY;
+    } else if (e.touches.length === 2) {
+      // Two touches: prepare for pinch zoom
+      e.preventDefault();
+      isDragging = false;
+      lastTouchDistance = getTouchDistance(e.touches[0], e.touches[1]);
+    }
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    if (!canvas) return;
+    
+    if (e.touches.length === 1 && isDragging) {
+      // Single touch: pan
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const currentX = touch.clientX - rect.left;
+      const currentY = touch.clientY - rect.top;
+      
+      const deltaX = currentX - dragStartX;
+      const deltaY = currentY - dragStartY;
+      
+      // Update view offset directly in pixels (1:1 movement)
+      viewOffsetX = dragStartOffsetX - deltaX;
+      viewOffsetY = dragStartOffsetY - deltaY;
+      
+      clampViewOffset();
+      renderMap();
+    } else if (e.touches.length === 2) {
+      // Two touches: pinch zoom
+      e.preventDefault();
+      const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+      const delta = currentDistance - lastTouchDistance;
+      
+      // Convert distance change to zoom delta (adjust sensitivity)
+      const zoomDelta = delta / 200;
+      updateZoomLevel(zoomDelta);
+      
+      lastTouchDistance = currentDistance;
+    }
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    if (e.touches.length === 0) {
+      isDragging = false;
+      lastTouchDistance = 0;
+    }
+  }
+
+  // Zoom: Wheel event handler
+  function handleWheel(e: WheelEvent) {
+    e.preventDefault();
+    
+    // Determine zoom direction (negative deltaY = zoom in)
+    // deltaY is typically ~100 per scroll tick
+    const zoomDelta = -e.deltaY / 100;
+    updateZoomLevel(zoomDelta);
+  }
+
+  // Utility: Get distance between two touch points
+  function getTouchDistance(t1: Touch, t2: Touch): number {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Utility: Update zoom level
+  function updateZoomLevel(delta: number) {
+    console.log('[MapView] updateZoomLevel called with delta:', delta);
+    const oldZoom = zoomLevel;
+    
+    // More granular zoom levels for smoother experience (50% to 200% in 10% increments)
+    const zoomLevels = [
+      0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0
+    ];
+    const currentIndex = zoomLevels.findIndex(z => Math.abs(z - zoomLevel) < 0.01);
+    console.log('[MapView] Current zoom index:', currentIndex, 'zoom:', zoomLevel);
+    
+    let newIndex = currentIndex;
+    // Increased threshold to make zoom less sensitive (0.05 instead of 0.01)
+    if (delta > 0.05) {
+      // Zoom in
+      newIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
+      console.log('[MapView] Zooming in, newIndex:', newIndex);
+    } else if (delta < -0.05) {
+      // Zoom out
+      newIndex = Math.max(currentIndex - 1, 0);
+      console.log('[MapView] Zooming out, newIndex:', newIndex);
+    }
+    
+    if (newIndex !== currentIndex) {
+      zoomLevel = zoomLevels[newIndex];
+      console.log('[MapView] Zoom level changed to:', zoomLevel);
+      clampViewOffset();
+      renderMap();
+    } else {
+      console.log('[MapView] Zoom level not changed');
+    }
+  }
+
+  // Utility: Clamp view offset to map bounds
+  function clampViewOffset() {
+    if (!metadata) return;
+    
+    // Allow panning as long as at least one tile is visible
+    // Maximum offset is when the last tile is at the top-left corner of viewport
+    const maxOffsetX = metadata.width * DISPLAY_TILE_SIZE - DISPLAY_TILE_SIZE;
+    const maxOffsetY = metadata.height * DISPLAY_TILE_SIZE - DISPLAY_TILE_SIZE;
+    
+    // Minimum offset is when the first tile is at the bottom-right corner of viewport
+    const minOffsetX = -(640 - DISPLAY_TILE_SIZE);
+    const minOffsetY = -(480 - DISPLAY_TILE_SIZE);
+    
+    viewOffsetX = Math.max(minOffsetX, Math.min(viewOffsetX, maxOffsetX));
+    viewOffsetY = Math.max(minOffsetY, Math.min(viewOffsetY, maxOffsetY));
+  }
+
+  // Re-render when canvas is mounted, tiles are loaded, or view changes
   $: if (canvas && tiles.length > 0) {
+    renderMap();
+  }
+  
+  // Re-render when zoom level changes
+  $: if (canvas && tiles.length > 0 && zoomLevel) {
     renderMap();
   }
 </script>
@@ -257,7 +478,7 @@
         {#if metadata}
           <span class="map-info">
             Map Size: {metadata.width}x{metadata.height} | 
-            Visible Tiles: {tiles.length}
+            Zoom: {Math.round(zoomLevel * 100)}%
           </span>
         {/if}
       </div>
@@ -265,16 +486,25 @@
       <div class="canvas-container">
         <canvas
           bind:this={canvas}
-          width={viewportTilesX * DISPLAY_TILE_SIZE}
-          height={viewportTilesY * DISPLAY_TILE_SIZE}
+          width={640}
+          height={480}
           class="map-canvas"
+          class:dragging={isDragging}
+          on:mousedown={handleMouseDown}
+          on:mousemove={handleMouseMove}
+          on:mouseup={handleMouseUp}
+          on:mouseleave={handleMouseLeave}
+          on:touchstart={handleTouchStart}
+          on:touchmove={handleTouchMove}
+          on:touchend={handleTouchEnd}
         ></canvas>
       </div>
 
       <div class="legend">
         <h4>Terrain Legend</h4>
         <div class="legend-text">
-          Map rendered using FreeCiv Trident tileset (30x30 pixel sprites)
+          Map rendered using FreeCiv Trident tileset (30x30 pixel sprites)<br>
+          Drag to pan • Scroll to zoom • Pinch to zoom (touch)
         </div>
       </div>
     </div>
@@ -334,6 +564,14 @@
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .map-canvas.dragging {
+    cursor: grabbing;
   }
 
   .legend {
