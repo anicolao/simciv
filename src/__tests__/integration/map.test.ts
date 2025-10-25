@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import express from 'express';
 import cookieParser from 'cookie-parser';
@@ -9,7 +8,6 @@ import { sessionMiddleware } from '../../middleware/session';
 import mapRoutes from '../../routes/map';
 
 describe('Map API Integration Tests', () => {
-  let mongoServer: MongoMemoryServer;
   let app: express.Application;
   let testSessionGuid: string;
   let testUserId: string;
@@ -19,21 +17,17 @@ describe('Map API Integration Tests', () => {
     // Close any existing connection first
     await closeDatabase();
     
-    // Use external MongoDB if TEST_MONGO_URI is set
-    if (process.env.TEST_MONGO_URI) {
-      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test-map');
-      // Clean up existing data
-      await getGamesCollection().deleteMany({});
-      await getUsersCollection().deleteMany({});
-      await getSessionsCollection().deleteMany({});
-      await getMapTilesCollection().deleteMany({});
-      await getStartingPositionsCollection().deleteMany({});
-      await getMapMetadataCollection().deleteMany({});
-    } else {
-      mongoServer = await MongoMemoryServer.create();
-      const uri = mongoServer.getUri();
-      await connectToDatabase(uri, 'simciv-test-map');
-    }
+    // Always use external MongoDB for testing
+    const mongoUri = process.env.TEST_MONGO_URI || 'mongodb://localhost:27017';
+    await connectToDatabase(mongoUri, 'simciv-test-map');
+    
+    // Clean up existing data
+    await getGamesCollection().deleteMany({});
+    await getUsersCollection().deleteMany({});
+    await getSessionsCollection().deleteMany({});
+    await getMapTilesCollection().deleteMany({});
+    await getStartingPositionsCollection().deleteMany({});
+    await getMapMetadataCollection().deleteMany({});
 
     // Create test user
     testUserId = 'testuser';
@@ -137,9 +131,6 @@ describe('Map API Integration Tests', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    if (mongoServer) {
-      await mongoServer.stop();
-    }
   });
 
   describe('GET /api/map/:gameId/metadata', () => {
