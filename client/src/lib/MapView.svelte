@@ -276,8 +276,9 @@
   function handleMouseDown(e: MouseEvent) {
     if (!canvas) return;
     isDragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
+    const rect = canvas.getBoundingClientRect();
+    dragStartX = e.clientX - rect.left;
+    dragStartY = e.clientY - rect.top;
     dragStartOffsetX = viewOffsetX;
     dragStartOffsetY = viewOffsetY;
   }
@@ -285,8 +286,12 @@
   function handleMouseMove(e: MouseEvent) {
     if (!isDragging || !canvas) return;
     
-    const deltaX = e.clientX - dragStartX;
-    const deltaY = e.clientY - dragStartY;
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    const deltaX = currentX - dragStartX;
+    const deltaY = currentY - dragStartY;
     
     // Convert pixel delta to tile delta
     const tileDeltaX = deltaX / DISPLAY_TILE_SIZE;
@@ -317,8 +322,9 @@
       e.preventDefault();
       isDragging = true;
       const touch = e.touches[0];
-      dragStartX = touch.clientX;
-      dragStartY = touch.clientY;
+      const rect = canvas.getBoundingClientRect();
+      dragStartX = touch.clientX - rect.left;
+      dragStartY = touch.clientY - rect.top;
       dragStartOffsetX = viewOffsetX;
       dragStartOffsetY = viewOffsetY;
     } else if (e.touches.length === 2) {
@@ -336,8 +342,12 @@
       // Single touch: pan
       e.preventDefault();
       const touch = e.touches[0];
-      const deltaX = touch.clientX - dragStartX;
-      const deltaY = touch.clientY - dragStartY;
+      const rect = canvas.getBoundingClientRect();
+      const currentX = touch.clientX - rect.left;
+      const currentY = touch.clientY - rect.top;
+      
+      const deltaX = currentX - dragStartX;
+      const deltaY = currentY - dragStartY;
       
       const tileDeltaX = deltaX / DISPLAY_TILE_SIZE;
       const tileDeltaY = deltaY / DISPLAY_TILE_SIZE;
@@ -396,11 +406,12 @@
     console.log('[MapView] Current zoom index:', currentIndex, 'zoom:', zoomLevel);
     
     let newIndex = currentIndex;
-    if (delta > 0.5) {
+    // Use a much lower threshold for trackpad scrolling (0.01 instead of 0.5)
+    if (delta > 0.01) {
       // Zoom in
       newIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
       console.log('[MapView] Zooming in, newIndex:', newIndex);
-    } else if (delta < -0.5) {
+    } else if (delta < -0.01) {
       // Zoom out
       newIndex = Math.max(currentIndex - 1, 0);
       console.log('[MapView] Zooming out, newIndex:', newIndex);
