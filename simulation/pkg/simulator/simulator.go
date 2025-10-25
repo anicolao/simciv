@@ -12,7 +12,7 @@ func DefaultStartingConditions() StartingConditions {
 		StartingHealthMin:   30.0,
 		StartingHealthMax:   50.0,
 		FoodStockpile:       100.0,
-		FoodAllocationRatio: 0.7, // 70/30 allocation for 100% viability
+		FoodAllocationRatio: 0.7, // 70/30 allocation for balanced progression
 		TerrainMultiplier:   1.0,
 	}
 }
