@@ -56,9 +56,8 @@ test.describe('Map View E2E Tests', () => {
   test('should display map and verify all components when game is started', async ({ browser }) => {
     test.setTimeout(300000); // 5 minutes - parallel registration + game setup takes time
     
-    const timestamp = Date.now();
-    const alias1 = `mapuser1_${timestamp}`;
-    const alias2 = `mapuser2_${timestamp}`;
+    const alias1 = 'mapuser1';
+    const alias2 = 'mapuser2';
     const password = 'TestPassword123!';
     
     console.log('[E2E] Starting parallel user registration...');
@@ -165,8 +164,7 @@ test.describe('Map View E2E Tests', () => {
   });
 
   test('should not show map for waiting games', async ({ page }) => {
-    const timestamp = Date.now();
-    const alias = `mapuser_waiting_${timestamp}`;
+    const alias = 'mapuser_waiting';
     const password = 'TestPassword123!';
     
     // Register and login user

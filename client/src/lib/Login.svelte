@@ -39,7 +39,7 @@
       const encryptedKey = getStoredEncryptedKey(guid);
       if (!encryptedKey) {
         messageType = 'error';
-        message = 'No private key found for this session';
+        message = 'No account found! Register instead.';
         isLoading = false;
         return;
       }

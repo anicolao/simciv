@@ -9,12 +9,10 @@
   let activeTab: 'register' | 'login' = 'register';
   let isAuthenticated = false;
   let currentUser = '';
-  let sessionInfo = '';
 
   onMount(async () => {
     try {
       const status = await getSessionStatus();
-      sessionInfo = `Session: ${status.sessionGuid} | State: ${status.state}`;
       
       if (status.state === 'authenticated' && status.userId) {
         isAuthenticated = true;
@@ -51,10 +49,6 @@
 
 <main>
   <h1>SimCiv Authentication</h1>
-  
-  {#if sessionInfo}
-    <div class="session-info">{sessionInfo}</div>
-  {/if}
 
   {#if isAuthenticated}
     <div class="authenticated">
@@ -113,16 +107,6 @@
     text-align: center;
     color: #333;
     margin-bottom: 20px;
-  }
-
-  .session-info {
-    background: #e3f2fd;
-    color: #1976d2;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    font-size: 12px;
-    text-align: center;
   }
 
   .tabs {

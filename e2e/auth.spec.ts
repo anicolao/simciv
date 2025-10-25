@@ -23,8 +23,7 @@ test.describe('SimCiv Authentication', () => {
     // Ensure we're on the Register tab (should be default)
     await expect(page.locator('.tabs button.active')).toContainText('Register');
     
-    const timestamp = Date.now();
-    const alias = `testuser_${timestamp}`;
+    const alias = 'testuser';
     const password = 'TestPassword123!';
     
     // Fill in registration form
@@ -69,8 +68,7 @@ test.describe('SimCiv Authentication', () => {
     await page.goto('/');
     await page.waitForURL(/\/id=[a-f0-9-]+/);
     
-    const timestamp = Date.now();
-    const alias1 = `user1_${timestamp}`;
+    const alias1 = 'user1';
     const password1 = 'Password123!';
     
     // Register using form submit button
@@ -112,7 +110,7 @@ test.describe('SimCiv Authentication', () => {
     await page2.locator('form button[type="submit"]').first().click();
     
     // Should see error about no private key found
-    await expect(page2.locator('.message.error')).toContainText('No private key found for this session', {
+    await expect(page2.locator('.message.error')).toContainText('No account found! Register instead.', {
       timeout: 10000
     });
     
@@ -130,8 +128,7 @@ test.describe('SimCiv Authentication', () => {
     await page.goto('/');
     await page.waitForURL(/\/id=[a-f0-9-]+/);
     
-    const timestamp = Date.now();
-    const alias = `logintest_${timestamp}`;
+    const alias = 'logintest';
     const password = 'SecurePass123!';
     
     // Register the user

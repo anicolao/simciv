@@ -33,8 +33,7 @@ async function registerAndLogin(page: Page, alias: string, password: string): Pr
 
 test.describe('Game Creation and Management', () => {
   test('should show game lobby after authentication', async ({ page }) => {
-    const timestamp = Date.now();
-    const alias = `gameuser_${timestamp}`;
+    const alias = 'gameuser';
     const password = 'TestPassword123!';
     
     await registerAndLogin(page, alias, password);
@@ -47,8 +46,7 @@ test.describe('Game Creation and Management', () => {
   });
 
   test('should create a new game', async ({ page }) => {
-    const timestamp = Date.now();
-    const alias = `gameuser_${timestamp}`;
+    const alias = 'gameuser';
     const password = 'TestPassword123!';
     
     await registerAndLogin(page, alias, password);
@@ -82,10 +80,8 @@ test.describe('Game Creation and Management', () => {
   });
 
   test('should allow second player to join game', async ({ page }) => {
-    const timestamp = Date.now();
-    
     // Create first user and game
-    const alias1 = `gameuser1_${timestamp}`;
+    const alias1 = 'gameuser1';
     const password = 'TestPassword123!';
     await registerAndLogin(page, alias1, password);
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
@@ -101,7 +97,7 @@ test.describe('Game Creation and Management', () => {
 
     // Clear cookies and navigate to new session for second player
     await page.context().clearCookies();
-    const alias2 = `gameuser2_${timestamp}`;
+    const alias2 = 'gameuser2';
     await registerAndLogin(page, alias2, password);
     
     // Wait for game lobby
@@ -125,11 +121,10 @@ test.describe('Game Creation and Management', () => {
   });
 
   test('should show time progression in started game', async ({ page }) => {
-    const timestamp = Date.now();
     const password = 'TestPassword123!';
     
     // Create first user and game
-    const alias1 = `gameuser1_${timestamp}`;
+    const alias1 = 'gameuser1';
     await registerAndLogin(page, alias1, password);
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
     
@@ -141,7 +136,7 @@ test.describe('Game Creation and Management', () => {
 
     // Clear cookies and login as second player
     await page.context().clearCookies();
-    const alias2 = `gameuser2_${timestamp}`;
+    const alias2 = 'gameuser2';
     await registerAndLogin(page, alias2, password);
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
 
@@ -170,11 +165,10 @@ test.describe('Game Creation and Management', () => {
   });
 
   test('should prevent joining a full game', async ({ page }) => {
-    const timestamp = Date.now();
     const password = 'TestPassword123!';
     
     // Create first user and game
-    const alias1 = `gameuser1_${timestamp}`;
+    const alias1 = 'gameuser1';
     await registerAndLogin(page, alias1, password);
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
     
@@ -186,7 +180,7 @@ test.describe('Game Creation and Management', () => {
 
     // Second player joins
     await page.context().clearCookies();
-    const alias2 = `gameuser2_${timestamp}`;
+    const alias2 = 'gameuser2';
     await registerAndLogin(page, alias2, password);
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
     await page.locator('.game-card').first().locator('button:has-text("Join")').click();
@@ -196,7 +190,7 @@ test.describe('Game Creation and Management', () => {
 
     // Third player tries to join
     await page.context().clearCookies();
-    const alias3 = `gameuser3_${timestamp}`;
+    const alias3 = 'gameuser3';
     await registerAndLogin(page, alias3, password);
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
 
@@ -209,8 +203,7 @@ test.describe('Game Creation and Management', () => {
   });
 
   test('should show game details when viewing', async ({ page }) => {
-    const timestamp = Date.now();
-    const alias = `gameuser_${timestamp}`;
+    const alias = 'gameuser';
     const password = 'TestPassword123!';
     
     await registerAndLogin(page, alias, password);
