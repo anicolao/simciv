@@ -182,7 +182,7 @@ test.describe('Map Interaction E2E Tests', () => {
       
       const zoomAfterIn = await getZoomLevel(page2);
       console.log(`[E2E] Zoom level after zoom in: ${zoomAfterIn}%`);
-      expect(zoomAfterIn).toBeGreaterThan(100); // Should be 150%
+      expect(zoomAfterIn).toBeGreaterThan(100); // Should be > 100%
       
       // Screenshot 27: Map after zooming in
       console.log('[E2E] Taking screenshot 27...');
@@ -200,10 +200,11 @@ test.describe('Map Interaction E2E Tests', () => {
       console.log('[E2E] Taking screenshot 28...');
       await page2.screenshot({ path: 'e2e-screenshots/28-map-zoom-out.png', fullPage: true });
       
-      // Zoom out further to minimum
+      // Zoom out to minimum (with granular levels, need more scrolls)
       console.log('[E2E] Zooming out to minimum...');
-      await scrollZoom(page2, 500); // 75%
-      await scrollZoom(page2, 500); // 50%
+      for (let i = 0; i < 10; i++) {
+        await scrollZoom(page2, 500);
+      }
       
       const minZoom = await getZoomLevel(page2);
       console.log(`[E2E] Minimum zoom level: ${minZoom}%`);
@@ -218,12 +219,11 @@ test.describe('Map Interaction E2E Tests', () => {
       const stillMinZoom = await getZoomLevel(page2);
       expect(stillMinZoom).toBe(50); // Should still be 50%
       
-      // Zoom in to maximum
+      // Zoom in to maximum (with granular levels, need more scrolls)
       console.log('[E2E] Zooming in to maximum...');
-      await scrollZoom(page2, -500); // 75%
-      await scrollZoom(page2, -500); // 100%
-      await scrollZoom(page2, -500); // 150%
-      await scrollZoom(page2, -500); // 200%
+      for (let i = 0; i < 20; i++) {
+        await scrollZoom(page2, -500);
+      }
       
       const maxZoom = await getZoomLevel(page2);
       console.log(`[E2E] Maximum zoom level: ${maxZoom}%`);
@@ -262,7 +262,7 @@ test.describe('Map Interaction E2E Tests', () => {
       console.log('[E2E] Zooming in...');
       await scrollZoom(page2, -500);
       const zoomLevel = await getZoomLevel(page2);
-      expect(zoomLevel).toBe(150);
+      expect(zoomLevel).toBeGreaterThan(100); // Should be > 100%
       
       // Pan the map
       console.log('[E2E] Panning zoomed map...');
@@ -272,7 +272,7 @@ test.describe('Map Interaction E2E Tests', () => {
       
       // Verify zoom level is maintained
       const zoomAfterPan = await getZoomLevel(page2);
-      expect(zoomAfterPan).toBe(150);
+      expect(zoomAfterPan).toBe(zoomLevel); // Zoom should be unchanged
       
       // Screenshot 31: Combined pan and zoom
       console.log('[E2E] Taking screenshot 31...');
