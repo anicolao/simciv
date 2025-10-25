@@ -58,7 +58,7 @@ const (
 	HealthCritical = 20.0
 
 	// Reproduction
-	MonthlyConceptionBase = 0.03 / DaysPerMonth // 3% monthly -> daily
+	MonthlyConceptionBase = 0.06 / DaysPerMonth // 6% monthly -> daily (2x increase per testing)
 	BelongingThreshold = 40.0
 	InfantSurvivalRate = 0.7 // 70% survival at birth
 

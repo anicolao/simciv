@@ -451,9 +451,9 @@ func TestCheckReproduction(t *testing.T) {
 	}
 
 	// Test that reproduction can succeed with good conditions
-	// Note: With health=80 and age=25, the chance is very low:
-	// (80-50)/50 * 1.0 * 0.001 = 0.0006 per day
-	// Over 10000 trials, we expect about 6 conceptions, and ~4 surviving births
+	// Note: With health=80, age=25, and MonthlyConceptionBase=0.06 (doubled):
+	// (80-50)/50 * 1.0 * 0.002 = 0.0012 per day
+	// Over 10000 trials, we expect about 12 conceptions, and ~8 surviving births
 	// However, due to the random nature and low probability, we'll just log the results
 	successCount := 0
 	for i := 0; i < 10000; i++ {
@@ -465,7 +465,7 @@ func TestCheckReproduction(t *testing.T) {
 		}
 	}
 	
-	t.Logf("Reproduction success rate: %d/10000 (%.2f%%) - expected ~4-6", 
+	t.Logf("Reproduction success rate: %d/10000 (%.2f%%) - expected ~8-12 with doubled rate", 
 		successCount, float64(successCount)/100.0)
 	
 	// The test is mainly to ensure the function doesn't crash or always return nil

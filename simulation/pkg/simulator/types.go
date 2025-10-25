@@ -65,6 +65,8 @@ type ViabilityResult struct {
 	PeakPopulation       int     // Peak population during simulation
 	MinimumPopulation    int     // Minimum population during simulation
 	FireMasteryUnlocked  bool    // Whether Fire Mastery was unlocked
+	TotalBirths          int     // Total births during simulation
+	HasFireMastery       bool    // Final Fire Mastery status
 
 	// All daily metrics for analysis
 	AllMetrics []*DailyMetrics

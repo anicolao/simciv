@@ -223,6 +223,7 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 	// Calculate population metrics and check for 1-year decline
 	peakPopulation := 0
 	minimumPopulation := startingPopulation
+	totalBirths := 0
 	
 	// Check for population decline in any 1-year (365-day) period
 	for i, m := range allMetrics {
@@ -232,6 +233,7 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		if m.Population < minimumPopulation {
 			minimumPopulation = m.Population
 		}
+		totalBirths += m.Births
 		
 		// Check if we have a full year of data from this point
 		if i >= 365 {
@@ -293,6 +295,8 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		PeakPopulation:      peakPopulation,
 		MinimumPopulation:   minimumPopulation,
 		FireMasteryUnlocked: lastDay.HasFireMastery,
+		TotalBirths:         totalBirths,
+		HasFireMastery:      lastDay.HasFireMastery,
 		AllMetrics:          allMetrics,
 	}
 }
