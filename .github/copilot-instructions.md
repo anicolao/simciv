@@ -24,9 +24,7 @@ Before using the persistent shell, set up Nix on your development machine:
 # Run the setup script (one-time only)
 ./SETUP_NIX_BIN.sh
 
-# Log out and log back in (required for group membership to take effect)
-
-# After logging back in, navigate to project and allow direnv
+# Navigate to project and allow direnv
 cd simciv
 direnv allow
 ```
@@ -36,6 +34,8 @@ This setup:
 - Configures Nix to enable flakes
 - Adds you to the `nix-users` group
 - Sets up direnv hook in your shell
+
+**Note**: The setup script adds you to the `nix-users` group. In interactive sessions, you may need to log out and log back in for the group membership to take effect. However, the `bin/nix-shell-persistent` script handles group membership automatically using `sg`, so you can proceed directly after running the setup.
 
 **You only need to do this once per machine.**
 
