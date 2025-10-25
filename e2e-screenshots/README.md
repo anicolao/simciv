@@ -2,6 +2,12 @@
 
 This directory contains screenshots captured during Playwright E2E test execution.
 
+## How Screenshots Are Managed
+
+Screenshots are automatically captured during test runs using a smart helper function that **only writes files when content has changed**. This prevents unnecessary git modifications when screenshots are identical.
+
+The helper function (`e2e/helpers/screenshot.ts`) compares SHA-256 hashes of new and existing screenshots before writing files. If the content is identical, the file is not modified, avoiding false positives in git status.
+
 ## Screenshot Files
 
 When `npm run test:e2e` is executed, the following screenshots are automatically generated:
@@ -43,6 +49,29 @@ These screenshots serve to:
 - Document expected UI states throughout the application
 - Aid in debugging test failures
 - Provide visual narrative of user workflows
+
+## Technical Details
+
+### Smart Screenshot Helper
+
+The tests use `screenshotIfChanged()` from `e2e/helpers/screenshot.ts` which:
+1. Takes screenshot to a buffer in memory
+2. Calculates SHA-256 hash of the new screenshot
+3. Compares with hash of existing file (if it exists)
+4. Only writes to disk if content differs
+5. Logs whether screenshot was created, updated, or skipped
+
+This approach ensures that:
+- **Identical screenshots don't trigger git changes** (no timestamp/metadata differences)
+- **Visual changes are still detected** (hash comparison catches any pixel differences)
+- **Test runs are deterministic** (same visual state = same file)
+
+### Benefits
+
+- **Cleaner git history**: Only commits actual visual changes
+- **Faster reviews**: Changed screenshots indicate real UI modifications
+- **CI/CD friendly**: Tests don't generate spurious file modifications
+- **Developer experience**: No need to manually check if screenshots actually changed
 
 ## Note
 

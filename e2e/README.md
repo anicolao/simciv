@@ -24,7 +24,7 @@ This directory contains Playwright E2E tests that validate the complete authenti
 
 ## Screenshot Validation
 
-Tests capture screenshots at key UI states in the `e2e-screenshots/` directory:
+Tests capture screenshots at key UI states in the `e2e-screenshots/` directory using a smart helper that **only writes files when content changes**:
 
 1. `01-initial-load.png` - Initial authentication page
 2. `02-registration-form-filled.png` - Registration form with data
@@ -34,6 +34,8 @@ Tests capture screenshots at key UI states in the `e2e-screenshots/` directory:
 6. `06-login-error-no-key.png` - Error message for missing credentials
 7. `07-login-form-filled.png` - Login form filled with credentials
 8. `08-login-success.png` - Successful login state
+
+The screenshot helper (`e2e/helpers/screenshot.ts`) compares SHA-256 hashes before writing, ensuring that **identical screenshots don't appear as modified in git**. This prevents false positives when tests are re-run without visual changes.
 
 **These screenshots should be reviewed after each test run to ensure:**
 - UI layout is correct
