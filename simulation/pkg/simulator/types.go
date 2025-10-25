@@ -60,6 +60,7 @@ type ViabilityResult struct {
 	// Metrics
 	FinalPopulation      int     // Final population
 	DaysToFireMastery    int     // Days until Fire Mastery was unlocked (-1 if never)
+	DaysToNonViable      int     // Days until population became non-viable (-1 if never)
 	FinalAverageHealth   float64 // Final average health
 	PeakPopulation       int     // Peak population during simulation
 	MinimumPopulation    int     // Minimum population during simulation

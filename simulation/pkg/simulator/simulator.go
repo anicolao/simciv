@@ -1,6 +1,9 @@
 package simulator
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 // DefaultStartingConditions returns the default starting conditions from the design document
 func DefaultStartingConditions() StartingConditions {
@@ -173,6 +176,20 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 			// Extinction
 			break
 		}
+		
+		// Check for population decline over past year (365 days)
+		// If population has declined or stayed same, halt as non-viable
+		if state.CurrentDay >= 365 {
+			yearAgoIdx := state.CurrentDay - 365 - 1 // -1 for 0-indexing
+			if yearAgoIdx >= 0 && yearAgoIdx < len(allMetrics) {
+				yearAgoPop := allMetrics[yearAgoIdx].Population
+				currentPop := metrics.Population
+				if currentPop <= yearAgoPop {
+					// Population not growing - halt simulation
+					break
+				}
+			}
+		}
 	}
 
 	// Assess viability
@@ -183,14 +200,16 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays int) ViabilityResult {
 	if len(allMetrics) == 0 {
 		return ViabilityResult{
-			IsViable:       false,
-			FailureReasons: []string{"No metrics recorded"},
-			AllMetrics:     allMetrics,
+			IsViable:         false,
+			FailureReasons:   []string{"No metrics recorded"},
+			DaysToNonViable:  -1,
+			AllMetrics:       allMetrics,
 		}
 	}
 
 	failures := []string{}
 	lastDay := allMetrics[len(allMetrics)-1]
+	daysToNonViable := -1
 
 	// Find day when Fire Mastery was unlocked (if ever)
 	fireMasteryDay := -1
@@ -201,15 +220,30 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		}
 	}
 
-	// Calculate population metrics
+	// Calculate population metrics and check for 1-year decline
 	peakPopulation := 0
 	minimumPopulation := startingPopulation
-	for _, m := range allMetrics {
+	
+	// Check for population decline in any 1-year (365-day) period
+	for i, m := range allMetrics {
 		if m.Population > peakPopulation {
 			peakPopulation = m.Population
 		}
 		if m.Population < minimumPopulation {
 			minimumPopulation = m.Population
+		}
+		
+		// Check if we have a full year of data from this point
+		if i >= 365 {
+			yearAgoPop := allMetrics[i-365].Population
+			currentPop := m.Population
+			
+			// If population declined or stayed same over the past year, mark as non-viable
+			if currentPop <= yearAgoPop && daysToNonViable == -1 {
+				daysToNonViable = m.Day
+				failures = append(failures, fmt.Sprintf("Population declined/stagnated over 1-year period (day %d: %d -> day %d: %d)", 
+					allMetrics[i-365].Day, yearAgoPop, m.Day, currentPop))
+			}
 		}
 	}
 
@@ -225,26 +259,21 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		failures = append(failures, "Fire Mastery took too long")
 	}
 
-	// Criterion 3: Population must be growing or stable (not declining at end)
-	// Check last 90 days for trend
-	recentStartIdx := len(allMetrics) - 90
-	if recentStartIdx < 0 {
-		recentStartIdx = 0
-	}
-	recentGrowth := 0
-	if recentStartIdx < len(allMetrics) {
-		recentGrowth = lastDay.Population - allMetrics[recentStartIdx].Population
-	}
-	if recentGrowth < 0 && lastDay.Population < int(float64(startingPopulation)*0.9) {
-		failures = append(failures, "Population declining")
-	}
-
-	// Criterion 4: Population must not go extinct
+	// Criterion 3: Population must not go extinct
 	if lastDay.Population == 0 {
 		failures = append(failures, "Population extinct")
+		if daysToNonViable == -1 {
+			// Find when extinction happened
+			for _, m := range allMetrics {
+				if m.Population == 0 {
+					daysToNonViable = m.Day
+					break
+				}
+			}
+		}
 	}
 
-	// Criterion 5: Average health must remain viable
+	// Criterion 4: Average health must remain viable
 	totalHealth := 0.0
 	for _, m := range allMetrics {
 		totalHealth += m.AverageHealth
@@ -259,6 +288,7 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		FailureReasons:      failures,
 		FinalPopulation:     lastDay.Population,
 		DaysToFireMastery:   fireMasteryDay,
+		DaysToNonViable:     daysToNonViable,
 		FinalAverageHealth:  lastDay.AverageHealth,
 		PeakPopulation:      peakPopulation,
 		MinimumPopulation:   minimumPopulation,
