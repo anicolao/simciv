@@ -176,8 +176,9 @@
     const startTileY = Math.floor(viewOffsetY / DISPLAY_TILE_SIZE);
     
     // Calculate pixel offset within the first tile
-    const pixelOffsetX = viewOffsetX % DISPLAY_TILE_SIZE;
-    const pixelOffsetY = viewOffsetY % DISPLAY_TILE_SIZE;
+    // Use proper modulo that works with negative numbers
+    const pixelOffsetX = ((viewOffsetX % DISPLAY_TILE_SIZE) + DISPLAY_TILE_SIZE) % DISPLAY_TILE_SIZE;
+    const pixelOffsetY = ((viewOffsetY % DISPLAY_TILE_SIZE) + DISPLAY_TILE_SIZE) % DISPLAY_TILE_SIZE;
 
     // Render tiles with sub-pixel positioning for smooth scrolling
     // Need to render one extra tile in each direction to fill the canvas
