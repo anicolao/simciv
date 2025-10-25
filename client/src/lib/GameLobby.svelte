@@ -79,8 +79,7 @@
     try {
       await joinGame(gameId);
       await loadGames();
-      // Select the game we just joined
-      selectedGame = games.find(g => g.gameId === gameId) || null;
+      // Don't automatically select - user will click View button
     } catch (err: any) {
       error = err.message || 'Failed to join game';
     } finally {

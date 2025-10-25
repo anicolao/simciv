@@ -97,16 +97,27 @@ test.describe('Map View E2E Tests', () => {
       console.log('[E2E] Game started');
       
       // Wait for map to be generated (game engine processes first tick)
-      console.log('[E2E] Waiting 3 seconds for map generation...');
-      await page2.waitForTimeout(3000);
+      console.log('[E2E] Waiting 10 seconds for map generation...');
+      await page2.waitForTimeout(10000);
       
       // Click the View button to open details modal
       console.log('[E2E] Opening game details modal...');
       await gameCard.locator('button:has-text("View")').click();
       
-      // Wait for map section in modal
+      // Wait for modal and game data to load
+      console.log('[E2E] Waiting for game details to load...');
+      await page2.waitForTimeout(3000); // Wait for handleViewGame API call
+      
+      // Wait for map data to load (MapView loads tiles in its onMount)
+      console.log('[E2E] Waiting for map data to load...');
+      // First wait for "Loading map..." to appear, then for it to disappear
+      await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+      
+      // Now the map section should be visible
       console.log('[E2E] Waiting for map section to appear...');
-      await expect(page2.locator('h3:has-text("Game Map")')).toBeVisible({ timeout: 10000 });
+      await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      await expect(page2.locator('h3:has-text("Game Map")')).toBeVisible({ timeout: 5000 });
       console.log('[E2E] Map section visible');
       
       // Screenshot 19: Map section visible
