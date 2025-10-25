@@ -42,11 +42,16 @@
       const response = await getGames();
       games = response.games;
       
-      // If a game is selected, refresh its data
+      // If a game is selected, refresh its data without replacing the object
       if (selectedGame) {
         const updated = games.find(g => g.gameId === selectedGame!.gameId);
         if (updated) {
-          selectedGame = updated;
+          // Preserve playerList when updating from list API (which doesn't include it)
+          const preservedPlayerList = selectedGame.playerList;
+          Object.assign(selectedGame, updated);
+          if (preservedPlayerList && !updated.playerList) {
+            selectedGame.playerList = preservedPlayerList;
+          }
         }
       }
     } catch (err) {
@@ -74,8 +79,7 @@
     try {
       await joinGame(gameId);
       await loadGames();
-      // Select the game we just joined
-      selectedGame = games.find(g => g.gameId === gameId) || null;
+      // Don't automatically select - user will click View button
     } catch (err: any) {
       error = err.message || 'Failed to join game';
     } finally {
@@ -236,7 +240,9 @@
 
       {#if selectedGame.state === 'started' && isInGame(selectedGame)}
         <div class="map-section">
-          <MapView gameId={selectedGame.gameId} />
+          {#key selectedGame.gameId}
+            <MapView gameId={selectedGame.gameId} />
+          {/key}
         </div>
       {/if}
     </div>
