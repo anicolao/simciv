@@ -600,18 +600,22 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 	t.Logf("Populations surviving: %d/%d (%.1f%%)\n", survivingCount, len(results), 
 		float64(survivingCount)/float64(len(results))*100)
 	
-	// With current science rate (0.001), Fire Mastery takes ~18 years
-	// 10-year simulations achieve ~56% progress but don't reach the goal
-	// However, populations should all survive and thrive
+	// With current science rate (0.002) and 70/30 food allocation
+	// All populations should survive, thrive, and reach Fire Mastery
 	if survivingCount < len(results) {
 		t.Errorf("Expected 100%% survival with 100 starting population, got %d/%d surviving", 
 			survivingCount, len(results))
 	}
 	
-	// Viability (Fire Mastery) is 0% with current slow science rate over 10 years
-	// This is expected - would need ~18 years to reach Fire Mastery
-	t.Logf("Viability (Fire Mastery in 10yr): %d/%d (%.1f%%) - Science rate requires ~18 years for Fire Mastery", 
+	// Viability (Fire Mastery) should be 100% with 70/30 allocation
+	// Fire Mastery achieved in ~140 days (0.38 years)
+	t.Logf("Viability (Fire Mastery in 10yr): %d/%d (%.1f%%)", 
 		viableCount, len(results), viabilityRate*100)
+	
+	if viableCount != len(results) {
+		t.Errorf("Expected 100%% viability with 70/30 allocation, got %d/%d viable", 
+			viableCount, len(results))
+	}
 	
 	// Check that results are variable (not all identical)
 	variance := CalculatePopulationVariance(results)
@@ -779,5 +783,5 @@ func TestFoodAllocationComparison(t *testing.T) {
 	}
 	
 	t.Log("================================================================================")
-	t.Log("\nCurrent default: 80/20 (food/science)")
+	t.Log("\nCurrent default: 70/30 (food/science) - achieves 100% viability")
 }
