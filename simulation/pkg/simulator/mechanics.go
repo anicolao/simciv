@@ -10,6 +10,10 @@ const (
 	// Age thresholds
 	AgeChild  = 15.0
 	AgeAdult  = 15.0
+	// BUG: AgeFertileMin should be 13.0 per design doc (HUMAN_ATTRIBUTES.md line 611)
+	// Design: "Minimum Fertility Age: 13 years"
+	// Current: 15.0
+	// See designs/HUMAN_SCENARIO_COMPARISON.md Bug #3 for analysis
 	AgeFertileMin = 15.0
 	AgeFertileMax = 45.0
 
@@ -25,6 +29,10 @@ const (
 
 	// Science production
 	ScienceBaseRate = 0.0025 // Science points per hour (balanced for high viability)
+	// BUG: ScienceHealthThreshold should be 50.0 per design doc (HUMAN_ATTRIBUTES.md line 413)
+	// Design: "* 0.5 if average_health < 50"
+	// Current: 30.0
+	// See designs/HUMAN_SCENARIO_COMPARISON.md Bug #2 for analysis
 	ScienceHealthThreshold = 30.0 // Only penalize science when health is critically low
 	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
 
@@ -158,6 +166,11 @@ func updateHealth(human *MinimalHuman, foodPerPerson float64) {
 	healthChange := HealthBaseDecline
 
 	// Food bonus/penalty
+	// BUG: This formula doesn't match the design doc (HUMAN_ATTRIBUTES.md line 86)
+	// Design: food_bonus = (food_consumed / food_required) * 15
+	// Current: food_bonus = (foodRatio - 0.5) * 15
+	// This creates wrong breakeven point - should be: healthChange += foodRatio * HealthFoodMultiplier
+	// See designs/HUMAN_SCENARIO_COMPARISON.md Bug #1 for detailed analysis
 	foodRatio := foodPerPerson / FoodRequiredPerPerson
 	healthChange += (foodRatio - HealthFoodBreakeven) * HealthFoodMultiplier
 

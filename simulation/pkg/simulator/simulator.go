@@ -21,10 +21,16 @@ func DefaultStartingConditions() StartingConditions {
 func initializePopulation(conditions StartingConditions, rng *RandomGenerator) []*MinimalHuman {
 	humans := make([]*MinimalHuman, 0, conditions.Population)
 
-	// Age distribution adjusted per feedback:
-	// children_0_14: 25% (reduced by 5%)
-	// adults_15_30: 60% (increased by 10%)
-	// elders_31_plus: 15% (reduced by 5%)
+	// BUG: Age distribution doesn't match design doc (HUMAN_ATTRIBUTES.md lines 267-269)
+	// Design specifies:
+	//   Children (0-12): 30%
+	//   Fertile Adults (13-30): 50%
+	//   Older Adults (30+): 20%
+	// Current implementation:
+	//   children_0_14: 25% (reduced by 5%)
+	//   adults_15_30: 60% (increased by 10%)
+	//   elders_31_plus: 15% (reduced by 5%)
+	// See designs/HUMAN_SCENARIO_COMPARISON.md Bug #4 for analysis
 
 	childrenCount := int(float64(conditions.Population) * 0.25)
 	adultsCount := int(float64(conditions.Population) * 0.60)
