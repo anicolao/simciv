@@ -82,15 +82,16 @@ export async function dragMapTouch(
 export async function scrollZoom(page: Page, deltaY: number): Promise<void> {
   const canvas = page.locator('.map-canvas');
   
-  // Get canvas bounding box to hover over center
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error('Canvas not found');
-  
-  // Hover over center of canvas
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  
-  // Scroll
-  await page.mouse.wheel(0, deltaY);
+  // Dispatch wheel event directly to canvas
+  await canvas.dispatchEvent('wheel', {
+    deltaY: deltaY,
+    deltaX: 0,
+    deltaZ: 0,
+    clientX: 320,
+    clientY: 240,
+    bubbles: true,
+    cancelable: true,
+  });
   
   // Wait for rendering
   await page.waitForTimeout(200);

@@ -105,6 +105,17 @@ When `npm run test:e2e` is executed, the following screenshots are validated:
 22. `22-map-with-resources.png` - Map showing resource markers on tiles
 23. `23-game-waiting-no-map.png` - Waiting game without map section
 
+### Map Interactions (map-interactions.spec.ts)
+24. `24-map-before-pan.png` - Map view before panning
+25. `25-map-after-pan-mouse.png` - Map view after mouse drag pan
+26. `26-map-before-zoom.png` - Map view before zooming
+27. `27-map-zoom-in.png` - Map zoomed in to 150%
+28. `28-map-zoom-out.png` - Map zoomed back out to 100%
+29. `29-map-zoom-min.png` - Map at minimum zoom (50%)
+30. `30-map-zoom-max.png` - Map at maximum zoom (200%)
+31. `31-map-pan-zoom-combined.png` - Map with combined pan and zoom operations
+32. `32-map-cursor-feedback.png` - Map with grab cursor feedback
+
 ## Purpose
 
 These screenshot expectations serve to:
