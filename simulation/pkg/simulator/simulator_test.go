@@ -718,9 +718,11 @@ func TestGoodTerrain(t *testing.T) {
 func TestFoodAllocationComparison(t *testing.T) {
 	// Test allocations from 10/90 to 90/10 in increments of 10
 	allocations := []float64{0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90}
+        samples := 10
+        years := 10
 	
 	t.Log("\n================================================================================")
-	t.Log("FOOD ALLOCATION COMPARISON (10-YEAR SIMULATION)")
+	t.Logf("FOOD ALLOCATION COMPARISON (%d-YEAR SIMULATION)", years)
 	t.Log("================================================================================\n")
 	
 	t.Logf("%-15s %-12s %-12s %-12s %-12s %-12s %-12s %-12s",
@@ -736,11 +738,11 @@ func TestFoodAllocationComparison(t *testing.T) {
 		survivalCount := 0
 		
 		// Test with first 10 seeds for efficiency
-		for i := 0; i < 10; i++ {
+		for i := 0; i < samples; i++ {
 			config := SimulationConfig{
 				Seed:               VIABILITY_TEST_SEEDS[i],
 				StartingConditions: conditions,
-				MaxDays:            3650, // 10 years
+				MaxDays:            365*years,
 			}
 			
 			result := RunSimulation(config)
