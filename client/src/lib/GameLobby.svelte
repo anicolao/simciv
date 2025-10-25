@@ -42,11 +42,16 @@
       const response = await getGames();
       games = response.games;
       
-      // If a game is selected, refresh its data
+      // If a game is selected, refresh its data without replacing the object
       if (selectedGame) {
         const updated = games.find(g => g.gameId === selectedGame!.gameId);
         if (updated) {
-          selectedGame = updated;
+          // Preserve playerList when updating from list API (which doesn't include it)
+          const preservedPlayerList = selectedGame.playerList;
+          Object.assign(selectedGame, updated);
+          if (preservedPlayerList && !updated.playerList) {
+            selectedGame.playerList = preservedPlayerList;
+          }
         }
       }
     } catch (err) {
