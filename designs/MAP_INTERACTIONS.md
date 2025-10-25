@@ -1,0 +1,515 @@
+# SimCiv Map Interaction Design Specification
+## Pan, Zoom, and Touch Controls
+
+### Document Status
+**Version:** 0.0004  
+**Status:** Implementation  
+**Last Updated:** 2025-10-25  
+**Purpose:** Specification for interactive map controls including pan, zoom, and touch gestures
+
+---
+
+## Executive Summary
+
+This document specifies the design for interactive map controls in SimCiv's MapView component. The design enables intuitive exploration of the game world through mouse and touch interactions, allowing players to navigate large maps efficiently.
+
+**Key Features:**
+- Click and drag (mouse) or tap and drag (touch) to pan the map view
+- Mouse wheel scroll to zoom in/out
+- Pinch gesture to zoom in/out on touch devices
+- Smooth interaction feedback with appropriate cursors
+- Bounds checking to prevent panning off the map
+- Zoom level indicators for user feedback
+- Comprehensive end-to-end testing for all interaction modes
+
+This design builds upon the map rendering system from MAP_GENERATION.md, adding the navigation layer necessary for players to explore and interact with the procedurally generated terrain.
+
+---
+
+## Related Documents
+
+- **MAP_GENERATION.md**: Terrain generation and map data structure
+- **version0.0002.md**: Game creation system
+- **TILESET_RENDERING.md**: FreeCiv tileset integration
+
+---
+
+## Architecture Context
+
+The map interaction system integrates with SimCiv's client-side rendering:
+- **MapView Component**: Svelte component that renders map tiles on HTML5 canvas
+- **Canvas Element**: Receives mouse and touch events for interaction
+- **View State**: Maintains viewOffsetX, viewOffsetY, and zoom level
+- **Render Loop**: Re-renders map when view state changes
+- **Bounds Checking**: Ensures view stays within map boundaries
+
+The design maintains separation between view state (client-side, temporary) and game state (server-side, persistent).
+
+---
+
+## Interaction Requirements
+
+### 1. Pan (Drag) Controls
+
+**Mouse Interaction:**
+- **Click and Drag**: User clicks on canvas, drags to move the view
+- **Events**: mousedown → mousemove → mouseup
+- **Visual Feedback**: Cursor changes from 'grab' to 'grabbing'
+- **Behavior**: Map tiles shift opposite to drag direction (natural scrolling)
+
+**Touch Interaction:**
+- **Tap and Drag**: Single-finger touch and drag to move the view
+- **Events**: touchstart → touchmove → touchend
+- **Visual Feedback**: No cursor (touch device)
+- **Behavior**: Map tiles shift opposite to drag direction
+
+**Bounds Checking:**
+- Prevent panning beyond map edges
+- Clamp viewOffsetX between 0 and (mapWidth - viewportWidth)
+- Clamp viewOffsetY between 0 and (mapHeight - viewportHeight)
+
+### 2. Zoom Controls
+
+**Mouse Wheel:**
+- **Scroll Up**: Zoom in (increase zoom level)
+- **Scroll Down**: Zoom out (decrease zoom level)
+- **Event**: wheel
+- **Zoom Levels**: 5 discrete levels (0.5x, 0.75x, 1.0x, 1.5x, 2.0x)
+- **Zoom Center**: Zoom towards mouse cursor position
+
+**Pinch Gesture (Touch):**
+- **Two-Finger Pinch Out**: Zoom in
+- **Two-Finger Pinch In**: Zoom out
+- **Events**: touchstart (2 fingers) → touchmove → touchend
+- **Calculation**: Distance between touch points determines zoom delta
+- **Zoom Center**: Midpoint between two fingers
+
+**Zoom Constraints:**
+- Minimum zoom: 0.5x (show more tiles, smaller size)
+- Maximum zoom: 2.0x (show fewer tiles, larger size)
+- Default zoom: 1.0x (32px tiles as currently implemented)
+
+### 3. Visual Feedback
+
+**Cursor States:**
+- Default: `cursor: grab` (when not dragging)
+- Dragging: `cursor: grabbing` (during drag operation)
+- No special cursor for zoom operations
+
+**Zoom Level Indicator:**
+- Display current zoom level as percentage (e.g., "100%")
+- Position: Top-right corner of map canvas
+- Update in real-time during zoom operations
+- Optional: Hide after 2 seconds of no interaction
+
+**Pan Position Indicator (Optional):**
+- Minimap showing current viewport position
+- Lower-right corner of map canvas
+- Future enhancement, not in initial implementation
+
+---
+
+## Technical Implementation
+
+### State Variables
+
+```typescript
+// Existing
+let viewOffsetX = 0;  // Map tile offset X
+let viewOffsetY = 0;  // Map tile offset Y
+
+// New
+let zoomLevel = 1.0;  // Current zoom multiplier (0.5 to 2.0)
+let isDragging = false;  // Mouse/touch drag in progress
+let dragStartX = 0;  // Drag start position X
+let dragStartY = 0;  // Drag start position Y
+let dragStartOffsetX = 0;  // View offset at drag start X
+let dragStartOffsetY = 0;  // View offset at drag start Y
+```
+
+### Event Handlers
+
+**Mouse Pan:**
+```typescript
+function handleMouseDown(e: MouseEvent): void
+function handleMouseMove(e: MouseEvent): void
+function handleMouseUp(e: MouseEvent): void
+function handleMouseLeave(e: MouseEvent): void
+```
+
+**Touch Pan:**
+```typescript
+function handleTouchStart(e: TouchEvent): void
+function handleTouchMove(e: TouchEvent): void
+function handleTouchEnd(e: TouchEvent): void
+```
+
+**Zoom:**
+```typescript
+function handleWheel(e: WheelEvent): void
+function handlePinchZoom(e: TouchEvent): void
+```
+
+**Utilities:**
+```typescript
+function clampViewOffset(): void
+function updateZoomLevel(delta: number, centerX?: number, centerY?: number): void
+function getViewportDimensions(): { width: number, height: number }
+```
+
+### Coordinate Systems
+
+**Screen Coordinates:**
+- Canvas pixel coordinates (e.clientX, e.clientY relative to canvas)
+- Used for mouse/touch events
+
+**Tile Coordinates:**
+- Map grid coordinates (x, y in tiles)
+- viewOffsetX, viewOffsetY are in tile coordinates
+
+**Conversion:**
+```typescript
+// Screen to tile
+const tileX = viewOffsetX + (screenX / (DISPLAY_TILE_SIZE * zoomLevel));
+const tileY = viewOffsetY + (screenY / (DISPLAY_TILE_SIZE * zoomLevel));
+
+// Tile to screen
+const screenX = (tileX - viewOffsetX) * (DISPLAY_TILE_SIZE * zoomLevel);
+const screenY = (tileY - viewOffsetY) * (DISPLAY_TILE_SIZE * zoomLevel);
+```
+
+---
+
+## Zoom Implementation Details
+
+### Zoom Levels
+
+Five discrete zoom levels:
+- **0.5x**: Display tile size = 16px (show 40x30 tiles)
+- **0.75x**: Display tile size = 24px (show ~27x20 tiles)
+- **1.0x**: Display tile size = 32px (show 20x15 tiles) - DEFAULT
+- **1.5x**: Display tile size = 48px (show ~13x10 tiles)
+- **2.0x**: Display tile size = 64px (show 10x7 tiles)
+
+### Zoom Behavior
+
+**Zoom In:**
+1. Increase zoom level by one step
+2. Recalculate DISPLAY_TILE_SIZE (TILE_SIZE * zoomLevel)
+3. Adjust viewportTiles count (canvas size / DISPLAY_TILE_SIZE)
+4. Adjust viewOffsetX/Y to keep center tile visible
+5. Re-render map
+
+**Zoom Out:**
+1. Decrease zoom level by one step
+2. Recalculate DISPLAY_TILE_SIZE
+3. Adjust viewportTiles count
+4. Adjust viewOffsetX/Y to keep center tile visible
+5. Re-render map
+
+**Zoom to Point:**
+When zooming with mouse wheel, zoom should focus on the cursor position:
+1. Calculate tile coordinates under cursor before zoom
+2. Apply zoom level change
+3. Adjust viewOffsetX/Y so same tile is under cursor after zoom
+
+---
+
+## Pan Implementation Details
+
+### Drag Operation
+
+**Flow:**
+1. **Start**: User presses mouse button or touches canvas
+   - Record start position (dragStartX, dragStartY)
+   - Record current view offset (dragStartOffsetX, dragStartOffsetY)
+   - Set isDragging = true
+   - Change cursor to 'grabbing'
+
+2. **Move**: User moves mouse/finger while pressed
+   - Calculate delta: (currentX - dragStartX, currentY - dragStartY)
+   - Convert pixel delta to tile delta: delta / (DISPLAY_TILE_SIZE * zoomLevel)
+   - Update view offset: viewOffsetX = dragStartOffsetX - tileDeltaX
+   - Clamp view offset to map bounds
+   - Re-render map
+
+3. **End**: User releases mouse button or lifts finger
+   - Set isDragging = false
+   - Change cursor to 'grab'
+
+**Bounds Clamping:**
+```typescript
+function clampViewOffset(): void {
+  const maxOffsetX = metadata.width - viewportTilesX;
+  const maxOffsetY = metadata.height - viewportTilesY;
+  
+  viewOffsetX = Math.max(0, Math.min(viewOffsetX, maxOffsetX));
+  viewOffsetY = Math.max(0, Math.min(viewOffsetY, maxOffsetY));
+}
+```
+
+---
+
+## Touch Gesture Details
+
+### Single Touch (Pan)
+
+- Single finger touch and drag
+- Identical to mouse drag behavior
+- No cursor feedback (touch device)
+
+### Two Touch (Pinch Zoom)
+
+**Detection:**
+- touchstart with e.touches.length === 2
+- Calculate initial distance between two touch points
+
+**Zoom Calculation:**
+```typescript
+function getTouchDistance(t1: Touch, t2: Touch): number {
+  const dx = t1.clientX - t2.clientX;
+  const dy = t1.clientY - t2.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function handlePinch(e: TouchEvent): void {
+  if (e.touches.length !== 2) return;
+  
+  const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+  const delta = currentDistance - initialDistance;
+  
+  // Convert distance change to zoom level change
+  const zoomDelta = delta / 100; // Adjust sensitivity
+  updateZoomLevel(zoomDelta);
+}
+```
+
+**Zoom Center:**
+- Midpoint between two touch points
+- Zoom should center on this point
+
+### Event Prevention
+
+Prevent default browser behaviors:
+- Prevent page scroll during touch pan: `e.preventDefault()` on touchmove
+- Prevent pinch-zoom page zoom: `touch-action: none` CSS on canvas
+- Prevent context menu on long press: `e.preventDefault()` on contextmenu
+
+---
+
+## Rendering Considerations
+
+### Canvas Size
+
+Canvas size remains fixed (currently 640x480 for 20x15 tiles at 32px):
+- Width: viewportTilesX * DISPLAY_TILE_SIZE
+- Height: viewportTilesY * DISPLAY_TILE_SIZE
+
+At different zoom levels, viewportTiles changes:
+- Canvas size stays constant
+- viewportTiles = canvas size / (TILE_SIZE * zoomLevel)
+- More tiles visible at lower zoom, fewer at higher zoom
+
+### Re-render Triggers
+
+Map must re-render when:
+- viewOffsetX or viewOffsetY changes (pan)
+- zoomLevel changes (zoom)
+- tiles array changes (data load)
+- canvas element is mounted
+
+Use Svelte reactivity:
+```typescript
+$: if (canvas && tiles.length > 0) {
+  renderMap();
+}
+```
+
+### Performance
+
+- Render only visible tiles (current viewport)
+- Use requestAnimationFrame for smooth drag updates
+- Debounce zoom events (max 60fps)
+- Disable image smoothing for crisp pixel art: `ctx.imageSmoothingEnabled = false`
+
+---
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
+
+Not applicable - interaction logic is tightly coupled to DOM events and canvas rendering. Testing is done via E2E tests.
+
+### E2E Tests (Playwright)
+
+**Test Suite: map-interactions.spec.ts**
+
+1. **Drag to Pan (Mouse)**
+   - Start game and open map view
+   - Get initial tile at center
+   - Mouse down, drag right 100px, mouse up
+   - Verify viewOffsetX decreased (map moved left, showing tiles to the right)
+   - Screenshot: 24-map-pan-mouse.png
+
+2. **Drag to Pan (Touch)**
+   - Start game and open map view  
+   - Get initial tile at center
+   - Touch start, move right 100px, touch end
+   - Verify viewOffsetX decreased
+   - Screenshot: 25-map-pan-touch.png
+
+3. **Scroll to Zoom In**
+   - Start game and open map view
+   - Get initial zoom level (1.0x)
+   - Scroll wheel up (negative deltaY)
+   - Verify zoom level increased
+   - Verify fewer tiles visible
+   - Screenshot: 26-map-zoom-in.png
+
+4. **Scroll to Zoom Out**
+   - Start game and open map view
+   - Set zoom to 1.5x
+   - Scroll wheel down (positive deltaY)
+   - Verify zoom level decreased
+   - Verify more tiles visible
+   - Screenshot: 27-map-zoom-out.png
+
+5. **Pinch to Zoom**
+   - Start game and open map view
+   - Simulate two-finger pinch out (increase distance)
+   - Verify zoom level increased
+   - Screenshot: 28-map-pinch-zoom.png
+
+6. **Bounds Checking - Pan**
+   - Start game and open map view
+   - Drag far right beyond map edge
+   - Verify viewOffsetX clamped to valid range
+   - Verify no tiles with negative coordinates rendered
+   - Screenshot: 29-map-bounds-check.png
+
+7. **Bounds Checking - Zoom**
+   - Start game and open map view
+   - Zoom out to minimum (0.5x)
+   - Attempt to zoom out further
+   - Verify zoom level stays at 0.5x
+   - Screenshot: 30-map-zoom-min.png
+
+8. **Combined Pan and Zoom**
+   - Start game and open map view
+   - Zoom in to 1.5x
+   - Pan to different location
+   - Verify correct tiles rendered at correct zoom
+   - Screenshot: 31-map-pan-zoom-combined.png
+
+**Screenshot Numbering:**
+Continue from existing screenshots (last is 23), starting at 24.
+
+**Helper Functions:**
+```typescript
+// e2e/helpers/map-interactions.ts
+export async function dragMap(page, startX, startY, endX, endY): Promise<void>
+export async function scrollZoom(page, deltaY): Promise<void>
+export async function pinchZoom(page, startDist, endDist): Promise<void>
+export async function getZoomLevel(page): Promise<number>
+export async function getViewOffset(page): Promise<{x: number, y: number}>
+export async function getCenterTile(page): Promise<{x: number, y: number}>
+```
+
+---
+
+## User Experience
+
+### Discoverability
+
+Users should intuitively discover interaction methods:
+- **Cursor Feedback**: Grab cursor suggests draggability
+- **Zoom Indicator**: Shows current zoom level, hints at zoom capability
+- **Smooth Animations**: Immediate feedback on interaction
+
+### Accessibility
+
+- Keyboard navigation: Not in initial implementation (future enhancement)
+- Screen reader support: Not applicable (visual map)
+- Reduced motion: No animations, instant position updates (inherently accessible)
+
+### Mobile Considerations
+
+- Touch targets: Entire canvas is touch target (no small buttons)
+- Gesture conflicts: Prevent browser zoom/scroll with CSS and event.preventDefault()
+- Performance: Limit render frequency on mobile (requestAnimationFrame)
+
+---
+
+## Future Enhancements
+
+**Phase 2 (Post-MVP):**
+- Keyboard pan (arrow keys) and zoom (+/- keys)
+- Double-click to zoom in at point
+- Minimap with viewport indicator
+- Smooth pan/zoom animations
+- Inertia/momentum scrolling
+- Zoom to fit entire map
+- Save/restore zoom and pan position per game
+
+**Phase 3 (Advanced):**
+- Click tiles to show info popup
+- Drag-to-select multiple tiles
+- Right-click context menus for tiles
+- Tile highlighting and overlays
+- Pathfinding visualization
+
+---
+
+## Security and Privacy
+
+No security or privacy concerns:
+- All interactions are client-side only
+- No data transmitted to server
+- View state is temporary (not persisted)
+- No user preferences stored
+
+---
+
+## Performance Targets
+
+- **Pan Response**: < 16ms per frame (60 fps)
+- **Zoom Response**: < 100ms to re-render at new zoom
+- **Touch Gesture**: < 16ms per touch move event
+- **Memory**: No memory leaks from event listeners
+- **Canvas Size**: Maximum 1280x960 (40x30 tiles at 32px)
+
+---
+
+## Implementation Checklist
+
+- [ ] Add state variables for zoom and drag
+- [ ] Implement mouse event handlers (down, move, up, leave)
+- [ ] Implement touch event handlers (start, move, end)
+- [ ] Implement wheel event handler
+- [ ] Implement pinch zoom detection and calculation
+- [ ] Add bounds checking utility functions
+- [ ] Update renderMap to use zoom level
+- [ ] Add cursor CSS (grab/grabbing)
+- [ ] Add touch-action CSS (none)
+- [ ] Create E2E test suite (map-interactions.spec.ts)
+- [ ] Create E2E helper functions (map-interactions.ts)
+- [ ] Generate screenshots (24-31)
+- [ ] Update e2e-screenshots/README.md
+- [ ] Update this design document with implementation notes
+
+---
+
+## References
+
+- MDN: PointerEvent API (modern alternative to mouse/touch)
+- MDN: WheelEvent API
+- MDN: TouchEvent API
+- Canvas API: imageSmoothingEnabled
+- Svelte: Event handling and reactivity
+- Playwright: Mouse and touch automation
+
+---
+
+## Conclusion
+
+This design provides a comprehensive interaction system for map navigation in SimCiv. The implementation follows web standards, leverages Svelte reactivity, and includes thorough E2E testing. The system is extensible for future enhancements while maintaining simplicity in the initial implementation.
