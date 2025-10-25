@@ -18,13 +18,13 @@ func DefaultStartingConditions() StartingConditions {
 func initializePopulation(conditions StartingConditions, rng *RandomGenerator) []*MinimalHuman {
 	humans := make([]*MinimalHuman, 0, conditions.Population)
 
-	// Age distribution from design doc
-	// children_0_14: 30% (6 children)
-	// adults_15_30: 50% (10 adults)
-	// elders_31_plus: 20% (4 elders)
+	// Age distribution adjusted per feedback:
+	// children_0_14: 25% (reduced by 5%)
+	// adults_15_30: 60% (increased by 10%)
+	// elders_31_plus: 15% (reduced by 5%)
 
-	childrenCount := int(float64(conditions.Population) * 0.30)
-	adultsCount := int(float64(conditions.Population) * 0.50)
+	childrenCount := int(float64(conditions.Population) * 0.25)
+	adultsCount := int(float64(conditions.Population) * 0.60)
 	eldersCount := conditions.Population - childrenCount - adultsCount
 
 	// Create children (0-14 years)
