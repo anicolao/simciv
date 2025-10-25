@@ -318,11 +318,12 @@ science_hours = total_work_hours * science_ratio
 
 **Player-Set Allocation:**
 
-Players always set the food allocation ratio (default: 80%):
+Players always set the food allocation ratio (default: 70%):
 ```
-food_ratio = 80%  (default, player-adjustable 0-100%)
+food_ratio = 70%  (default, player-adjustable 0-100%; tuned from original 80%)
 science_ratio = 100% - food_ratio
 ```
+
 
 **Population Feedback System:**
 
@@ -365,7 +366,7 @@ Feedback to Player:
 **Food Production Formula:**
 ```
 Food produced per hour:
-  base_rate = 0.3 food units/hour (primitive gathering)
+  base_rate = 1.0 food units/hour (tuned for viability; originally 0.3 for primitive gathering)
   
   Modifiers:
   - Tool technology: * (1 + tool_level * 0.2)
@@ -374,6 +375,8 @@ Food produced per hour:
   - Seasonal variation: * season_multiplier (0.5 to 1.5)
   
   food_production = food_hours * base_rate * all_modifiers
+  
+  Note: Minimal implementation uses only Fire Mastery (+15%) and terrain multiplier.
 ```
 
 **Food → Health Relationship:**
@@ -402,7 +405,7 @@ Daily food distribution:
 **Science Progress Formula:**
 ```
 Science points produced per hour:
-  base_rate = 1.0 science point/hour
+  base_rate = 0.0025 science point/hour (tuned for viability; originally 1.0)
   
   Modifiers:
   - Population size: * log10(population) (collaboration bonus)
@@ -411,6 +414,8 @@ Science points produced per hour:
   - Health threshold: * 0.5 if average_health < 50 (can't think when starving)
   
   science_production = science_hours * base_rate * all_modifiers
+  
+  Note: Minimal implementation uses only population and health modifiers.
 ```
 
 **Technology Unlock System:**
@@ -624,13 +629,15 @@ A human can reproduce if:
   5. Not currently pregnant/caring for infant < 1 year
 
 Conception Probability:
-  base_chance = 0.03 per month (3% monthly for eligible pairs)
+  base_chance = 0.06 per month (6% monthly, doubled for viability; originally 0.03)
   
   Modifiers:
   - health_modifier = (health - 50) / 50  (range: 0.0 to 1.0)
   - belonging_modifier = (belonging - 40) / 60 (range: 0.0 to 1.0)
   - age_modifier = 1.0 (age 15-25), 0.8 (age 13-15 or 25-30), 0.5 (age 30-40), 0.2 (age 40-45)
   - stress_modifier = (100 - safety) / 100 (lower safety reduces fertility)
+  
+  Note: Minimal implementation uses simplified belonging threshold and omits stress modifier.
   
   monthly_conception_chance = base_chance * health_modifier * belonging_modifier * age_modifier * stress_modifier
 ```
