@@ -7,7 +7,7 @@ SimCiv is a strategy game combining city-building mechanics with grand strategy 
 ## Technology Stack
 
 - **Server**: Node.js with TypeScript and Express
-- **Database**: MongoDB (production) / MongoDB Memory Server (tests)
+- **Database**: MongoDB (required for all environments including tests)
 - **Client**: TypeScript + Svelte with Vite
 - **Simulation**: Go (future implementation)
 - **Testing**: Vitest for unit tests, Playwright for E2E tests
@@ -52,7 +52,7 @@ After completing the one-time setup above:
 - `npm install` - Install dependencies
 - `npm run build` - Build TypeScript and Svelte
 - `npm run dev` - Start development server
-- `npm test` - Run unit tests (use `TEST_MONGO_URI=mongodb://localhost:27017` for integration tests)
+- `npm test` - Run unit tests (requires MongoDB running on localhost:27017)
 - `go build` and `go test` - Go simulation work
 - `mongo start`, `mongo stop`, `mongo status` - MongoDB management
 - `e2e-setup` - Set up E2E test environment (builds Go engine, starts MongoDB, server, and engine)
@@ -143,7 +143,7 @@ The current implementation includes:
 ### Testing
 - Write unit tests with Vitest for utility functions
 - Write E2E tests with Playwright for user flows
-- Mock database connections in tests
+- All tests require a running MongoDB instance on localhost:27017
 - Test both success and failure cases
 - Test edge cases (expired challenges, duplicate aliases, etc.)
 - Use descriptive test names
@@ -156,7 +156,7 @@ The current implementation includes:
 - **ALWAYS run all unit and integration tests before completing a PR**
 - **ALWAYS run Playwright E2E tests (`npm run test:e2e`) before completing a PR**
 - **DELETING TESTS IS GENERALLY UNACCEPTABLE** - Only remove tests if they're truly obsolete
-- Use `TEST_MONGO_URI` environment variable to run integration tests with external MongoDB when mongodb-memory-server has issues
+- **MongoDB MUST be running** - Start MongoDB with `mongo start` before running tests
 - Integration tests must pass before PR completion
 - **E2E tests must be run and screenshots must be generated and committed** whenever new e2e tests are added
 
