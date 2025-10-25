@@ -78,6 +78,8 @@ await screenshotIfChanged(page, { path: 'screenshot.png' });
 ### Example Output
 
 ```
+import { screenshotIfChanged } from './helpers/screenshot';
+
 ✓ Skipped screenshot: 01-initial-load.png (identical to existing)
 ✓ Skipped screenshot: 02-registration-form-filled.png (identical to existing)
 📸 Updated screenshot: 03-authenticated.png (content changed)
@@ -110,8 +112,8 @@ Running tests twice in a row shows no modifications (when UI is unchanged):
 
 ```bash
 $ npm run test:e2e
-✓ Skipped screenshot: 01-initial-load.png (identical)
-✓ Skipped screenshot: 02-registration-form-filled.png (identical)
+✓ Skipped screenshot: 01-initial-load.png (identical to existing)
+✓ Skipped screenshot: 02-registration-form-filled.png (identical to existing)
 ...
 $ git status
 # nothing to commit, working tree clean
@@ -122,10 +124,10 @@ $ git status
 ```bash
 # Modify button color in CSS
 $ npm run test:e2e
-✓ Skipped screenshot: 01-initial-load.png (identical)
+✓ Skipped screenshot: 01-initial-load.png (identical to existing)
 📸 Updated screenshot: 02-registration-form-filled.png (content changed)
 📸 Updated screenshot: 03-authenticated.png (content changed)
-✓ Skipped screenshot: 04-after-logout.png (identical)
+✓ Skipped screenshot: 04-after-logout.png (identical to existing)
 ...
 $ git status
 # 2 files modified (only the ones with visual changes)
