@@ -236,7 +236,9 @@
 
       {#if selectedGame.state === 'started' && isInGame(selectedGame)}
         <div class="map-section">
-          <MapView gameId={selectedGame.gameId} />
+          {#key selectedGame.gameId}
+            <MapView gameId={selectedGame.gameId} />
+          {/key}
         </div>
       {/if}
     </div>
