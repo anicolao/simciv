@@ -12,6 +12,56 @@ SimCiv is a strategy game combining city-building mechanics with grand strategy 
 - **Simulation**: Go (future implementation)
 - **Testing**: Vitest for unit tests, Playwright for E2E tests
 
+## Development Environment
+
+**CRITICAL: Use the persistent Nix shell for all development work EXCEPT E2E tests.**
+
+### One-Time Nix Setup (Required First)
+
+Before using the persistent shell, set up Nix on your development machine:
+
+```bash
+# Run the setup script (one-time only)
+./SETUP_NIX_BIN.sh
+
+# Navigate to project and allow direnv
+cd simciv
+direnv allow
+```
+
+This setup:
+- Installs `nix-bin` and `direnv` from apt (Ubuntu/Debian)
+- Configures Nix to enable flakes
+- Adds you to the `nix-users` group
+- Sets up direnv hook in your shell
+
+**Note**: The setup script adds you to the `nix-users` group. In interactive sessions, you may need to log out and log back in for the group membership to take effect. However, the `bin/nix-shell-persistent` script handles group membership automatically using `sg`, so you can proceed directly after running the setup.
+
+**You only need to do this once per machine.**
+
+### Persistent Nix Shell Usage
+
+After completing the one-time setup above:
+
+- **ALWAYS** use `bin/nix-shell-persistent exec <command>` to run commands in the Nix environment
+- Initialize once per session: `bin/nix-shell-persistent init` (takes 1-2 minutes first time)
+- Run commands instantly: `bin/nix-shell-persistent exec npm install`, `bin/nix-shell-persistent exec npm run build`, etc.
+- Cleanup when done: `bin/nix-shell-persistent cleanup`
+
+### Commands to Run in Nix Environment (via persistent shell)
+- `npm install` - Install dependencies
+- `npm run build` - Build TypeScript and Svelte
+- `npm run dev` - Start development server
+- `npm test` - Run unit tests (use `TEST_MONGO_URI=mongodb://localhost:27017` for integration tests)
+- `go build` and `go test` - Go simulation work
+- `mongo start`, `mongo stop`, `mongo status` - MongoDB management
+- `e2e-setup` - Set up E2E test environment (builds Go engine, starts MongoDB, server, and engine)
+- All development work, building, and testing
+
+### Commands to Run OUTSIDE Nix Environment
+- `npm run test:e2e` - Playwright E2E tests (ONLY this command runs outside Nix)
+- The persistent shell remains running; do NOT cleanup before E2E tests
+
 ## Architecture Principles
 
 1. **Database as Single Source of Truth**: All game state and user actions are stored in MongoDB
@@ -132,17 +182,20 @@ The current implementation includes:
 
 ## How to Run E2E Tests
 
+**CRITICAL: Only `npm run test:e2e` must be run OUTSIDE the Nix environment. Setup runs inside.**
+
 ### Prerequisites
-1. Run setup script: `e2e-setup` (or `bash bin/e2e-setup`)
-   - This script handles everything: npm install, Playwright browsers, building, MongoDB, and server
+1. Run e2e-setup inside persistent Nix shell: `bin/nix-shell-persistent exec e2e-setup`
+   - This script handles everything: npm install, Playwright browsers, building, MongoDB, server, and Go game engine
+   - The persistent shell remains running
 
 ### Running E2E Tests
 ```bash
-# Run all e2e tests with timeout
-timeout 180 npx playwright test e2e/ 2>&1 | tail -100
+# Run all e2e tests (outside Nix, but persistent shell stays running)
+npm run test:e2e
 
 # Run specific test file
-timeout 180 npx playwright test e2e/map-view.spec.ts 2>&1 | tail -100
+npx playwright test e2e/map-view.spec.ts
 
 # Debug mode (headed browser)
 npx playwright test e2e/ --headed --debug
@@ -224,24 +277,40 @@ NODE_ENV=development
 
 ## Running the Application
 
+**Prerequisites**: Complete the one-time Nix setup from the "Development Environment" section before running these commands.
+
+**Use persistent Nix shell for all commands except the final E2E test run:**
+
 ```bash
-# Install dependencies
-npm install
+# Initialize persistent Nix shell (once per session)
+bin/nix-shell-persistent init
 
-# Run unit tests
-npm test
+# Install dependencies (in Nix)
+bin/nix-shell-persistent exec npm install
 
-# Run E2E tests (requires MongoDB)
+# Run unit tests (in Nix)
+bin/nix-shell-persistent exec npm test
+
+# Run integration tests with external MongoDB (in Nix)
+bin/nix-shell-persistent exec bash -c 'TEST_MONGO_URI=mongodb://localhost:27017 npm test'
+
+# Build TypeScript (in Nix)
+bin/nix-shell-persistent exec npm run build
+
+# Start development server (in Nix)
+bin/nix-shell-persistent exec npm run dev
+
+# Start production server (in Nix)
+bin/nix-shell-persistent exec npm start
+
+# Set up E2E test environment (in Nix - builds Go engine, starts MongoDB, server, and engine)
+bin/nix-shell-persistent exec e2e-setup
+
+# Run E2E tests (OUTSIDE Nix - persistent shell stays running)
 npm run test:e2e
 
-# Build TypeScript
-npm run build
-
-# Start development server
-npm run dev
-
-# Start production server
-npm start
+# Cleanup when done (after all work is complete)
+bin/nix-shell-persistent cleanup
 ```
 
 ## Future Development
