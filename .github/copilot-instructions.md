@@ -47,7 +47,6 @@ After completing the one-time setup above:
 - Initialize once per session: `bin/nix-shell-persistent init` (takes 1-2 minutes first time)
 - Run commands instantly: `bin/nix-shell-persistent exec npm install`, `bin/nix-shell-persistent exec npm run build`, etc.
 - Cleanup when done: `bin/nix-shell-persistent cleanup`
-- **Note**: In CI/GitHub Actions environments without Nix, commands run directly (e.g., `npm install`, `npm test`)
 
 ### Commands to Run in Nix Environment (via persistent shell)
 - `npm install` - Install dependencies
@@ -56,12 +55,12 @@ After completing the one-time setup above:
 - `npm test` - Run unit tests (use `TEST_MONGO_URI=mongodb://localhost:27017` for integration tests)
 - `go build` and `go test` - Go simulation work
 - `mongo start`, `mongo stop`, `mongo status` - MongoDB management
-- All development work, building, and testing EXCEPT Playwright E2E tests
-- **Note**: Use `bin/nix-shell-persistent exec <command>` in development, or run directly in CI environments
+- `e2e-setup` - Set up E2E test environment (builds Go engine, starts MongoDB, server, and engine)
+- All development work, building, and testing
 
 ### Commands to Run OUTSIDE Nix Environment
-- `npm run test:e2e` - Playwright E2E tests (NEVER run inside Nix)
-- Exit the persistent shell or move to a different directory before running E2E tests
+- `npm run test:e2e` - Playwright E2E tests (ONLY this command runs outside Nix)
+- The persistent shell remains running; do NOT cleanup before E2E tests
 
 ## Architecture Principles
 
@@ -183,21 +182,20 @@ The current implementation includes:
 
 ## How to Run E2E Tests
 
-**CRITICAL: E2E tests must be run OUTSIDE the Nix environment.**
+**CRITICAL: Only `npm run test:e2e` must be run OUTSIDE the Nix environment. Setup runs inside.**
 
 ### Prerequisites
-1. Exit persistent Nix shell if running: `bin/nix-shell-persistent cleanup`
-2. Or move to a different directory to exit Nix environment
-3. Run setup script: `bash bin/e2e-setup`
-   - This script handles everything: npm install, Playwright browsers, building, MongoDB, and server
+1. Run e2e-setup inside persistent Nix shell: `bin/nix-shell-persistent exec e2e-setup`
+   - This script handles everything: npm install, Playwright browsers, building, MongoDB, server, and Go game engine
+   - The persistent shell remains running
 
 ### Running E2E Tests
 ```bash
-# Run all e2e tests with timeout
-timeout 180 npx playwright test e2e/ 2>&1 | tail -100
+# Run all e2e tests (outside Nix, but persistent shell stays running)
+npm run test:e2e
 
 # Run specific test file
-timeout 180 npx playwright test e2e/map-view.spec.ts 2>&1 | tail -100
+npx playwright test e2e/map-view.spec.ts
 
 # Debug mode (headed browser)
 npx playwright test e2e/ --headed --debug
@@ -281,7 +279,7 @@ NODE_ENV=development
 
 **Prerequisites**: Complete the one-time Nix setup from the "Development Environment" section before running these commands.
 
-**Use persistent Nix shell for all commands except E2E tests:**
+**Use persistent Nix shell for all commands except the final E2E test run:**
 
 ```bash
 # Initialize persistent Nix shell (once per session)
@@ -305,14 +303,15 @@ bin/nix-shell-persistent exec npm run dev
 # Start production server (in Nix)
 bin/nix-shell-persistent exec npm start
 
-# Run E2E tests (OUTSIDE Nix - exit persistent shell first)
+# Set up E2E test environment (in Nix - builds Go engine, starts MongoDB, server, and engine)
+bin/nix-shell-persistent exec e2e-setup
+
+# Run E2E tests (OUTSIDE Nix - persistent shell stays running)
 npm run test:e2e
 
-# Cleanup when done
+# Cleanup when done (after all work is complete)
 bin/nix-shell-persistent cleanup
 ```
-
-**Note**: In CI/GitHub Actions environments without Nix, run commands directly (e.g., `npm install`, `npm test`, `npm run test:e2e`).
 
 ## Future Development
 
