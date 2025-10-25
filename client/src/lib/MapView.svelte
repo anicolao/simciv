@@ -35,8 +35,8 @@
   let metadata: MapMetadata | null = null;
   let loading = true;
   let error = '';
-  let viewOffsetX = 0;
-  let viewOffsetY = 0;
+  let viewOffsetX = 0; // Pixel offset, not tile offset
+  let viewOffsetY = 0; // Pixel offset, not tile offset
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
   let tilesetImage: HTMLImageElement | null = null;
@@ -133,10 +133,10 @@
         metadata
       });
 
-      // Center view on starting position
+      // Center view on starting position (now in pixels)
       if (startingPosition) {
-        viewOffsetX = startingPosition.centerX - Math.floor(viewportTilesX / 2);
-        viewOffsetY = startingPosition.centerY - Math.floor(viewportTilesY / 2);
+        viewOffsetX = (startingPosition.centerX - Math.floor(viewportTilesX / 2)) * DISPLAY_TILE_SIZE;
+        viewOffsetY = (startingPosition.centerY - Math.floor(viewportTilesY / 2)) * DISPLAY_TILE_SIZE;
         console.log('[MapView] View centered at:', { viewOffsetX, viewOffsetY });
       }
 
@@ -171,26 +171,40 @@
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Render each tile
-    for (let row = 0; row < viewportTilesY; row++) {
-      for (let col = 0; col < viewportTilesX; col++) {
-        const tileX = viewOffsetX + col;
-        const tileY = viewOffsetY + row;
+    // Calculate which tiles are visible (convert pixel offset to tile coordinates)
+    const startTileX = Math.floor(viewOffsetX / DISPLAY_TILE_SIZE);
+    const startTileY = Math.floor(viewOffsetY / DISPLAY_TILE_SIZE);
+    
+    // Calculate pixel offset within the first tile
+    const pixelOffsetX = viewOffsetX % DISPLAY_TILE_SIZE;
+    const pixelOffsetY = viewOffsetY % DISPLAY_TILE_SIZE;
+
+    // Render tiles with sub-pixel positioning for smooth scrolling
+    // Need to render one extra tile in each direction to fill the canvas
+    for (let row = 0; row <= viewportTilesY + 1; row++) {
+      for (let col = 0; col <= viewportTilesX + 1; col++) {
+        const tileX = startTileX + col;
+        const tileY = startTileY + row;
         const tile = getTileAt(tileX, tileY);
 
         if (tile) {
-          renderTile(ctx, tile, col * DISPLAY_TILE_SIZE, row * DISPLAY_TILE_SIZE);
+          // Position tiles with sub-pixel accuracy
+          const screenX = col * DISPLAY_TILE_SIZE - pixelOffsetX;
+          const screenY = row * DISPLAY_TILE_SIZE - pixelOffsetY;
+          renderTile(ctx, tile, screenX, screenY);
         }
       }
     }
 
     // Render starting city marker
     if (startingPosition) {
-      const cityCol = startingPosition.startingCityX - viewOffsetX;
-      const cityRow = startingPosition.startingCityY - viewOffsetY;
+      const cityScreenX = (startingPosition.startingCityX - startTileX) * DISPLAY_TILE_SIZE - pixelOffsetX;
+      const cityScreenY = (startingPosition.startingCityY - startTileY) * DISPLAY_TILE_SIZE - pixelOffsetY;
       
-      if (cityCol >= 0 && cityCol < viewportTilesX && cityRow >= 0 && cityRow < viewportTilesY) {
-        renderCityMarker(ctx, cityCol * DISPLAY_TILE_SIZE, cityRow * DISPLAY_TILE_SIZE);
+      // Only render if visible on screen
+      if (cityScreenX >= -DISPLAY_TILE_SIZE && cityScreenX < canvas.width &&
+          cityScreenY >= -DISPLAY_TILE_SIZE && cityScreenY < canvas.height) {
+        renderCityMarker(ctx, cityScreenX, cityScreenY);
       }
     }
   }
@@ -293,13 +307,9 @@
     const deltaX = currentX - dragStartX;
     const deltaY = currentY - dragStartY;
     
-    // Convert pixel delta to tile delta
-    const tileDeltaX = deltaX / DISPLAY_TILE_SIZE;
-    const tileDeltaY = deltaY / DISPLAY_TILE_SIZE;
-    
-    // Update view offset (negative because we're dragging the view, not the map)
-    viewOffsetX = dragStartOffsetX - tileDeltaX;
-    viewOffsetY = dragStartOffsetY - tileDeltaY;
+    // Update view offset directly in pixels (1:1 movement)
+    viewOffsetX = dragStartOffsetX - deltaX;
+    viewOffsetY = dragStartOffsetY - deltaY;
     
     clampViewOffset();
     renderMap();
@@ -349,11 +359,9 @@
       const deltaX = currentX - dragStartX;
       const deltaY = currentY - dragStartY;
       
-      const tileDeltaX = deltaX / DISPLAY_TILE_SIZE;
-      const tileDeltaY = deltaY / DISPLAY_TILE_SIZE;
-      
-      viewOffsetX = dragStartOffsetX - tileDeltaX;
-      viewOffsetY = dragStartOffsetY - tileDeltaY;
+      // Update view offset directly in pixels (1:1 movement)
+      viewOffsetX = dragStartOffsetX - deltaX;
+      viewOffsetY = dragStartOffsetY - deltaY;
       
       clampViewOffset();
       renderMap();
@@ -400,18 +408,20 @@
     console.log('[MapView] updateZoomLevel called with delta:', delta);
     const oldZoom = zoomLevel;
     
-    // Discrete zoom levels: 0.5, 0.75, 1.0, 1.5, 2.0
-    const zoomLevels = [0.5, 0.75, 1.0, 1.5, 2.0];
+    // More granular zoom levels for smoother experience (50% to 200% in 10% increments)
+    const zoomLevels = [
+      0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0
+    ];
     const currentIndex = zoomLevels.findIndex(z => Math.abs(z - zoomLevel) < 0.01);
     console.log('[MapView] Current zoom index:', currentIndex, 'zoom:', zoomLevel);
     
     let newIndex = currentIndex;
-    // Use a much lower threshold for trackpad scrolling (0.01 instead of 0.5)
-    if (delta > 0.01) {
+    // Increased threshold to make zoom less sensitive (0.05 instead of 0.01)
+    if (delta > 0.05) {
       // Zoom in
       newIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
       console.log('[MapView] Zooming in, newIndex:', newIndex);
-    } else if (delta < -0.01) {
+    } else if (delta < -0.05) {
       // Zoom out
       newIndex = Math.max(currentIndex - 1, 0);
       console.log('[MapView] Zooming out, newIndex:', newIndex);
@@ -431,8 +441,9 @@
   function clampViewOffset() {
     if (!metadata) return;
     
-    const maxOffsetX = Math.max(0, metadata.width - viewportTilesX);
-    const maxOffsetY = Math.max(0, metadata.height - viewportTilesY);
+    // Calculate max offset in pixels
+    const maxOffsetX = Math.max(0, (metadata.width - viewportTilesX) * DISPLAY_TILE_SIZE);
+    const maxOffsetY = Math.max(0, (metadata.height - viewportTilesY) * DISPLAY_TILE_SIZE);
     
     viewOffsetX = Math.max(0, Math.min(viewOffsetX, maxOffsetX));
     viewOffsetY = Math.max(0, Math.min(viewOffsetY, maxOffsetY));
