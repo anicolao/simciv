@@ -25,7 +25,7 @@ const (
 
 	// Science production
 	ScienceBaseRate = 0.0025 // Science points per hour (balanced for high viability)
-	ScienceHealthThreshold = 50.0
+	ScienceHealthThreshold = 30.0 // Only penalize science when health is critically low
 	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
 
 	// Food consumption

@@ -238,8 +238,9 @@ func TestProduceScience(t *testing.T) {
 		maxExpected   float64
 	}{
 		// With ScienceBaseRate = 0.002 (500x slower than original, 2x faster than 0.001)
-		{"Healthy population", 10, population20, avgHealthy, 0.024, 0.028}, // ~0.026
-		{"Unhealthy population", 10, population20, avgUnhealthy, 0.012, 0.014}, // ~0.013 (halved)
+		// Health penalty only applies when health < 30, so both healthy (60) and unhealthy (40) get full production
+		{"Healthy population", 10, population20, avgHealthy, 0.024, 0.035}, // ~0.026
+		{"Unhealthy population", 10, population20, avgUnhealthy, 0.024, 0.035}, // ~0.026 (no penalty above 30 health)
 		{"Zero hours", 0, population20, avgHealthy, 0, 0},
 	}
 
