@@ -24,7 +24,7 @@ This directory contains Playwright E2E tests that validate the complete authenti
 
 ## Screenshot Validation
 
-Tests capture screenshots at key UI states in the `e2e-screenshots/` directory:
+Tests use visual regression testing to validate UI layout and appearance. Screenshots are compared against expected versions in the `e2e-screenshots/` directory:
 
 1. `01-initial-load.png` - Initial authentication page
 2. `02-registration-form-filled.png` - Registration form with data
@@ -35,7 +35,27 @@ Tests capture screenshots at key UI states in the `e2e-screenshots/` directory:
 7. `07-login-form-filled.png` - Login form filled with credentials
 8. `08-login-success.png` - Successful login state
 
-**These screenshots should be reviewed after each test run to ensure:**
+The screenshot helper (`e2e/helpers/screenshot.ts`) compares SHA-256 hashes and **fails tests if screenshots differ from expectations**. This ensures visual changes are reviewed before acceptance.
+
+### Screenshot Update Workflow
+
+When tests fail due to screenshot mismatch:
+
+1. **Inspect**: Review the changed screenshot to verify if the change is correct
+2. **If correct**:
+   ```bash
+   UPDATE_SCREENSHOTS=1 npm run test:e2e  # Update expectations
+   npm run test:e2e                        # Verify stability
+   git add e2e-screenshots/ && git commit  # Commit new expectations
+   ```
+3. **If incorrect**:
+   ```bash
+   git checkout -- e2e-screenshots/[filename].png  # Revert
+   # Fix the source of the visual difference
+   npm run test:e2e  # Should pass now
+   ```
+
+**Screenshots are expected to be reviewed and approved before updating expectations.**
 - UI layout is correct
 - No visual regressions
 - Error messages display properly

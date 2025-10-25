@@ -1,10 +1,80 @@
 # E2E Test Screenshots
 
-This directory contains screenshots captured during Playwright E2E test execution.
+This directory contains expected screenshots for Playwright E2E test visual regression testing.
+
+## Visual Regression Testing
+
+Screenshots are compared against expected versions during test runs. Tests **fail** if screenshots differ from expectations, requiring manual review and approval before updating.
+
+### How It Works
+
+The screenshot helper (`e2e/helpers/screenshot.ts`) implements visual regression testing:
+
+1. **Takes screenshot** to memory buffer
+2. **Compares SHA-256 hash** with expected screenshot
+3. **Test passes** if hashes match (identical visual content)
+4. **Test fails** if hashes differ (visual change detected)
+5. **Creates file** if it doesn't exist (first-time setup)
+
+This ensures that visual changes are:
+- Detected immediately
+- Reviewed before acceptance
+- Intentionally committed as new expectations
+
+## Screenshot Update Workflow
+
+When a test fails due to screenshot mismatch:
+
+### 1. Inspect the Screenshot
+
+```bash
+# Run tests to see which screenshots differ
+npm run test:e2e
+
+# Test fails with message:
+# Screenshot mismatch: 02-registration-form-filled.png
+# The screenshot differs from the expected version.
+```
+
+### 2. Review the Visual Changes
+
+Open the screenshot file and verify the changes:
+- Is the visual change intentional and correct?
+- Does it match your expectations for the UI?
+
+### 3A. If Changes Are Correct (Accept New Expectations)
+
+```bash
+# Update expected screenshots
+UPDATE_SCREENSHOTS=1 npm run test:e2e
+
+# Verify stability - run tests again without update mode
+npm run test:e2e
+
+# Should pass with: "✓ Screenshot matches expected"
+
+# Commit the new expectations
+git add e2e-screenshots/
+git commit -m "Update screenshot expectations for [feature/fix]"
+```
+
+### 3B. If Changes Are Incorrect (Reject and Fix)
+
+```bash
+# Revert the screenshot changes
+git checkout -- e2e-screenshots/02-registration-form-filled.png
+
+# Fix the source of the visual difference in your code
+
+# Run tests again
+npm run test:e2e
+
+# Tests should now pass
+```
 
 ## Screenshot Files
 
-When `npm run test:e2e` is executed, the following screenshots are automatically generated:
+When `npm run test:e2e` is executed, the following screenshots are validated:
 
 ### Authentication Flow (auth.spec.ts)
 1. `01-initial-load.png` - Initial authentication page load
@@ -37,12 +107,82 @@ When `npm run test:e2e` is executed, the following screenshots are automatically
 
 ## Purpose
 
-These screenshots serve to:
-- Validate UI layout correctness
-- Prevent visual regressions when UI changes are made
-- Document expected UI states throughout the application
-- Aid in debugging test failures
-- Provide visual narrative of user workflows
+These screenshot expectations serve to:
+- **Detect visual regressions** automatically during test runs
+- **Validate UI layout correctness** against known-good baselines
+- **Require explicit approval** for visual changes before merging
+- **Document expected UI states** throughout the application
+- **Aid in debugging** when tests fail due to visual changes
+- **Provide visual narrative** of user workflows
+
+## Technical Details
+
+### Visual Regression Testing
+
+The tests use `screenshotIfChanged()` from `e2e/helpers/screenshot.ts` which:
+
+1. Takes screenshot to a buffer in memory
+2. Calculates SHA-256 hash of the new screenshot
+3. Compares with hash of expected screenshot
+4. **Fails test if hashes differ** (visual change detected)
+5. Passes test if hashes match (no visual change)
+
+### Update Mode
+
+Set `UPDATE_SCREENSHOTS=1` environment variable to update expected screenshots:
+
+```bash
+UPDATE_SCREENSHOTS=1 npm run test:e2e
+```
+
+In update mode:
+- Screenshot differences **update the expected files** instead of failing
+- Used after reviewing and approving visual changes
+- Should be followed by a normal test run to verify stability
+
+### First-Time Setup
+
+When a screenshot doesn't exist (first test run):
+- The screenshot is automatically created
+- Logged as "Created expected screenshot"
+- No test failure occurs
+
+## Benefits
+
+- **Explicit approval required**: Visual changes must be reviewed before acceptance
+- **Clear workflow**: Inspect → approve/reject → commit
+- **Prevents regressions**: Unintended visual changes are caught immediately
+- **Git-friendly**: Only intentional changes are committed
+- **Deterministic**: Same UI state always produces same hash
+
+## Common Scenarios
+
+### Scenario 1: UI Change is Intentional
+
+Developer modifies button styling:
+1. Tests fail: "Screenshot mismatch: 02-registration-form-filled.png"
+2. Developer reviews screenshot - change looks correct
+3. Developer runs: `UPDATE_SCREENSHOTS=1 npm run test:e2e`
+4. Tests now pass with updated expectations
+5. Developer commits new screenshot expectations
+
+### Scenario 2: UI Change is Unintended
+
+Tests fail unexpectedly:
+1. Tests fail: "Screenshot mismatch: 03-authenticated.png"
+2. Developer reviews screenshot - unexpected layout shift
+3. Developer reverts screenshot: `git checkout -- e2e-screenshots/03-authenticated.png`
+4. Developer fixes CSS bug causing layout shift
+5. Tests now pass with original expectations
+
+### Scenario 3: New Feature with New Screenshots
+
+Adding new UI:
+1. New test with new screenshot path
+2. First run creates expected screenshot
+3. Developer reviews screenshot to ensure it's correct
+4. Runs tests again to verify stability
+5. Commits new screenshot expectations with feature
 
 ## Note
 

@@ -1,5 +1,6 @@
 import { test, expect, Page, Browser } from '@playwright/test';
 import { clearDatabase } from './global-setup';
+import { screenshotIfChanged } from './helpers/screenshot';
 
 // Clear database before each test to prevent data carryover between retries
 test.beforeEach(async () => {
@@ -121,7 +122,7 @@ test.describe('Map View E2E Tests', () => {
       
       // Screenshot 19: Map section visible
       console.log('[E2E] Taking screenshot 19...');
-      await page2.screenshot({ path: 'e2e-screenshots/19-map-section-visible.png', fullPage: true });
+      await screenshotIfChanged(page2, { path: 'e2e-screenshots/19-map-section-visible.png', fullPage: true });
       
       // Verify map components
       console.log('[E2E] Verifying map legend...');
@@ -131,7 +132,7 @@ test.describe('Map View E2E Tests', () => {
       
       // Screenshot 20: Complete map view with legend and canvas
       console.log('[E2E] Taking screenshot 20...');
-      await page2.screenshot({ path: 'e2e-screenshots/20-map-view-complete.png', fullPage: true });
+      await screenshotIfChanged(page2, { path: 'e2e-screenshots/20-map-view-complete.png', fullPage: true });
       
       // Verify that canvas has correct dimensions (20x15 tiles at 32px each)
       console.log('[E2E] Verifying canvas dimensions...');
@@ -146,11 +147,11 @@ test.describe('Map View E2E Tests', () => {
       
       // Screenshot 21: Map rendered with FreeCiv tiles
       console.log('[E2E] Taking screenshot 21 (map with FreeCiv tiles)...');
-      await page2.screenshot({ path: 'e2e-screenshots/21-map-starting-city-marker.png', fullPage: true });
+      await screenshotIfChanged(page2, { path: 'e2e-screenshots/21-map-starting-city-marker.png', fullPage: true });
       
       // Screenshot 22: Complete map view
       console.log('[E2E] Taking screenshot 22 (complete map view)...');
-      await page2.screenshot({ path: 'e2e-screenshots/22-map-with-resources.png', fullPage: true });
+      await screenshotIfChanged(page2, { path: 'e2e-screenshots/22-map-with-resources.png', fullPage: true });
       
       console.log('[E2E] Test completed successfully!');
       
@@ -185,6 +186,6 @@ test.describe('Map View E2E Tests', () => {
       await expect(page.locator('h3:has-text("Game Map")')).not.toBeVisible();
       
       // Screenshot 23: No map for waiting game
-      await page.screenshot({ path: 'e2e-screenshots/23-game-waiting-no-map.png', fullPage: true });
+      await screenshotIfChanged(page, { path: 'e2e-screenshots/23-game-waiting-no-map.png', fullPage: true });
   });
 });

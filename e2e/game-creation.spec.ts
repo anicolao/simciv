@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { clearDatabase } from './global-setup';
+import { screenshotIfChanged } from './helpers/screenshot';
 
 // Clear database before each test to prevent data carryover between retries
 test.beforeEach(async () => {
@@ -42,7 +43,7 @@ test.describe('Game Creation and Management', () => {
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
     
     // Take screenshot of authenticated state
-    await page.screenshot({ path: 'e2e-screenshots/09-game-lobby-authenticated.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/09-game-lobby-authenticated.png', fullPage: true });
   });
 
   test('should create a new game', async ({ page }) => {
@@ -59,7 +60,7 @@ test.describe('Game Creation and Management', () => {
     await expect(page.locator('h3:has-text("Create New Game")')).toBeVisible();
 
     // Take screenshot of create game form
-    await page.screenshot({ path: 'e2e-screenshots/10-game-create-form.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/10-game-create-form.png', fullPage: true });
 
     // Select 2 players
     await page.selectOption('select#maxPlayers', '2');
@@ -76,7 +77,7 @@ test.describe('Game Creation and Management', () => {
     await expect(gameCard.locator('.game-state.waiting')).toContainText('Waiting');
 
     // Take screenshot of game created
-    await page.screenshot({ path: 'e2e-screenshots/11-game-created.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/11-game-created.png', fullPage: true });
   });
 
   test('should allow second player to join game', async ({ page }) => {
@@ -93,7 +94,7 @@ test.describe('Game Creation and Management', () => {
     await page.waitForSelector('.game-card');
 
     // Take screenshot before second player joins
-    await page.screenshot({ path: 'e2e-screenshots/12-game-waiting-for-players.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/12-game-waiting-for-players.png', fullPage: true });
 
     // Clear cookies and navigate to new session for second player
     await page.context().clearCookies();
@@ -108,7 +109,7 @@ test.describe('Game Creation and Management', () => {
     await expect(gameCard).toBeVisible();
     
     // Take screenshot showing join button
-    await page.screenshot({ path: 'e2e-screenshots/13-game-second-player-view.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/13-game-second-player-view.png', fullPage: true });
     
     // Click join button
     await gameCard.locator('button:has-text("Join")').click();
@@ -117,7 +118,7 @@ test.describe('Game Creation and Management', () => {
     await expect(page.locator('.game-state.started').first()).toBeVisible({ timeout: 5000 });
 
     // Take screenshot of game started
-    await page.screenshot({ path: 'e2e-screenshots/14-game-started.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/14-game-started.png', fullPage: true });
   });
 
   test('should show time progression in started game', async ({ page }) => {
@@ -155,13 +156,13 @@ test.describe('Game Creation and Management', () => {
     await expect(yearValue).toContainText('5000 BC');
 
     // Take screenshot showing initial year
-    await page.screenshot({ path: 'e2e-screenshots/15-game-time-initial.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/15-game-time-initial.png', fullPage: true });
 
     // Wait for time to progress - wait for year to change from 5000 BC
     await expect(yearValue).not.toContainText('5000 BC', { timeout: 10000 });
 
     // Take screenshot showing time progression
-    await page.screenshot({ path: 'e2e-screenshots/16-game-time-progressed.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/16-game-time-progressed.png', fullPage: true });
   });
 
   test('should prevent joining a full game', async ({ page }) => {
@@ -199,7 +200,7 @@ test.describe('Game Creation and Management', () => {
     await expect(gameCard.locator('.game-state.started')).toContainText('Started', { timeout: 5000 });
 
     // Take screenshot showing full game
-    await page.screenshot({ path: 'e2e-screenshots/17-game-full-no-join.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/17-game-full-no-join.png', fullPage: true });
   });
 
   test('should show game details when viewing', async ({ page }) => {
@@ -225,7 +226,7 @@ test.describe('Game Creation and Management', () => {
     await expect(page.locator('.game-details h3:has-text("Game Details")')).toBeVisible();
 
     // Take screenshot of game details
-    await page.screenshot({ path: 'e2e-screenshots/18-game-details-modal.png', fullPage: true });
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/18-game-details-modal.png', fullPage: true });
 
     // Close modal
     await page.locator('.close-btn').click();
