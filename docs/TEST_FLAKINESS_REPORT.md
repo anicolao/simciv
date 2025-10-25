@@ -94,16 +94,19 @@ MONGOMS_SKIP_AUTO_DOWNLOAD=1
 ### For CI/CD
 When running tests in CI/CD environments, use the following command pattern:
 ```bash
-# Start MongoDB
+# Start MongoDB using the project's MongoDB management script
+# This script is located at bin/mongo and manages a local MongoDB instance
 bin/mongo start
 
 # Run unit and integration tests
+# Use external MongoDB to avoid MongoDB Memory Server download issues
 MONGOMS_SKIP_AUTO_DOWNLOAD=1 TEST_MONGO_URI=mongodb://localhost:27017 npm test
 
-# Set up E2E environment
-e2e-setup
+# Set up E2E environment using the project's e2e-setup script
+# This script (bin/e2e-setup) builds the Go engine, starts MongoDB, server, and engine
+bin/nix-shell-persistent exec e2e-setup
 
-# Run E2E tests (outside Nix shell)
+# Run E2E tests (must be run outside Nix shell per project requirements)
 npm run test:e2e
 ```
 
