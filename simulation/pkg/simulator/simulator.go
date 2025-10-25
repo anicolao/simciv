@@ -8,7 +8,7 @@ import (
 // DefaultStartingConditions returns the default starting conditions from the design document
 func DefaultStartingConditions() StartingConditions {
 	return StartingConditions{
-		Population:          20,
+		Population:          100,
 		StartingHealthMin:   30.0,
 		StartingHealthMax:   50.0,
 		FoodStockpile:       100.0,
