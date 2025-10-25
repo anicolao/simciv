@@ -67,11 +67,9 @@
         resolve();
       };
       img.onerror = (err) => {
-        const errorMsg = 'Failed to load tileset image';
-        console.error('[MapView]', errorMsg, err);
-        error = errorMsg;
-        loading = false;
-        reject(new Error(errorMsg));
+        console.warn('[MapView] Failed to load tileset, will use colored squares fallback:', err);
+        // Don't set error - we have a fallback
+        reject(new Error('Failed to load tileset'));
       };
       img.src = '/assets/freeciv/trident/tiles.png';
       console.log('[MapView] Loading tileset from:', img.src);
@@ -122,8 +120,8 @@
   }
 
   function renderMap() {
-    if (!canvas || !imageLoaded || !tilesetImage) {
-      console.log('[MapView] Cannot render: canvas or tileset not ready');
+    if (!canvas) {
+      console.log('[MapView] Cannot render: canvas not ready');
       return;
     }
 
@@ -167,7 +165,7 @@
   function renderTile(ctx: CanvasRenderingContext2D, tile: MapTile, x: number, y: number) {
     const sprite = getTerrainSprite(tile.terrainType);
     
-    if (sprite && tilesetImage) {
+    if (sprite && tilesetImage && imageLoaded) {
       // Draw the terrain sprite from the tileset
       ctx.drawImage(
         tilesetImage,
@@ -180,9 +178,14 @@
         renderResourceMarker(ctx, tile.resources[0], x, y);
       }
     } else {
-      // Fallback: draw a colored rectangle
+      // Fallback: draw a colored rectangle if tileset not loaded
       ctx.fillStyle = getTerrainColor(tile.terrainType);
       ctx.fillRect(x, y, DISPLAY_TILE_SIZE, DISPLAY_TILE_SIZE);
+      
+      // Draw resource marker if present
+      if (tile.resources.length > 0) {
+        renderResourceMarker(ctx, tile.resources[0], x, y);
+      }
     }
   }
 
@@ -236,8 +239,8 @@
     return colors[terrainType] || '#9ca3af';
   }
 
-  // Re-render when canvas is mounted
-  $: if (canvas && imageLoaded && tiles.length > 0) {
+  // Re-render when canvas is mounted or tiles are loaded
+  $: if (canvas && tiles.length > 0) {
     renderMap();
   }
 </script>
