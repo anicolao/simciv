@@ -1,15 +1,34 @@
 /**
  * Screenshot Helper for E2E Tests
  * 
- * This module provides utilities to avoid unnecessary screenshot writes
- * when the visual content hasn't changed. This prevents git from detecting
- * screenshots as modified when they are actually identical.
+ * This module provides visual regression testing for screenshots.
+ * Screenshots are compared against expected versions and tests fail
+ * if differences are detected, requiring manual review and approval.
+ * 
+ * Usage:
+ * - Normal test run: Tests fail if screenshots differ from expectations
+ * - Update mode: Set UPDATE_SCREENSHOTS=1 to update expected screenshots
+ * 
+ * Workflow:
+ * 1. Run tests normally - they fail if screenshots differ
+ * 2. Inspect changed screenshots to verify they match your expectations
+ * 3. If correct: Set UPDATE_SCREENSHOTS=1 and run tests again to update expectations
+ * 4. Verify tests pass with new expectations (run without UPDATE_SCREENSHOTS)
+ * 5. Commit the new screenshot expectations
+ * 
+ * If screenshots are incorrect:
+ * - Fix the source of the visual differences
+ * - Revert the screenshot files
+ * - Run tests again
  */
 
 import { Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+
+// Check if we're in update mode (for updating screenshot expectations)
+const UPDATE_SCREENSHOTS = process.env.UPDATE_SCREENSHOTS === '1' || process.env.UPDATE_SCREENSHOTS === 'true';
 
 /**
  * Calculate SHA-256 hash of a file
@@ -30,24 +49,27 @@ function getBufferHash(buffer: Buffer): string {
 }
 
 /**
- * Take a screenshot only if it differs from the existing file
+ * Take a screenshot and compare it with the expected version
  * 
- * This function:
- * 1. Takes a screenshot to a temporary location
- * 2. Compares its hash with the existing file's hash
- * 3. Only overwrites if the hashes differ
- * 4. Returns true if the file was updated, false if it was identical
+ * This function implements visual regression testing:
+ * 1. Takes a screenshot to a buffer
+ * 2. Compares its hash with the expected file's hash
+ * 3. If hashes match: test passes
+ * 4. If hashes differ:
+ *    - In UPDATE mode: updates the expected screenshot
+ *    - In normal mode: throws an error (test fails)
+ * 5. If file doesn't exist: creates it (first time setup)
  * 
  * @param page - Playwright Page object
  * @param screenshotPath - Path where screenshot should be saved
  * @param options - Playwright screenshot options
- * @returns Promise<boolean> - true if file was written, false if skipped (identical)
+ * @throws Error if screenshot differs from expected (unless in UPDATE mode)
  */
 export async function takeScreenshotIfChanged(
   page: Page,
   screenshotPath: string,
   options?: Parameters<Page['screenshot']>[0]
-): Promise<boolean> {
+): Promise<void> {
   // Ensure the directory exists
   const dir = path.dirname(screenshotPath);
   if (!fs.existsSync(dir)) {
@@ -66,35 +88,60 @@ export async function takeScreenshotIfChanged(
   // Get hash of existing file (if it exists)
   const existingHash = getFileHash(screenshotPath);
 
-  // Only write if the file doesn't exist or hashes differ
-  if (existingHash === null || existingHash !== newHash) {
+  // Handle different scenarios
+  if (existingHash === null) {
+    // First time - create the expected screenshot
     fs.writeFileSync(screenshotPath, screenshotBuffer);
-    if (existingHash === null) {
-      console.log(`📸 Created new screenshot: ${path.basename(screenshotPath)}`);
+    console.log(`📸 Created expected screenshot: ${path.basename(screenshotPath)}`);
+  } else if (existingHash !== newHash) {
+    // Screenshot differs from expected
+    if (UPDATE_SCREENSHOTS) {
+      // Update mode: update the expected screenshot
+      fs.writeFileSync(screenshotPath, screenshotBuffer);
+      console.log(`📸 Updated expected screenshot: ${path.basename(screenshotPath)}`);
     } else {
-      console.log(`📸 Updated screenshot: ${path.basename(screenshotPath)} (content changed)`);
+      // Normal mode: fail the test with instructions
+      const filename = path.basename(screenshotPath);
+      throw new Error(
+        `Screenshot mismatch: ${filename}\n\n` +
+        `The screenshot differs from the expected version.\n\n` +
+        `Next steps:\n` +
+        `1. Inspect the screenshot at: ${screenshotPath}\n` +
+        `2. If the visual change is correct and expected:\n` +
+        `   - Run: UPDATE_SCREENSHOTS=1 npm run test:e2e\n` +
+        `   - Verify tests pass: npm run test:e2e\n` +
+        `   - Commit the updated screenshot\n` +
+        `3. If the visual change is incorrect:\n` +
+        `   - Fix the source of the visual difference\n` +
+        `   - Revert the screenshot: git checkout -- ${screenshotPath}\n` +
+        `   - Run tests again: npm run test:e2e`
+      );
     }
-    return true;
   } else {
-    console.log(`✓ Skipped screenshot: ${path.basename(screenshotPath)} (identical to existing)`);
-    return false;
+    // Screenshot matches expected - test passes
+    console.log(`✓ Screenshot matches expected: ${path.basename(screenshotPath)}`);
   }
 }
 
 /**
- * Convenience wrapper for page.screenshot that avoids unnecessary writes
+ * Convenience wrapper for visual regression testing
  * 
- * Usage (drop-in replacement):
+ * Usage:
  *   await screenshotIfChanged(page, { path: 'e2e-screenshots/01-test.png', fullPage: true });
+ * 
+ * Behavior:
+ * - Compares screenshot against expected version
+ * - Throws error if different (unless UPDATE_SCREENSHOTS=1 is set)
+ * - Creates file if it doesn't exist (first time)
  * 
  * @param page - Playwright Page object  
  * @param options - Playwright screenshot options (must include 'path')
- * @returns Promise<boolean> - true if file was written, false if skipped
+ * @throws Error if screenshot differs from expected (unless in UPDATE mode)
  */
 export async function screenshotIfChanged(
   page: Page,
   options: Parameters<Page['screenshot']>[0] & { path: string }
-): Promise<boolean> {
+): Promise<void> {
   const { path: screenshotPath, ...screenshotOptions } = options;
   return takeScreenshotIfChanged(page, screenshotPath, screenshotOptions);
 }
