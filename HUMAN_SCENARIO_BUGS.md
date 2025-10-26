@@ -27,14 +27,15 @@
    - **Location:** `simulation/pkg/simulator/mechanics.go:28`
    - **Issue:** Threshold is 30 instead of 50 per design
    - **Impact:** Science production continues at low health levels, reducing strategic pressure
-   - **Fix:** Change `ScienceHealthThreshold = 30.0` to `50.0`
-
-3. **MEDIUM - Fertility Age Starts Too Late**
-   - **Location:** `simulation/pkg/simulator/mechanics.go:13`
-   - **Issue:** Minimum fertility age is 15 instead of 13 per design
-   - **Impact:** Slightly reduced reproduction rates
    - **Status:** Not yet fixed
-   - **Suggested Fix:** Change `AgeFertileMin = 15.0` to `13.0`
+   - **Suggested Fix:** Change `ScienceHealthThreshold = 30.0` to `50.0`
+
+3. **MEDIUM - Fertility Age Starts Too Late** ✅ **FIXED**
+   - **Location:** `simulation/pkg/simulator/mechanics.go:13`
+   - **Issue:** Minimum fertility age was 15 instead of 13 per design
+   - **Impact:** Slightly reduced reproduction rates
+   - **Status:** ✅ FIXED - Changed to 13.0
+   - **Result:** Science completion ~6-9% slower (still in 5-10 year range)
 
 4. **MEDIUM - Age Distribution Mismatch**
    - **Location:** `simulation/pkg/simulator/simulator.go:29-31`
@@ -57,13 +58,13 @@ These have been **documented in the design doc** as tuned parameters.
 
 ## Status Summary
 
-- ✅ **1 Bug Fixed:** Health formula corrected (Bug #1)
-- ⚠️ **3 Bugs Remaining:** Science threshold, fertility age, age distribution
+- ✅ **2 Bugs Fixed:** Health formula corrected (Bug #1), Fertility age corrected (Bug #3)
+- ⚠️ **2 Bugs Remaining:** Science threshold, age distribution
 - 📊 **Impact Measured:** See `designs/HEALTH_FIX_IMPACT.md`
 
 ## Code Comments
 
-Bug #1 has been fixed and the BUG comment removed. Remaining bugs still have `// BUG:` comments in source code referencing:
+Bugs #1 and #3 have been fixed. Remaining bugs still have `// BUG:` comments in source code referencing:
 - The specific design doc line they violate
 - The comparison analysis document
 - The correct value per design
@@ -71,5 +72,6 @@ Bug #1 has been fixed and the BUG comment removed. Remaining bugs still have `//
 ## Next Steps
 
 1. ✅ **Bug #1 fixed** - Health formula now matches design specification
-2. Review remaining bugs (2-4) with team to determine priority
-3. Consider balancing adjustments based on health fix impact (see HEALTH_FIX_IMPACT.md recommendations)
+2. ✅ **Bug #3 fixed** - Fertility age now 13 (matches design, science ~7% slower but still in range)
+3. Review remaining bugs (2, 4) with team to determine priority
+4. Consider balancing adjustments if needed
