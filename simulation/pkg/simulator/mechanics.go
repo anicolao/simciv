@@ -28,7 +28,7 @@ const (
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production
-	ScienceBaseRate = 0.0025 // Science points per hour (balanced for high viability)
+	ScienceBaseRate = 0.00048 // Science points per hour (tuned for ~10 year Fire Mastery)
 	// BUG: ScienceHealthThreshold should be 50.0 per design doc (HUMAN_ATTRIBUTES.md line 413)
 	// Design: "* 0.5 if average_health < 50"
 	// Current: 30.0
