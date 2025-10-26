@@ -71,11 +71,11 @@ MONGOMS_SKIP_AUTO_DOWNLOAD=1
 
 ## Key Findings
 
-### 1. MongoDB Memory Server Issue
-- **Issue:** MongoDB Memory Server fails to download binaries due to CDN redirect issues
-- **Error:** `Response header "content-length" does not exist or resolved to NaN`
-- **Solution:** Use external MongoDB instance via `TEST_MONGO_URI` environment variable
-- **Status:** Already supported by existing test infrastructure in `src/__tests__/helpers/testDb.ts`
+### 1. MongoDB Configuration
+- **Requirement:** All tests require a running external MongoDB instance
+- **Solution:** Tests connect to MongoDB on `localhost:27017` by default
+- **Override:** Use `TEST_MONGO_URI` environment variable to specify a different MongoDB instance
+- **Status:** mongodb-memory-server dependency has been removed; all tests use external MongoDB
 
 ### 2. Test Infrastructure Quality
 - All tests properly clean up after themselves
@@ -99,8 +99,7 @@ When running tests in CI/CD environments, use the following command pattern:
 bin/mongo start
 
 # Run unit and integration tests
-# Use external MongoDB to avoid MongoDB Memory Server download issues
-MONGOMS_SKIP_AUTO_DOWNLOAD=1 TEST_MONGO_URI=mongodb://localhost:27017 npm test
+npm test
 
 # Set up E2E environment using the project's e2e-setup script
 # This script (bin/e2e-setup) builds the Go engine, starts MongoDB, server, and engine
@@ -111,7 +110,7 @@ npm run test:e2e
 ```
 
 ### For Local Development
-The same approach works for local development. The test infrastructure automatically falls back to external MongoDB when `TEST_MONGO_URI` is set.
+Ensure MongoDB is running before executing tests. The test infrastructure connects to `localhost:27017` by default.
 
 ## Conclusion
 

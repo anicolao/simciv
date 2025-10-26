@@ -1,24 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { connectToDatabase, closeDatabase, getGamesCollection, getUsersCollection, getSessionsCollection } from '../../db/connection';
 import { Game, User, Session } from '../../models/types';
 
 describe('Game Creation and Management', () => {
-  let mongoServer: MongoMemoryServer;
-
   beforeEach(async () => {
-    // Use external MongoDB if TEST_MONGO_URI is set
-    if (process.env.TEST_MONGO_URI) {
-      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test');
-      // Clean up existing data
-      await getGamesCollection().deleteMany({});
-      await getUsersCollection().deleteMany({});
-      await getSessionsCollection().deleteMany({});
-    } else {
-      mongoServer = await MongoMemoryServer.create();
-      const uri = mongoServer.getUri();
-      await connectToDatabase(uri, 'simciv-test');
-    }
+    // Always use external MongoDB for testing
+    const mongoUri = process.env.TEST_MONGO_URI || 'mongodb://localhost:27017';
+    await connectToDatabase(mongoUri, 'simciv-test');
+    
+    // Clean up existing data
+    await getGamesCollection().deleteMany({});
+    await getUsersCollection().deleteMany({});
+    await getSessionsCollection().deleteMany({});
 
     // Create test user
     const user: User = {
@@ -43,9 +36,6 @@ describe('Game Creation and Management', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    if (mongoServer) {
-      await mongoServer.stop();
-    }
   });
 
   it('should create a game with valid parameters', async () => {

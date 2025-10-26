@@ -170,9 +170,12 @@ go build -o simciv-sim main.go
 
 ## Testing
 
-SimCiv has comprehensive test coverage:
+SimCiv has comprehensive test coverage. **All tests require a running MongoDB instance.**
 
 ```bash
+# Ensure MongoDB is running (required for all tests)
+mongo start
+
 # Run all unit tests
 npm test
 
@@ -182,14 +185,17 @@ npm run test:watch
 # Run tests with coverage report
 npm run test:coverage
 
-# Run tests with external MongoDB (if mongodb-memory-server has issues)
-TEST_MONGO_URI="mongodb://localhost:27017" npm test
-
 # Run Go tests
 cd simulation && go test ./...
 
 # Run end-to-end tests (requires server and simulation engine running)
 npm run test:e2e
+```
+
+**Important:** Tests will connect to MongoDB on `localhost:27017` by default. You can override this with the `TEST_MONGO_URI` environment variable if needed:
+
+```bash
+TEST_MONGO_URI="mongodb://localhost:27018" npm test
 ```
 
 ## Development Workflow
@@ -268,15 +274,6 @@ Enable:
 
 ## Troubleshooting
 
-### MongoDB Memory Server Issues
-
-If you encounter download issues with `mongodb-memory-server` during tests:
-
-```bash
-# Use external MongoDB for tests
-TEST_MONGO_URI="mongodb://localhost:27017" npm test
-```
-
 ### Port Already in Use
 
 If port 3000 is already in use:
@@ -294,6 +291,18 @@ If you encounter Go module problems:
 cd simulation
 go mod tidy
 go mod download
+```
+
+### MongoDB Not Running
+
+If tests fail with connection errors, ensure MongoDB is running:
+
+```bash
+# Start MongoDB
+mongo start
+
+# Check MongoDB status
+mongo status
 ```
 
 ## Additional Resources

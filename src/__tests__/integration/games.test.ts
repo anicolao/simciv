@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import express, { Express } from 'express';
 import cookieParser from 'cookie-parser';
@@ -11,24 +10,19 @@ import { User, Session } from '../../models/types';
 
 describe('Game Integration Tests', () => {
   let app: Express;
-  let mongoServer: MongoMemoryServer;
   let agent1: request.SuperAgentTest;
   let agent2: request.SuperAgentTest;
   let agent3: request.SuperAgentTest;
 
   beforeEach(async () => {
-    // Use external MongoDB if TEST_MONGO_URI is set
-    if (process.env.TEST_MONGO_URI) {
-      await connectToDatabase(process.env.TEST_MONGO_URI, 'simciv-test-games');
-      // Clean up existing data
-      await getGamesCollection().deleteMany({});
-      await getUsersCollection().deleteMany({});
-      await getSessionsCollection().deleteMany({});
-    } else {
-      mongoServer = await MongoMemoryServer.create();
-      const uri = mongoServer.getUri();
-      await connectToDatabase(uri, 'simciv-test-games');
-    }
+    // Always use external MongoDB for testing
+    const mongoUri = process.env.TEST_MONGO_URI || 'mongodb://localhost:27017';
+    await connectToDatabase(mongoUri, 'simciv-test-games');
+    
+    // Clean up existing data
+    await getGamesCollection().deleteMany({});
+    await getUsersCollection().deleteMany({});
+    await getSessionsCollection().deleteMany({});
 
     // Create test users
     const user1: User = {
@@ -98,9 +92,6 @@ describe('Game Integration Tests', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    if (mongoServer) {
-      await mongoServer.stop();
-    }
   });
 
   it('should create a new game', async () => {

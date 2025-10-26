@@ -178,11 +178,8 @@ go build -o simciv-sim main.go
 # Navigate to http://localhost:3000
 # Register/login, then create or join games!
 
-# Run tests
+# Run tests (requires MongoDB running on localhost:27017)
 npm test
-
-# Run tests with external MongoDB (if mongodb-memory-server has issues)
-TEST_MONGO_URI="mongodb://localhost:27017" npm test
 
 # Run Go tests
 cd simulation && go test ./...

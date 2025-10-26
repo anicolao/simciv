@@ -81,14 +81,17 @@ go test ./...
 
 **Integration Tests with MongoDB:**
 
-Since mongodb-memory-server has download issues inside Nix, use an external MongoDB:
+All tests require a running MongoDB instance:
 
 ```bash
 # Inside Nix: Start MongoDB
 mongo start
 
 # In another terminal, inside Nix: Run integration tests
-TEST_MONGO_URI="mongodb://localhost:27017" npm test
+npm test
+
+# Optional: Override MongoDB URI if using a different port
+TEST_MONGO_URI="mongodb://localhost:27018" npm test
 ```
 
 **E2E Tests (OUTSIDE Nix):**
@@ -201,9 +204,9 @@ cd ..
 ### Run Complete Test Suite
 
 ```bash
-# Inside Nix: Unit tests with external MongoDB
+# Inside Nix: Unit and integration tests (requires MongoDB)
 mongo start
-TEST_MONGO_URI="mongodb://localhost:27017" npm test
+npm test
 
 # Inside Nix: Go tests
 cd simulation && go test ./...
@@ -257,7 +260,7 @@ See [PERSISTENT_NIX_SHELL.md](PERSISTENT_NIX_SHELL.md) for details.
 - npm install
 - npm run build
 - npm run dev
-- npm test (with TEST_MONGO_URI)
+- npm test (requires MongoDB running)
 - go build
 - go test
 - mongo start/stop/status

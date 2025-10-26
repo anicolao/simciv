@@ -1,26 +1,13 @@
 import { MongoClient, Db } from 'mongodb';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 
-let mongod: MongoMemoryServer | null = null;
 let client: MongoClient | null = null;
 let db: Db | null = null;
 
 export async function setupTestDatabase(): Promise<Db> {
-  // Check if we should use external MongoDB for testing
-  const externalMongoUri = process.env.TEST_MONGO_URI;
+  // Always use external MongoDB for testing
+  const externalMongoUri = process.env.TEST_MONGO_URI || 'mongodb://localhost:27017';
   
-  let uri: string;
-  
-  if (externalMongoUri) {
-    // Use external MongoDB instance
-    uri = externalMongoUri;
-  } else {
-    // Use MongoDB Memory Server
-    mongod = await MongoMemoryServer.create();
-    uri = mongod.getUri();
-  }
-  
-  client = new MongoClient(uri);
+  client = new MongoClient(externalMongoUri);
   await client.connect();
   db = client.db('simciv_test');
   
@@ -31,12 +18,8 @@ export async function teardownTestDatabase(): Promise<void> {
   if (client) {
     await client.close();
   }
-  if (mongod) {
-    await mongod.stop();
-  }
   client = null;
   db = null;
-  mongod = null;
 }
 
 export async function clearTestDatabase(): Promise<void> {
