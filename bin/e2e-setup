@@ -89,7 +89,7 @@ if [ ! -f engine ] || [ pkg/engine/engine.go -nt engine ]; then
 fi
 
 # Check if engine is already running
-if pgrep -f "simulation/engine" >/dev/null; then
+if pgrep -f "./engine" >/dev/null; then
     echo "✅ Game engine is already running"
 else
     echo "🚀 Starting game engine with deterministic test seed..."
@@ -99,7 +99,7 @@ else
     ./engine > /tmp/engine-e2e.log 2>&1 &
     ENGINE_PID=$!
     sleep 2
-    if pgrep -f "simulation/engine" >/dev/null; then
+    if pgrep -f "./engine" >/dev/null; then
         echo "✅ Game engine is running (PID: $ENGINE_PID)"
         echo "   Using deterministic seed for consistent map generation"
     else
