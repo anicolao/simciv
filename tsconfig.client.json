@@ -10,7 +10,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "strict": true
+    "strict": true,
+    "rootDir": "."
   },
   "include": ["client/src/**/*.ts", "client/src/**/*.svelte"],
   "references": [{ "path": "./tsconfig.node.json" }]
