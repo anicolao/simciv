@@ -128,6 +128,22 @@ These screenshot expectations serve to:
 
 ## Technical Details
 
+### Timestamp Stabilization
+
+To ensure screenshots are 100% reproducible across test runs, timestamps are stabilized using the `mockDateInBrowser()` helper from `e2e/helpers/mock-time.ts`.
+
+**How it works:**
+1. Before each test, `Date.prototype.toLocaleString()` is overridden in the browser
+2. All date formatting returns the fixed string: `"1/1/2024, 12:00:00 PM"`
+3. This ensures screenshots with timestamps (e.g., game creation times) are always identical
+
+**Implementation:**
+- Applied in `test.beforeEach()` hooks in all test files
+- Also applied to additional browser contexts created during tests
+- Only affects date formatting, not actual date values or logic
+
+This approach ensures that screenshots containing timestamps (like `18-game-details-modal.png`) remain stable and don't change between test runs due to different creation times.
+
 ### Visual Regression Testing
 
 The tests use `screenshotIfChanged()` from `e2e/helpers/screenshot.ts` which:
