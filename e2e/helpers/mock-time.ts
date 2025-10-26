@@ -48,11 +48,22 @@ import { Page } from '@playwright/test';
  * display dates. It replaces toLocaleString() to always return the same
  * fixed string, ensuring screenshots are stable.
  * 
+ * Note: We only override toLocaleString() because that's the only date
+ * formatting method used in the SimCiv UI (see GameLobby.svelte). If the
+ * application starts using other formatting methods (toString, toDateString,
+ * toTimeString, toISOString), those should be overridden as well.
+ * 
+ * The locales and options parameters are intentionally ignored to ensure
+ * complete stability - we want the exact same string regardless of browser
+ * locale settings.
+ * 
  * @param page - Playwright Page object
  */
 export async function mockDateInBrowser(page: Page): Promise<void> {
   await page.addInitScript(() => {
     // Override toLocaleString to return a consistent, fixed string for all dates
+    // We intentionally ignore the locales and options parameters to ensure
+    // complete stability across different browser locales and settings
     Date.prototype.toLocaleString = function(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string {
       // Return a fixed timestamp string that looks realistic but is always the same
       return '1/1/2024, 12:00:00 PM';
