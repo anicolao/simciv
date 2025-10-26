@@ -405,7 +405,7 @@ Daily food distribution:
 **Science Progress Formula:**
 ```
 Science points produced per hour:
-  base_rate = 0.0025 science point/hour (tuned for viability; originally 1.0)
+  base_rate = 0.00050 science point/hour (tuned for ~1 year at 50/50-60/40 allocation; originally 1.0)
   
   Modifiers:
   - Population size: * log10(population) (collaboration bonus)
@@ -416,6 +416,10 @@ Science points produced per hour:
   science_production = science_hours * base_rate * all_modifiers
   
   Note: Minimal implementation uses only population and health modifiers.
+  With this rate:
+  - At 50/50 food/science allocation: ~0.8 years to Fire Mastery
+  - At 60/40 food/science allocation: ~1.0 year to Fire Mastery
+  - At 70/30 food/science allocation (default): ~22 years to Fire Mastery
 ```
 
 **Technology Unlock System:**
