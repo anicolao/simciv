@@ -42,7 +42,6 @@ const (
 	// Health changes
 	HealthBaseDecline = -0.5
 	HealthFoodMultiplier = 15.0
-	HealthFoodBreakeven = 0.5
 	HealthAgeDivisor = 30.0
 	HealthAgeMultiplier = 5.0
 
@@ -166,13 +165,10 @@ func updateHealth(human *MinimalHuman, foodPerPerson float64) {
 	healthChange := HealthBaseDecline
 
 	// Food bonus/penalty
-	// BUG: This formula doesn't match the design doc (HUMAN_ATTRIBUTES.md line 86)
-	// Design: food_bonus = (food_consumed / food_required) * 15
-	// Current: food_bonus = (foodRatio - 0.5) * 15
-	// This creates wrong breakeven point - should be: healthChange += foodRatio * HealthFoodMultiplier
-	// See designs/HUMAN_SCENARIO_COMPARISON.md Bug #1 for detailed analysis
+	// Formula per design doc (HUMAN_ATTRIBUTES.md line 86):
+	// food_bonus = (food_consumed / food_required) * 15
 	foodRatio := foodPerPerson / FoodRequiredPerPerson
-	healthChange += (foodRatio - HealthFoodBreakeven) * HealthFoodMultiplier
+	healthChange += foodRatio * HealthFoodMultiplier
 
 	// Age penalty
 	healthChange -= (human.Age / HealthAgeDivisor) * HealthAgeMultiplier
