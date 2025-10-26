@@ -28,7 +28,7 @@ const (
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production
-	ScienceBaseRate = 0.00050 // Science points per hour (tuned for 5-10 year Fire Mastery with 60/40 allocation)
+	ScienceBaseRate = 0.00015 // Science points per hour (tuned for 5-10 year Fire Mastery without pop bonus)
 	// BUG: ScienceHealthThreshold should be 50.0 per design doc (HUMAN_ATTRIBUTES.md line 413)
 	// Design: "* 0.5 if average_health < 50"
 	// Current: 30.0
@@ -124,8 +124,12 @@ func produceScience(scienceHours float64, population int, averageHealth float64)
 
 	multiplier := 1.0
 
-	// Population collaboration bonus (log scale)
-	multiplier *= math.Log10(float64(population))
+	// Population collaboration bonus removed to eliminate cliff effect
+	// The log10 bonus created a positive feedback loop where early population
+	// growth from higher food allocations dramatically accelerated science,
+	// causing a discontinuity (1 year vs 20+ years) between allocations.
+	// See designs/SCIENCE_DISCONTINUITY_ANALYSIS.md for details.
+	// multiplier *= math.Log10(float64(population))
 
 	// Health threshold penalty
 	if averageHealth < ScienceHealthThreshold {
@@ -134,7 +138,6 @@ func produceScience(scienceHours float64, population int, averageHealth float64)
 
 	return scienceHours * ScienceBaseRate * multiplier
 }
-
 // consumeFood distributes available food among the population
 func consumeFood(humans []*MinimalHuman, foodStockpile float64) (remainingFood, foodPerPerson float64) {
 	aliveHumans := 0
