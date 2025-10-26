@@ -1,10 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { clearDatabase } from './global-setup';
 import { screenshotIfChanged } from './helpers/screenshot';
+import { mockDateInBrowser } from './helpers/mock-time';
 
 // Clear database before each test to prevent data carryover between retries
-test.beforeEach(async () => {
+test.beforeEach(async ({ page }) => {
   await clearDatabase();
+  // Mock the Date object to ensure stable timestamps in screenshots
+  await mockDateInBrowser(page);
 });
 
 test.describe('SimCiv Authentication', () => {
@@ -89,6 +92,8 @@ test.describe('SimCiv Authentication', () => {
     // Create a NEW browser context (completely separate session)
     const context2 = await browser.newContext();
     const page2 = await context2.newPage();
+    // Mock date in the new page to ensure stable timestamps
+    await mockDateInBrowser(page2);
     await page2.goto('/');
     await page2.waitForURL(/\/id=[a-f0-9-]+/);
     
