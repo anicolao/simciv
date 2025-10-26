@@ -1,18 +1,27 @@
 # Human Scenario Implementation Bugs
 
 **Date:** 2025-10-25  
+**Last Updated:** 2025-10-26  
 **Analysis:** Comparison of Go implementation vs design doc HUMAN_ATTRIBUTES.md  
-**Full Report:** See `designs/HUMAN_SCENARIO_COMPARISON.md`
+**Full Report:** See `designs/HUMAN_SCENARIO_COMPARISON.md`  
+**Impact Analysis:** See `designs/HEALTH_FIX_IMPACT.md`
 
-## Summary of Bugs Found
+## Summary of Bugs
 
-### Logic Bugs Requiring Fixes
+### Fixed Bugs ✅
 
-1. **CRITICAL - Health Formula Wrong Breakeven Point**
-   - **Location:** `simulation/pkg/simulator/mechanics.go:162`
-   - **Issue:** Formula uses `(foodRatio - 0.5) * 15` instead of `foodRatio * 15`
-   - **Impact:** Requires 3x more food to maintain neutral health than designed
-   - **Fix:** Remove the `- HealthFoodBreakeven` subtraction
+1. **CRITICAL - Health Formula Wrong Breakeven Point** ✅ **FIXED**
+   - **Location:** `simulation/pkg/simulator/mechanics.go:172`
+   - **Issue:** Formula used `(foodRatio - 0.5) * 15` instead of `foodRatio * 15`
+   - **Impact:** Required 3x more food to maintain neutral health than designed
+   - **Fix Applied:** Removed the `- HealthFoodBreakeven` subtraction
+   - **Results:** 
+     - Days to Fire Mastery: 113.5 → 101.7 (10.4% faster)
+     - Average Health: 91.2 → 98.4 (+8%)
+     - Final Population: 231.8 → 239.3 (+3.2%)
+   - **See:** `designs/HEALTH_FIX_IMPACT.md` for complete before/after analysis
+
+### Remaining Logic Bugs
 
 2. **HIGH - Science Health Threshold Too Low**
    - **Location:** `simulation/pkg/simulator/mechanics.go:28`
@@ -24,14 +33,16 @@
    - **Location:** `simulation/pkg/simulator/mechanics.go:13`
    - **Issue:** Minimum fertility age is 15 instead of 13 per design
    - **Impact:** Slightly reduced reproduction rates
-   - **Fix:** Change `AgeFertileMin = 15.0` to `13.0`
+   - **Status:** Not yet fixed
+   - **Suggested Fix:** Change `AgeFertileMin = 15.0` to `13.0`
 
 4. **MEDIUM - Age Distribution Mismatch**
    - **Location:** `simulation/pkg/simulator/simulator.go:29-31`
    - **Issue:** Ages and percentages don't match design (0-14 25%, 15-30 60%, 31+ 15%)
    - **Design:** Should be (0-12 30%, 13-30 50%, 30+ 20%)
    - **Impact:** Different starting population structure
-   - **Fix:** Update age ranges and percentages to match design
+   - **Status:** Not yet fixed
+   - **Suggested Fix:** Update age ranges and percentages to match design
 
 ### Parameter Changes (Acceptable - Tuned for Viability)
 
@@ -44,16 +55,21 @@ The following parameter changes are **acceptable** as they were tuned for game b
 
 These have been **documented in the design doc** as tuned parameters.
 
-## Code Comments Added
+## Status Summary
 
-All bugs have been marked with `// BUG:` comments in the source code referencing:
+- ✅ **1 Bug Fixed:** Health formula corrected (Bug #1)
+- ⚠️ **3 Bugs Remaining:** Science threshold, fertility age, age distribution
+- 📊 **Impact Measured:** See `designs/HEALTH_FIX_IMPACT.md`
+
+## Code Comments
+
+Bug #1 has been fixed and the BUG comment removed. Remaining bugs still have `// BUG:` comments in source code referencing:
 - The specific design doc line they violate
 - The comparison analysis document
 - The correct value per design
 
 ## Next Steps
 
-1. Review bugs with team to confirm they should be fixed
-2. Fix bugs 1-4 in the Go implementation
-3. Re-run viability tests to ensure fixes maintain game balance
-4. Adjust tuned parameters if needed to compensate for fixes
+1. ✅ **Bug #1 fixed** - Health formula now matches design specification
+2. Review remaining bugs (2-4) with team to determine priority
+3. Consider balancing adjustments based on health fix impact (see HEALTH_FIX_IMPACT.md recommendations)
