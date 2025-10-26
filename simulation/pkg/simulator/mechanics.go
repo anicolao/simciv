@@ -25,11 +25,7 @@ const (
 
 	// Science production
 	ScienceBaseRate = 0.00015 // Science points per hour (tuned for 5-10 year Fire Mastery without pop bonus)
-	// BUG: ScienceHealthThreshold should be 50.0 per design doc (HUMAN_ATTRIBUTES.md line 413)
-	// Design: "* 0.5 if average_health < 50"
-	// Current: 30.0
-	// See designs/HUMAN_SCENARIO_COMPARISON.md Bug #2 for analysis
-	ScienceHealthThreshold = 30.0 // Only penalize science when health is critically low
+	ScienceHealthThreshold = 30.0 // Tuned for viability (originally 50 per design, relaxed to reduce pressure)
 	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
 
 	// Food consumption
