@@ -6,10 +6,13 @@ import {
   getZoomLevel,
   getCanvasSize,
 } from './helpers/map-interactions';
+import { mockDateInBrowser } from './helpers/mock-time';
 
 // Clear database before each test to prevent data carryover between retries
-test.beforeEach(async () => {
+test.beforeEach(async ({ page }) => {
   await clearDatabase();
+  // Mock the Date object to ensure stable timestamps in screenshots
+  await mockDateInBrowser(page);
 });
 
 // Helper to register and login a user
@@ -48,6 +51,12 @@ async function registerTwoUsersParallel(browser: Browser, alias1: string, alias2
   const context2 = await browser.newContext();
   const page1 = await context1.newPage();
   const page2 = await context2.newPage();
+  
+  // Mock date in both pages to ensure stable timestamps
+  await Promise.all([
+    mockDateInBrowser(page1),
+    mockDateInBrowser(page2)
+  ]);
   
   // Start both registrations in parallel
   await Promise.all([
