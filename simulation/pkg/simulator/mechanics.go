@@ -10,11 +10,7 @@ const (
 	// Age thresholds
 	AgeChild  = 15.0
 	AgeAdult  = 15.0
-	// BUG: AgeFertileMin should be 13.0 per design doc (HUMAN_ATTRIBUTES.md line 611)
-	// Design: "Minimum Fertility Age: 13 years"
-	// Current: 15.0
-	// See designs/HUMAN_SCENARIO_COMPARISON.md Bug #3 for analysis
-	AgeFertileMin = 15.0
+	AgeFertileMin = 13.0  // Per design doc (HUMAN_ATTRIBUTES.md line 611)
 	AgeFertileMax = 45.0
 
 	// Work capacity
