@@ -63,26 +63,20 @@ go test ./pkg/models -v
 
 ## Running TypeScript Integration Tests
 
-TypeScript integration tests require MongoDB to be running.
+TypeScript integration tests require MongoDB to be running. All tests connect to an external MongoDB instance.
 
-### Recommended Approach: Use External MongoDB
+### Running Tests
 
 ```bash
 # Start MongoDB first (see MongoDB Setup section above)
 /tmp/mongo-script.sh start
 
-# Run integration tests
-TEST_MONGO_URI="mongodb://localhost:27017" npm test
-```
-
-### Alternative: Use MongoDB Memory Server
-
-```bash
-# This is slower and may have download issues in some environments
+# Run integration tests (connects to localhost:27017 by default)
 npm test
-```
 
-**Note:** MongoDB Memory Server may timeout or fail with download errors in CI environments. The external MongoDB approach is more reliable.
+# Optional: Override MongoDB URI if using a different port
+TEST_MONGO_URI="mongodb://localhost:27018" npm test
+```
 
 **Expected Results:**
 - Integration tests for map API endpoints should pass
