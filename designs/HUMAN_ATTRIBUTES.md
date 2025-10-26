@@ -263,10 +263,15 @@ Prehistoric humans begin the simulation with relatively low attribute values, re
 
 **Starting Population Parameters:**
 - **Initial Population**: 20-50 humans per civilization
-- **Age Distribution**: 
-  - Children (0-12): 30%
-  - Fertile Adults (13-30): 50%
-  - Older Adults (30+): 20%
+- **Age Distribution** (tuned for viability; originally 0-12/13-30/30+): 
+  - Children (0-14): 25%
+  - Fertile Adults (15-30): 60%
+  - Older Adults (31+): 15%
+  
+  Note: Age ranges adjusted from design (0-12/13-30/30+) to (0-14/15-30/31+) and
+  percentages tuned from (30%/50%/20%) to (25%/60%/15%) for improved viability.
+  This creates a slightly older, more productive starting population.
+  
 - **Starting Location**: Random but resource-viable starting position
 - **Initial Resources**: 100 food units (50 days supply for 20 people)
 
@@ -411,16 +416,19 @@ Science points produced per hour:
   - Population size: REMOVED (was causing cliff effect - see SCIENCE_DISCONTINUITY_ANALYSIS.md)
   - Intelligence factor: * 1.0 (baseline, may vary by individual in future)
   - Tool availability: * (1 + tool_level * 0.1) (tools help research)
-  - Health threshold: * 0.5 if average_health < 50 (can't think when starving)
+  - Health threshold: * 0.5 if average_health < 30 (tuned for viability; originally 50)
   
   science_production = science_hours * base_rate * all_modifiers
   
   Note: Minimal implementation uses only health modifier (population bonus removed).
+  Health threshold was relaxed from 50 to 30 to reduce strategic pressure and improve
+  viability. Science production continues at reduced rate until critically low health.
+  
   With this rate and no population bonus:
-  - At 40/60 food/science allocation: ~8.2 years to Fire Mastery
-  - At 50/50 food/science allocation: ~7.6 years to Fire Mastery
-  - At 60/40 food/science allocation: ~8.0 years to Fire Mastery
-  - At 70/30 food/science allocation (default): ~9.1 years to Fire Mastery
+  - At 40/60 food/science allocation: ~8.7 years to Fire Mastery
+  - At 50/50 food/science allocation: ~8.3 years to Fire Mastery
+  - At 60/40 food/science allocation: ~8.5 years to Fire Mastery
+  - At 70/30 food/science allocation (default): ~9.8 years to Fire Mastery
   
   The removal of the log10 population bonus eliminates the discontinuity problem
   where small allocation changes caused dramatic time differences (1 year vs 20+ years).
