@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { getMapTiles, getStartingPosition, getMapMetadata, getUnits, getSettlements } from '../utils/api';
   import { getTerrainSprite } from './terrainSprites';
+  import { getUnitSprite, getCitySprite } from './unitSprites';
   import type { Unit, Settlement } from '../utils/api';
 
   export let gameId: string;
@@ -44,7 +45,11 @@
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
   let tilesetImage: HTMLImageElement | null = null;
+  let unitsImage: HTMLImageElement | null = null;
+  let citiesImage: HTMLImageElement | null = null;
   let imageLoaded = false;
+  let unitsImageLoaded = false;
+  let citiesImageLoaded = false;
   
   const TILE_SIZE = 30; // FreeCiv Trident tiles are 30x30
   const BASE_DISPLAY_TILE_SIZE = 32; // Base display size at 1.0x zoom
@@ -68,9 +73,9 @@
 
   onMount(async () => {
     try {
-      await loadTileset();
+      await Promise.all([loadTileset(), loadUnitsImage(), loadCitiesImage()]);
     } catch (err) {
-      console.error('[MapView] Failed to load tileset in onMount:', err);
+      console.error('[MapView] Failed to load sprites in onMount:', err);
       // Continue anyway - will show error or fallback rendering
     }
     await loadMap();
@@ -118,6 +123,40 @@
       };
       img.src = '/assets/freeciv/trident/tiles.png';
       console.log('[MapView] Loading tileset from:', img.src);
+    });
+  }
+
+  async function loadUnitsImage() {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        unitsImage = img;
+        unitsImageLoaded = true;
+        console.log('[MapView] Units image loaded:', img.width, 'x', img.height);
+        resolve();
+      };
+      img.onerror = (err) => {
+        console.warn('[MapView] Failed to load units image:', err);
+        reject(new Error('Failed to load units image'));
+      };
+      img.src = '/assets/freeciv/trident/units.png';
+    });
+  }
+
+  async function loadCitiesImage() {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        citiesImage = img;
+        citiesImageLoaded = true;
+        console.log('[MapView] Cities image loaded:', img.width, 'x', img.height);
+        resolve();
+      };
+      img.onerror = (err) => {
+        console.warn('[MapView] Failed to load cities image:', err);
+        reject(new Error('Failed to load cities image'));
+      };
+      img.src = '/assets/freeciv/trident/cities.png';
     });
   }
 
@@ -311,52 +350,50 @@
   }
 
   function renderUnit(ctx: CanvasRenderingContext2D, unit: Unit, x: number, y: number) {
-    // Draw settlers icon (walking person)
-    const fontSize = Math.max(16, Math.round(DISPLAY_TILE_SIZE * 0.6));
-    ctx.font = `${fontSize}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    const sprite = getUnitSprite(unit.unitType);
     
-    // Draw shadow
-    ctx.fillStyle = '#000';
-    ctx.fillText('🚶', x + DISPLAY_TILE_SIZE / 2 + 1, y + DISPLAY_TILE_SIZE / 2 + 1);
-    
-    // Draw unit
-    ctx.fillStyle = '#FFF';
-    ctx.fillText('🚶', x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2);
-
-    // Draw circle around unit for visibility
-    ctx.strokeStyle = '#4CAF50';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2, DISPLAY_TILE_SIZE / 2.5, 0, 2 * Math.PI);
-    ctx.stroke();
+    if (sprite && unitsImage && unitsImageLoaded) {
+      // Draw the unit sprite from the units tileset
+      ctx.drawImage(
+        unitsImage,
+        sprite.x, sprite.y, TILE_SIZE, TILE_SIZE,  // Source rectangle
+        x, y, DISPLAY_TILE_SIZE, DISPLAY_TILE_SIZE  // Destination rectangle
+      );
+    } else {
+      // Fallback: draw a colored square
+      ctx.fillStyle = '#4CAF50';
+      ctx.fillRect(x + 2, y + 2, DISPLAY_TILE_SIZE - 4, DISPLAY_TILE_SIZE - 4);
+    }
   }
 
   function renderSettlement(ctx: CanvasRenderingContext2D, settlement: Settlement, x: number, y: number) {
-    // Draw settlement icon (star)
-    const fontSize = Math.max(20, Math.round(DISPLAY_TILE_SIZE * 0.8));
-    ctx.font = `${fontSize}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    const sprite = getCitySprite(settlement.type);
     
-    // Draw shadow
-    ctx.fillStyle = '#000';
-    ctx.fillText('⭐', x + DISPLAY_TILE_SIZE / 2 + 1, y + DISPLAY_TILE_SIZE / 2 + 1);
-    
-    // Draw star
-    ctx.fillStyle = '#FFD700';
-    ctx.fillText('⭐', x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2);
-
-    // Draw settlement name if zoom is sufficient
-    if (zoomLevel >= 1.0) {
-      const nameFontSize = Math.max(10, Math.round(DISPLAY_TILE_SIZE * 0.4));
-      ctx.font = `${nameFontSize}px Arial`;
-      ctx.fillStyle = 'white';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
-      ctx.strokeText(settlement.name, x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE + 8);
-      ctx.fillText(settlement.name, x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE + 8);
+    if (sprite && citiesImage && citiesImageLoaded) {
+      // Draw the settlement sprite from the cities tileset
+      ctx.drawImage(
+        citiesImage,
+        sprite.x, sprite.y, TILE_SIZE, TILE_SIZE,  // Source rectangle
+        x, y, DISPLAY_TILE_SIZE, DISPLAY_TILE_SIZE  // Destination rectangle
+      );
+      
+      // Draw settlement name if zoom is sufficient
+      if (zoomLevel >= 1.0) {
+        const nameFontSize = Math.max(10, Math.round(DISPLAY_TILE_SIZE * 0.4));
+        ctx.font = `${nameFontSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeText(settlement.name, x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE + 8);
+        ctx.fillText(settlement.name, x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE + 8);
+      }
+    } else {
+      // Fallback: draw a colored circle
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2, DISPLAY_TILE_SIZE / 3, 0, 2 * Math.PI);
+      ctx.fill();
     }
   }
 

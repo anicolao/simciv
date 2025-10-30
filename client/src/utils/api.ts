@@ -276,7 +276,6 @@ export interface Settlement {
     x: number;
     y: number;
   };
-  population: number;
 }
 
 /**

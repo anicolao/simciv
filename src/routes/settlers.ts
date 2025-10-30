@@ -64,7 +64,6 @@ router.get('/:gameId/settlements', async (req: Request, res: Response): Promise<
         name: settlement.name,
         type: settlement.type,
         location: settlement.location,
-        population: settlement.population,
       })),
     });
   } catch (error) {

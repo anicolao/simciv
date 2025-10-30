@@ -226,69 +226,6 @@ test.describe('Minimal Settlers Implementation', () => {
     // Verify settlement exists
     expect(gameState.settlements).toHaveLength(1);
     expect(gameState.settlements[0].type).toBe('nomadic_camp');
-    expect(gameState.settlements[0].population).toBe(100);
     expect(gameState.settlements[0].name).toBe('First Settlement');
-  });
-
-  test('should grow settlement population over time', async ({ page }) => {
-    const alias = 'settler_test_growth';
-    const password = 'TestPassword123!';
-    
-    await registerAndLogin(page, alias, password);
-    await createAndStartGame(page);
-
-    // Wait for map to load and settlement to be created
-    await page.waitForTimeout(4500);
-
-    // Get initial population
-    let gameState = await page.evaluate(async () => {
-      const response = await fetch('/api/games/user/my-games');
-      const data = await response.json();
-      const gameId = data.games[0].gameId;
-      
-      const settlementsResponse = await fetch(`/api/game/${gameId}/settlements`);
-      const settlementsData = await settlementsResponse.json();
-      
-      return {
-        gameId,
-        settlement: settlementsData.settlements[0]
-      };
-    });
-
-    const initialPop = gameState.settlement.population;
-    console.log(`Initial population: ${initialPop}`);
-
-    // Wait for 10 seconds (10 ticks = 10 years of growth)
-    await page.waitForTimeout(10000);
-
-    // Take screenshot showing population growth
-    await screenshotIfChanged(page, { 
-      path: 'e2e-screenshots/39-population-growth.png', 
-      fullPage: true 
-    });
-
-    // Check population has grown
-    gameState = await page.evaluate(async () => {
-      const response = await fetch('/api/games/user/my-games');
-      const data = await response.json();
-      const gameId = data.games[0].gameId;
-      
-      const settlementsResponse = await fetch(`/api/game/${gameId}/settlements`);
-      const settlementsData = await settlementsResponse.json();
-      
-      return {
-        gameId,
-        settlement: settlementsData.settlements[0]
-      };
-    });
-
-    const finalPop = gameState.settlement.population;
-    console.log(`Final population: ${finalPop}`);
-
-    // With 1% growth per year over 10 years starting from 100:
-    // Year 0: 100, Year 1: 101, Year 2: 102, ..., Year 10: ~110
-    // We expect at least 5 population growth
-    expect(finalPop).toBeGreaterThan(initialPop);
-    expect(finalPop).toBeGreaterThanOrEqual(initialPop + 5);
   });
 });
