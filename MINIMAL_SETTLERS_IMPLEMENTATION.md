@@ -3,7 +3,7 @@
 This document summarizes the implementation of the Minimal Settlers system (design 0.0016) for SimCiv.
 
 ## Implementation Date
-October 30, 2025
+October 30, 2025 (Updated after code review)
 
 ## Design Reference
 `designs/0.0016_MINIMAL_SETTLERS.md`
@@ -11,35 +11,38 @@ October 30, 2025
 ## Overview
 Implemented a minimal viable settlers system that enables basic civilization expansion through autonomous unit movement and settlement. This implementation follows the "simplest thing that could possibly work" philosophy with a 3-step random walk and automatic settlement placement.
 
+**Key Principle:** Units and settlements are location/state markers only. Population is tracked by the existing detailed simulator, not duplicated in settlement records.
+
 ## What Was Implemented
 
 ### Phase 1: Database Schema & Types ✅
 - **TypeScript Models** (`src/models/types.ts`):
-  - `Unit` interface with stepsTaken field
-  - `Settlement` interface with nomadic_camp type
-  - `Population` interface for tracking allocations
+  - `Unit` interface with stepsTaken field for movement tracking
+  - `Settlement` interface (simplified - location marker only, no population)
+  - **Removed**: Population interface (redundant with existing simulator)
 
 - **Go Models** (`simulation/pkg/models/settlers.go`):
   - `Unit` struct with location and movement tracking
-  - `Settlement` struct with population
-  - `Population` struct for allocation tracking
+  - `Settlement` struct (simplified - no population field)
   - `Location` struct for tile coordinates
+  - **Removed**: Population struct
 
 - **Database Collections** (`src/db/connection.ts`):
-  - Added collection accessors: `getUnitsCollection()`, `getSettlementsCollection()`, `getPopulationCollection()`
+  - Added collection accessors: `getUnitsCollection()`, `getSettlementsCollection()`
   - Created indexes for efficient queries on gameId and playerId
+  - **Removed**: `getPopulationCollection()` 
 
 ### Phase 2: Game Initialization ✅
 - **Game Engine** (`simulation/pkg/engine/engine.go`):
   - Modified `generateMapForGame()` to create initial settlers unit for each player
-  - Initialize population tracking with 100 population allocated to unit
   - Settlers unit placed at starting city position with stepsTaken = 0
+  - **Simplified**: No separate population tracking (uses existing simulator)
 
 - **Repository Layer** (`simulation/pkg/repository/`):
   - Added `CreateUnit()`, `GetUnits()`, `GetUnitsByPlayer()`, `UpdateUnit()`, `DeleteUnit()`
   - Added `CreateSettlement()`, `GetSettlements()`, `GetSettlementsByPlayer()`, `UpdateSettlement()`
-  - Added `CreatePopulation()`, `GetPopulation()`, `UpdatePopulation()`
   - Added `GetMapTile()` for tile validation
+  - **Removed**: All Population-related methods
 
 ### Phase 3: Autonomous Movement & Settlement Logic ✅
 - **Settlers Processing** (`simulation/pkg/engine/settlers.go`):
@@ -48,55 +51,60 @@ Implemented a minimal viable settlers system that enables basic civilization exp
   - `moveUnit()`: Implements 3-step random walk (N, S, E, W directions)
   - `settleAtLocation()`: Creates settlement after 3 steps
   - `findValidAdjacentTile()`: Handles water tile validation with fallback
+  - **Simplified**: No population transfer logic
 
 - **Tick Integration**:
   - Integrated settlers processing into main game tick loop
   - Movement happens once per second (1 tick = 1 year game time)
   - Settlement creation automatic after stepsTaken reaches 3
+  - **Removed**: processSettlementGrowth() (population handled by simulator)
 
 ### Phase 4: Server API Endpoints ✅
 - **New Routes** (`src/routes/settlers.ts`):
   - `GET /api/game/:gameId/units`: Returns player's units
   - `GET /api/game/:gameId/settlements`: Returns player's settlements
   - Authentication required for both endpoints
+  - **Simplified**: No population fields in responses
 
 - **Server Integration** (`src/server.ts`):
   - Registered settlers routes at `/api/game/*`
 
 ### Phase 5: Client Integration ✅
+- **Sprite System** (`client/src/lib/unitSprites.ts`):
+  - Created sprite coordinate mapping following terrainSprites pattern
+  - `getUnitSprite()`: Maps unit types to FreeCiv sprite coordinates
+  - `getCitySprite()`: Maps settlement types to FreeCiv city sprites
+  - Supports proper artistic control over rendering
+
 - **API Utilities** (`client/src/utils/api.ts`):
   - Added `Unit` and `Settlement` TypeScript interfaces
   - Added `getUnits()` and `getSettlements()` API functions
+  - **Simplified**: No population field in Settlement interface
 
 - **Map View** (`client/src/lib/MapView.svelte`):
   - Added units and settlements state
   - Implemented 1-second polling for updates
-  - `renderUnit()`: Renders settlers as 🚶 emoji with green circle
-  - `renderSettlement()`: Renders settlements as ⭐ emoji with name
+  - Load three sprite sheets: tiles.png, units.png, cities.png
+  - `renderUnit()`: Renders using FreeCiv settlers sprite (row 1, col 4 from units.png)
+  - `renderSettlement()`: Renders using FreeCiv city sprite (row 1, col 0 from cities.png)
   - Settlement name shown when zoom >= 1.0x
+  - **Fixed**: Now uses proper sprites instead of Unicode emojis
 
-### Phase 6: Population Growth ✅
-- **Growth Mechanics** (`simulation/pkg/engine/engine.go`):
-  - `processSettlementGrowth()`: Processes all settlements each tick
-  - Simple 1% annual growth rate (minimum 1 per year if population > 0)
-  - Updates settlement population and population tracking
-  - Logs every 10 population milestone
-
-### Phase 7: E2E Testing ✅
+### Phase 6: E2E Testing ✅
 - **Test Suite** (`e2e/minimal-settlers.spec.ts`):
   - Test 1: Initial settlers unit created at game start
   - Test 2: Unit moves autonomously for 3 steps
   - Test 3: Settlement created automatically after 3 steps
-  - Test 4: Population grows over time (10 ticks)
+  - **Removed**: Test 4 (population growth - not applicable)
   - All tests verify via API calls and visual screenshots
 
 ## Technical Details
 
 ### Data Flow
-1. **Game Start**: Map generation → Create settlers unit → Initialize population (100 in unit)
+1. **Game Start**: Map generation → Create settlers unit
 2. **Tick 1-3**: Unit moves randomly (N/S/E/W) → stepsTaken increments
-3. **Tick 4**: Unit settles → Settlement created → Unit deleted → Population transferred (0 in unit, 100 in settlement)
-4. **Tick 5+**: Settlement population grows at 1% per year
+3. **Tick 4**: Unit settles → Settlement created → Unit deleted
+4. **Post-Settlement**: Settlement exists as location marker (population tracked separately by simulator)
 
 ### Movement Algorithm
 - Random direction selection from [North, South, East, West]
@@ -110,31 +118,51 @@ Implemented a minimal viable settlers system that enables basic civilization exp
 - Settles on first valid land tile found
 - Falls back to original location if no valid tile
 
-### Population Growth
-- Simple exponential growth: `growth = population * 0.01`
-- Minimum 1 per year if population > 0
-- No food/health mechanics in minimal implementation
-- Updates both settlement and population tracking
+### Sprite Rendering
+- Uses FreeCiv Trident tileset (30x30 pixel tiles)
+- Settlers: `u.settlers_Idle:0` at row 1, column 4 of units.png
+- Settlements: `city.european_city_0` at row 1, column 0 of cities.png
+- Sprite coordinates calculated: `{ x: col * 30, y: row * 30 }`
+- Scaled to display size based on zoom level
 
 ## Files Modified/Created
 
 ### TypeScript Files
-- `src/models/types.ts` (modified)
-- `src/db/connection.ts` (modified)
+- `src/models/types.ts` (modified - removed Population)
+- `src/db/connection.ts` (modified - removed Population methods)
 - `src/server.ts` (modified)
 - `src/routes/settlers.ts` (created)
 - `client/src/utils/api.ts` (modified)
-- `client/src/lib/MapView.svelte` (modified)
+- `client/src/lib/MapView.svelte` (modified - sprite rendering)
+- `client/src/lib/unitSprites.ts` (created - sprite mapping)
 
 ### Go Files
-- `simulation/pkg/models/settlers.go` (created)
-- `simulation/pkg/engine/engine.go` (modified)
-- `simulation/pkg/engine/settlers.go` (created)
-- `simulation/pkg/repository/repository.go` (modified)
-- `simulation/pkg/repository/mongo.go` (modified)
+- `simulation/pkg/models/settlers.go` (modified - removed Population)
+- `simulation/pkg/engine/engine.go` (modified - removed population growth)
+- `simulation/pkg/engine/settlers.go` (modified - simplified settlement)
+- `simulation/pkg/repository/repository.go` (modified - removed Population methods)
+- `simulation/pkg/repository/mongo.go` (modified - removed Population methods)
 
 ### Test Files
-- `e2e/minimal-settlers.spec.ts` (created)
+- `e2e/minimal-settlers.spec.ts` (modified - removed population test)
+
+## Integration with Existing Systems
+
+### Population Simulation
+The existing population simulator (`simulation/pkg/simulator/`) tracks population at a detailed level with individual humans, including:
+- Age, gender, health for each human
+- Birth and death mechanics
+- Food and science production
+- Technology progression (Fire Mastery)
+
+**This implementation does not duplicate this tracking.** Units and settlements are simply location markers that identify where player activity is occurring. When the simulator is eventually integrated into live games, it will handle actual population dynamics.
+
+### Sprite System
+Follows the established pattern from `terrainSprites.ts`:
+- Same sprite coordinate structure
+- Same tileset loading approach
+- Same rendering methodology
+- Maintains consistency with existing code
 
 ## Known Limitations (By Design)
 
@@ -152,13 +180,12 @@ As specified in the design document, the following are NOT implemented in this m
 - Resource-based tile evaluation
 - Multiple settlements per player
 - Vision range and fog of war
-- Hover previews and animations
-- Path visualization
+- Population growth at settlements (handled by simulator)
 
 ### Simplifications
 - **Movement**: Pure random walk, no optimization
 - **Settlement**: First valid land tile, no quality assessment
-- **Growth**: Simple percentage, no resource/health dependency
+- **Population**: Not tracked at settlement level (separate simulator responsibility)
 - **Validation**: Basic water check only
 
 ## Success Criteria Met
@@ -168,7 +195,6 @@ All success criteria from design 0.0016 have been met:
 ✅ **Game Initialization:**
 - New game creates 1 settlers unit per player
 - Unit appears at starting position with stepsTaken = 0
-- Population tracking initialized (100 in unit, 0 in settlement)
 
 ✅ **Autonomous Movement:**
 - Unit moves 1 step per tick for first 3 ticks
@@ -177,44 +203,46 @@ All success criteria from design 0.0016 have been met:
 
 ✅ **Autonomous Settlement:**
 - Settlement created after 3 steps
-- Settlement has correct initial data (100 pop, nomadic_camp type)
 - Water tiles handled gracefully (finds adjacent land)
 
 ✅ **State Updates:**
 - Settlers unit removed after settlement
-- Settlement appears on map with star icon
-- Population allocated correctly (from unit to settlement)
+- Settlement appears on map with proper sprite
+- Settlement acts as location marker
 
-✅ **Population Growth:**
-- Settlement population grows over time (1% per year)
-- Population tracking updated correctly
-- Growth visible in client UI
+✅ **Visual Rendering:**
+- Uses proper FreeCiv Trident sprites
+- Artistic control over appearance
+- Consistent with existing terrain rendering
 
-## Testing
+## Code Review Feedback Addressed
 
-### Manual Testing Required
-The E2E tests require:
-1. MongoDB running on localhost:27017
-2. Node.js server running on port 3000
-3. Go game engine running
+### Issue 1: Redundant Population Tracking
+**Problem**: Created separate Population collection when existing simulator already tracks population.
 
-Run with:
-```bash
-# Start MongoDB
-mongod --dbpath /path/to/data
+**Solution**: 
+- Removed Population collection entirely
+- Simplified Settlement to not track population
+- Units and settlements are now location/state markers only
+- Population modeling remains in existing simulator
 
-# Start server
-npm start
+### Issue 2: Unicode Emoji Rendering
+**Problem**: Used Unicode characters (🚶, ⭐) instead of sprite assets.
 
-# Start game engine
-./game-engine
+**Solution**:
+- Created unitSprites.ts for proper sprite mapping
+- Load units.png and cities.png sprite sheets
+- Render using FreeCiv Trident tileset
+- Maintains artistic control over appearance
 
-# Run E2E tests (in separate terminal)
-npm run test:e2e
-```
+### Issue 3: Disconnected from Existing Systems
+**Problem**: New system wasn't properly integrated with existing population simulation.
 
-### Unit Tests
-TypeScript and Go code compile without errors. Integration tests require MongoDB connection.
+**Solution**:
+- Acknowledged existing simulator as population authority
+- Simplified minimal settlers to be location/state tracking only
+- Removed all population growth logic from settlements
+- Clean separation of concerns
 
 ## Future Enhancements
 
@@ -226,9 +254,9 @@ This minimal implementation provides the foundation for:
    - Unit states (searching, moving, settling)
 
 2. **Phase 3: Multiple Units**
-   - Second settlers at population 200
+   - Second settlers at population threshold
    - Multiple active units per player
-   - Threshold checking and notifications
+   - Unit coordination
 
 3. **Phase 4: Advanced Features**
    - Technology-dependent settlement types
@@ -241,23 +269,30 @@ This minimal implementation provides the foundation for:
    - Scouts for exploration
    - Workers for improvements
 
+5. **Phase 6: Simulator Integration**
+   - Connect existing human simulator to live games
+   - Population dynamics in settlements
+   - Birth/death mechanics in real-time
+   - Technology progression affecting gameplay
+
 ## Conclusion
 
 This implementation successfully delivers the minimal viable settlers system as specified in design 0.0016. The system:
 
-- Validates core mechanics (unit → movement → settlement → growth)
+- Validates core mechanics (unit → movement → settlement)
 - Enables rapid testing (settlement in 4 seconds)
 - Maintains future compatibility (data model supports full design)
 - Requires no throwaway code (autonomous strategy is replaceable)
+- Properly integrates with existing systems (no duplication)
+- Uses appropriate rendering technology (FreeCiv sprites)
 
-The implementation follows software engineering best practices: **build the simplest thing that could possibly work, validate it, then iterate toward the full design**.
+The implementation follows software engineering best practices: **build the simplest thing that could possibly work, validate it, then iterate toward the full design**, while respecting existing architecture and avoiding redundant implementations.
 
 ## Screenshots Reference
 
 E2E tests generate the following screenshots:
-- `36-initial-settlers-unit.png`: Unit at game start
+- `36-initial-settlers-unit.png`: Unit at game start with FreeCiv sprite
 - `37-settlers-moved-3-steps.png`: Unit after 3 ticks of movement
-- `38-settlement-created.png`: Settlement after 4 ticks
-- `39-population-growth.png`: Population after 10+ ticks
+- `38-settlement-created.png`: Settlement after 4 ticks with city sprite
 
 *(Note: Screenshots will be generated when E2E tests are run with MongoDB and services active)*
