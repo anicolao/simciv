@@ -84,3 +84,43 @@ export interface MapMetadata {
   generatedAt: Date;
   generationTimeMs: number;
 }
+
+export interface Unit {
+  unitId: string;
+  gameId: string;
+  playerId: string;
+  unitType: 'settlers';
+  location: {
+    x: number;
+    y: number;
+  };
+  stepsTaken: number;
+  populationCost: 100;
+  createdAt: Date;
+  lastUpdated: Date;
+}
+
+export interface Settlement {
+  settlementId: string;
+  gameId: string;
+  playerId: string;
+  name: string;
+  type: 'nomadic_camp';
+  location: {
+    x: number;
+    y: number;
+  };
+  population: number;
+  founded: Date;
+  lastUpdated: Date;
+}
+
+export interface Population {
+  gameId: string;
+  playerId: string;
+  totalPopulation: number;
+  allocatedToUnit: number;
+  allocatedToSettlement: number;
+  unallocated: number;
+  lastUpdated: Date;
+}
