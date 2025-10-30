@@ -17,14 +17,14 @@ This document specifies the design for SimCiv's unit creation and behavior syste
 - Population-threshold-based unit creation (not traditional production)
 - Settlers units require 100 population per unit
 - Initial game state: 100 population = 1 settlers unit, no settled location
-- Units can only be produced from existing settlements
+- Units can only be produced from existing settlements (after first)
 - Settlers establish the first settlement, enabling future unit production
-- AI-driven settlers behavior: wander towards optimal settlement locations
+- **Fully autonomous settlers behavior**: units automatically search for and settle optimal locations
 - Technology integration: settlement types adapt to unlocked technologies
 - Progressive expansion: each 100 additional population enables a new settlers unit
 
 **Design Philosophy:**
-This system transforms population from a simple resource counter into a strategic asset. Players must balance population growth against the opportunity to create specialized units, creating meaningful trade-offs between expansion (settlers) and other future unit types (warriors, workers, etc.).
+This system transforms population from a simple resource counter into a strategic asset. Players must balance population growth against the opportunity to create specialized units, creating meaningful trade-offs between expansion (settlers) and other future unit types (warriors, workers, etc.). All unit behavior is autonomous, eliminating micromanagement while strategic decisions remain in population allocation and technology choices.
 
 ---
 
@@ -64,8 +64,8 @@ The design maintains the database-as-single-source-of-truth principle while enab
 **SimCiv Model (What We ARE Doing):**
 - Population grows naturally based on health, food, and conditions
 - When population reaches threshold (100), unit becomes available
-- Unit creation consumes the population threshold permanently
-- Remaining population continues growing toward next threshold
+- Unit creation allocates 100 population to the unit (population still contributes to empire)
+- Total population continues growing toward next threshold
 
 **Example Progression:**
 - **Pop 0-99**: No units, no settlement possible
@@ -166,14 +166,15 @@ AvailableSettlers = floor(TotalPopulation / 100) - ExistingSettlers - ExistingSe
 **Step 2: Unit Creation (Player Decision)**
 - Game notifies player: "New Settlers Unit Available"
 - Player chooses whether to create unit immediately or wait
-- **Cost**: 100 population permanently allocated to unit
-- **Result**: New settlers unit appears at settlement location
+- **Cost**: 100 population allocated to unit (still contributes to empire)
+- **Result**: New settlers unit appears at settlement location and begins autonomous search
 
 **Special Case: Initial Settlers**
 - At game start, if population >= 100, first settlers is automatically created
 - This unit is not tied to any settlement (none exist yet)
 - Appears at the player's starting position coordinates
-- Cannot be disbanded - must settle to establish first settlement
+- Immediately begins autonomous search for optimal settlement location
+- Must settle to establish first settlement (enables future unit production)
 
 **Settlement Production:**
 - After first settlement exists, new units appear at a specific settlement
@@ -222,25 +223,19 @@ totalPopulation =
 
 Settlers units operate in distinct behavioral states:
 
-**1. Idle State**
-- Unit exists but has no destination
-- Awaits player command or enters autonomous mode
-- Location: Current tile
-- Action: None
-
-**2. Moving State**
-- Unit is traveling to a destination
-- Follows pathfinding to target location
-- Location: Changes each tick
-- Action: Movement along path
-
-**3. Searching State (Autonomous)**
+**1. Searching State**
 - Unit is searching for optimal settlement location
 - Uses evaluation algorithm to score nearby tiles
 - Location: Wanders toward high-scoring regions
 - Action: Exploration and evaluation
 
-**4. Settling State**
+**2. Moving State**
+- Unit is traveling toward a high-value destination
+- Follows pathfinding to target location
+- Location: Changes each tick
+- Action: Movement along path
+
+**3. Settling State**
 - Unit has found acceptable location and is settling
 - Takes 1 game tick to establish settlement
 - Location: Final settlement location
@@ -249,7 +244,7 @@ Settlers units operate in distinct behavioral states:
 ### Autonomous Settlement Search
 
 **Algorithm Overview:**
-When settlers enters autonomous search mode:
+Settlers are always in autonomous mode and follow this algorithm:
 1. Evaluate all tiles within movement range
 2. Score each tile based on civilization priorities and technology
 3. Move toward highest-scoring tile cluster
@@ -345,37 +340,15 @@ Total: 43.6 → SETTLE (exceeds threshold)
 - Reveals fog of war as they move
 - Helps identify resources and terrain
 
-### Player Commands
+### Autonomous Behavior
 
-**Available Commands:**
-
-**1. Move To Location**
-- Player clicks destination tile on map
-- Settlers moves toward destination
-- Uses pathfinding to determine route
-- Settles upon arrival if location is valid
-
-**2. Settle Here**
-- Player commands immediate settlement at current location
-- Validates location is acceptable (land tile, not in rival territory)
-- Creates new settlement if valid
-- Consumes settlers unit (100 pop allocated to new settlement)
-
-**3. Automate Settlement**
-- Settlers enters autonomous search mode
-- Uses scoring algorithm to find optimal location
-- Automatically settles when suitable location found
-- Player can cancel automation at any time
-
-**4. Fortify**
-- Settlers stops moving and fortifies position
-- Increases defensive strength (for future combat system)
-- Remains fortified until given new orders
-
-**5. Disband (Future)**
-- Returns 50 population to nearest settlement
-- 50% efficiency penalty for disbanding
-- Useful for recovering population if unit not needed
+**Settlers Operation:**
+Settlers units operate entirely autonomously with no player intervention. The unit:
+- Continuously evaluates tiles within exploration range
+- Uses the scoring algorithm to identify optimal settlement locations
+- Moves toward high-scoring tile clusters
+- Automatically settles when a suitable location is found (score >= threshold)
+- Cannot be manually controlled or redirected by the player
 
 ---
 
@@ -440,9 +413,8 @@ The type of settlement created depends on the civilization's current technology:
 
 ### Settlement Creation Process
 
-**Step 1: Command Issued**
-- Player commands "Settle Here" on settlers unit
-- Or settlers in autonomous mode chooses to settle
+**Step 1: Settlement Decision**
+- Settlers autonomously chooses to settle when optimal location found
 
 **Step 2: Validation**
 - Check location is valid settlement tile
@@ -579,21 +551,19 @@ If multiple settlement types are available, settlers chooses based on:
 │ Movement: 2/2 remaining         │
 │ Location: (45, 67)              │
 │                                 │
-│ Actions:                        │
-│ [ Settle Here ]                 │
-│ [ Automate Settlement ]         │
-│ [ Move To... ]                  │
-│ [ Fortify ]                     │
-│                                 │
 │ Current Location Score: 35      │
+│ Best Score Seen: 42             │
 │ Status: Searching...            │
+│                                 │
+│ (Autonomous - No Actions)       │
 └─────────────────────────────────┘
 ```
 
 **Location Score Display:**
 - When settlers is selected, show score of current tile
+- Show best score found so far in current search
 - Color-code: Red (<40), Yellow (40-59), Green (60+)
-- Help players understand settlers' decision-making
+- Helps players understand settlers' autonomous decision-making
 
 ### Notifications
 
@@ -605,12 +575,11 @@ Create a new Settlers unit to expand your civilization?
 [Create Settlers] [Dismiss]
 ```
 
-**Settlers Ready to Settle:**
+**Settlers Settling:**
 ```
-📍 Settlers Ready to Settle
+📍 Settlers Settling
 Your Settlers has found an excellent location (Score: 67)
-Settle at (52, 73)?
-[Settle] [Continue Searching] [Take Control]
+Establishing settlement at (52, 73)...
 ```
 
 **Settlement Founded:**
@@ -633,12 +602,12 @@ Bonuses: +1 Food, +1 Health
 Population: 100
 Settlements: 0
 Units: 1 Settlers (initial, at starting position)
-Player sees: Settlers at (50, 50), can move or settle
+Settlers begins autonomous search
 ```
 
-**Turn 1-5: Exploration**
+**Turn 1-5: Autonomous Exploration**
 ```
-Player commands: "Automate Settlement"
+Settlers autonomously searches for optimal location
 Settlers moves: (50,50) → (52,51) → (54,52) → (56,53) → (58,54)
 Each turn, settlers evaluates tiles within range, moves toward best cluster
 ```
@@ -682,7 +651,7 @@ Units: 1 Settlers (at First Settlement location)
 
 **Turn 76-90:**
 ```
-Settlers explores, finds location 25 tiles away
+Settlers autonomously explores, finds location 25 tiles away
 Settles at (85, 60): PLAINS with DEER and stone
 Result:
   Population: 200 (100 at each settlement)
@@ -711,9 +680,9 @@ Population: 450 (100+100 settlements, 100+100 units, 50 unallocated)
 
 **Turn 152-160:**
 ```
-Both settlers explore simultaneously in different directions
-Settlers 1 → Northeast (autonomous)
-Settlers 2 → Southwest (player-controlled toward specific target)
+Both settlers autonomously explore simultaneously in different directions
+Settlers 1 → Northeast (searching)
+Settlers 2 → Southwest (searching)
 ```
 
 **Turn 165:**
@@ -754,16 +723,19 @@ interface Unit {
     y: number;
   };
   
-  state: "idle" | "moving" | "searching" | "settling" | "fortified";
+  state: "searching" | "moving" | "settling";
   
   movement: {
     pointsRemaining: number;
     pointsMax: number;
     path: Array<{x: number, y: number}>; // Current path being followed
-    destination: {x: number, y: number} | null;
+    destination: {x: number, y: number} | null; // Current target tile
   };
   
-  autonomous: boolean; // True if in automate mode
+  searchState: {
+    bestScoreSeen: number; // Highest score encountered so far
+    tilesEvaluated: number; // Count of tiles evaluated
+  }
   
   populationCost: number; // 100 for settlers
   
@@ -850,18 +822,15 @@ interface PlayerPopulation {
    - Compare to: `settlements.length + units.length`
    - If greater: Notify player of available unit
 
-3. **Unit Movement**
-   - For each unit with state "moving" or "searching":
+3. **Unit Movement and Search**
+   - For each unit (all settlers are autonomous):
+     - If in "searching" state: evaluate tiles within movement range
+     - Score each tile based on criteria
+     - Identify highest-scoring tile cluster
+     - If best score >= threshold, enter "settling" state
+     - Otherwise, update path toward high-scoring tiles
      - Deduct terrain cost from movement points
      - Update location along path
-     - If destination reached and state "settling", create settlement
-
-4. **Autonomous Settlers**
-   - For each settlers with autonomous=true:
-     - Evaluate tiles within movement range
-     - Score each tile based on criteria
-     - Move toward highest-scoring tile cluster
-     - If score >= threshold, enter "settling" state
 
 5. **Settlement Creation**
    - When settlers settles:
@@ -876,10 +845,7 @@ interface PlayerPopulation {
 **Unit Management:**
 - `POST /api/game/{gameId}/units/create`: Create unit from population
 - `GET /api/game/{gameId}/units`: List all units for player
-- `POST /api/game/{gameId}/units/{unitId}/move`: Issue move command
-- `POST /api/game/{gameId}/units/{unitId}/settle`: Command settlement
-- `POST /api/game/{gameId}/units/{unitId}/automate`: Toggle autonomous mode
-- `DELETE /api/game/{gameId}/units/{unitId}`: Disband unit
+- `GET /api/game/{gameId}/units/{unitId}`: Get unit details and current state
 
 **Settlement Management:**
 - `GET /api/game/{gameId}/settlements`: List all settlements for player
@@ -916,9 +882,9 @@ interface PlayerPopulation {
 **Full Settlement Flow:**
 1. Start game with 100 population
 2. Verify initial settlers created
-3. Command settlers to move
-4. Verify movement and pathfinding
-5. Command settle at valid location
+3. Verify settlers begins autonomous search
+4. Verify movement and pathfinding toward high-score tiles
+5. Verify settlers settles at valid location when threshold met
 6. Verify settlement created and settlers removed
 7. Verify population allocated correctly
 
@@ -932,8 +898,8 @@ interface PlayerPopulation {
 7. Verify two settlements exist
 
 **Autonomous Settlement:**
-1. Create settlers with automate command
-2. Verify settlers enters "searching" state
+1. Create settlers unit
+2. Verify settlers automatically enters "searching" state
 3. Simulate movement toward high-score tiles
 4. Verify settlers settles when threshold met
 5. Verify settlement created at appropriate location
@@ -945,37 +911,29 @@ interface PlayerPopulation {
 1. **Initial Settlers Creation**
    - Start new game
    - Verify settlers appears at starting position
+   - Verify settlers begins autonomous search
    - Screenshot: 32-initial-settlers.png
 
-2. **Manual Settlement**
-   - Click settlers unit
-   - Click destination tile
-   - Wait for arrival
-   - Click "Settle Here"
-   - Verify settlement created
-   - Screenshot: 33-manual-settlement.png
-
-3. **Autonomous Settlement**
-   - Create settlers
-   - Click "Automate Settlement"
-   - Wait for autonomous settlement
+2. **Autonomous Settlement**
+   - Wait for settlers to autonomously search
+   - Verify settlers moves toward high-score tiles
    - Verify settlement created at good location
-   - Screenshot: 34-autonomous-settlement.png
+   - Screenshot: 33-autonomous-settlement.png
 
-4. **Multiple Settlers**
+3. **Multiple Settlers**
    - Grow population to 400
    - Create 2 settlers units
-   - Move in different directions
+   - Verify both autonomously search in different directions
    - Verify both can settle independently
-   - Screenshot: 35-multiple-settlers.png
+   - Screenshot: 34-multiple-settlers.png
 
-5. **Technology Integration**
+4. **Technology Integration**
    - Start with Cave Dwelling tech
    - Create settlers
    - Verify settlers prefers MOUNTAIN terrain
-   - Settle near mountain
+   - Verify settles near mountain
    - Verify Cave Settlement created
-   - Screenshot: 36-tech-settlement.png
+   - Screenshot: 35-tech-settlement.png
 
 ---
 
@@ -1016,8 +974,8 @@ interface PlayerPopulation {
 - Custom unit designs (future tech)
 - Amphibious units (water transport)
 - Aerial units (flying)
-- Unit automation presets (player-defined algorithms)
-- AI learning from player settlement patterns
+- Configurable AI behavior parameters per civilization
+- Machine learning for improved settlement location selection
 
 **Phase 4 (Multiplayer):**
 - Unit combat between players
@@ -1030,10 +988,10 @@ interface PlayerPopulation {
 ## Security and Privacy
 
 **Security Considerations:**
-- Validate all unit commands (player owns unit)
+- Validate unit creation (player has sufficient population)
 - Validate settlement locations (not in rival territory)
 - Rate limit unit creation (prevent spam)
-- Prevent cheating (unit teleportation, duplicate units)
+- Prevent cheating (duplicate units, invalid population allocation)
 
 **Privacy Considerations:**
 - Fog of war: Players cannot see rival settlers in unexplored tiles
@@ -1052,8 +1010,8 @@ interface PlayerPopulation {
 - Time to 200 pop: ~300-500 days (~1-1.5 years after first settlement)
 
 **Rationale:**
-- Players need time to explore map with first settlers
-- Shouldn't feel rushed to settle immediately
+- Settlers needs time to autonomously explore map and find optimal location
+- First settlement should occur naturally without feeling rushed
 - Should have second settlers within reasonable timeframe
 - Growth rate matches historical population growth in small communities
 
@@ -1074,14 +1032,15 @@ interface PlayerPopulation {
 ### Population Pressure
 
 **Strategic tension:**
-- Do I create settlers to expand?
+- Do I create settlers to autonomously expand?
 - Or wait for higher population to support better technology?
-- Or create warriors for defense?
+- Or create warriors for defense (future)?
 
 **Balance goal:**
 - Expansion should feel meaningful but not mandatory
 - Late expansion should still be viable (catch-up mechanics)
 - Over-expansion should strain resources (food/science penalties)
+- Autonomous settlement placement should generally be smart but not perfect, creating some variance in outcomes
 
 ---
 
@@ -1097,10 +1056,10 @@ interface PlayerPopulation {
 
 **Gameplay Success:**
 - Players understand population threshold mechanic
-- Autonomous settlement finds reasonable locations
-- Manual settlement feels strategic and rewarding
-- Technology integration affects settlement decisions
+- Autonomous settlement finds reasonable locations consistently
+- Technology integration visibly affects settlement decisions
 - Balance feels fair (not too fast or too slow)
+- Players feel satisfied with autonomous settlement choices
 
 **Technical Success:**
 - Unit creation and movement performant (< 100ms per tick)
@@ -1114,14 +1073,13 @@ interface PlayerPopulation {
 ## Open Questions
 
 **For Design Review:**
-1. Should settlers be able to disband and return 100% population? Or 50% penalty?
-2. Should there be a maximum settlement limit per player?
-3. Should settlements have minimum viability population (e.g., can't go below 50)?
-4. Should settlers be able to merge (combine two 100-pop settlers into 200-pop settlement)?
-5. Should there be a "recall to city" command to bring settlers back?
-6. Should autonomous settlers avoid dangerous terrain (mountains, tundra)?
-7. Should there be a settlement name generator or always player-named?
-8. Should cultural borders expand automatically or require player action/technology?
+1. Should there be a maximum settlement limit per player?
+2. Should settlements have minimum viability population (e.g., can't go below 50)?
+3. Should settlers be able to merge (combine two 100-pop settlers into 200-pop settlement)?
+4. Should autonomous settlers avoid dangerous terrain (mountains, tundra)?
+5. Should there be a settlement name generator or always player-named?
+6. Should cultural borders expand automatically or require technology?
+7. What happens if a settlers unit is destroyed (future combat)? Is the population lost?
 
 **For Implementation:**
 1. Should unit state be stored in separate collection or embedded in game state?
@@ -1135,6 +1093,6 @@ interface PlayerPopulation {
 
 This design establishes a unique unit creation system that transforms population from a simple counter into a strategic resource. The settlers mechanic provides the foundation for civilization expansion while maintaining the database-centric architecture and simulation-driven gameplay that defines SimCiv.
 
-The system is intentionally simple in its initial form (only settlers units), creating a solid foundation for future unit types while keeping the implementation scope manageable. The population threshold mechanic creates natural pacing and meaningful decisions, and the autonomous settlement system reduces micromanagement while maintaining strategic depth.
+The system is intentionally simple in its initial form (only settlers units), creating a solid foundation for future unit types while keeping the implementation scope manageable. The population threshold mechanic creates natural pacing and meaningful decisions, and the fully autonomous settlement system eliminates micromanagement while still providing strategic depth through technology choices and expansion pacing.
 
 By tying unit creation to organic population growth rather than traditional production queues, SimCiv creates a more realistic and engaging model of civilization development that will differentiate it from conventional strategy games.
