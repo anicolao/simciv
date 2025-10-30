@@ -1,5 +1,5 @@
 import { MongoClient, Db, Collection } from 'mongodb';
-import { User, Session, Challenge, Game, MapTile, StartingPosition, MapMetadata } from '../models/types';
+import { User, Session, Challenge, Game, MapTile, StartingPosition, MapMetadata, Unit, Settlement, Population } from '../models/types';
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -30,6 +30,16 @@ export async function connectToDatabase(uri: string, dbName: string): Promise<Db
   await db.collection<StartingPosition>('startingPositions').createIndex({ gameId: 1, playerId: 1 }, { unique: true });
   await db.collection<StartingPosition>('startingPositions').createIndex({ gameId: 1 });
   await db.collection<MapMetadata>('mapMetadata').createIndex({ gameId: 1 }, { unique: true });
+
+  // Minimal settlers indexes
+  await db.collection<Unit>('units').createIndex({ unitId: 1 }, { unique: true });
+  await db.collection<Unit>('units').createIndex({ gameId: 1 });
+  await db.collection<Unit>('units').createIndex({ gameId: 1, playerId: 1 });
+  await db.collection<Settlement>('settlements').createIndex({ settlementId: 1 }, { unique: true });
+  await db.collection<Settlement>('settlements').createIndex({ gameId: 1 });
+  await db.collection<Settlement>('settlements').createIndex({ gameId: 1, playerId: 1 });
+  await db.collection<Population>('population').createIndex({ gameId: 1, playerId: 1 }, { unique: true });
+  await db.collection<Population>('population').createIndex({ gameId: 1 });
 
   return db;
 }
@@ -67,6 +77,18 @@ export function getStartingPositionsCollection(): Collection<StartingPosition> {
 
 export function getMapMetadataCollection(): Collection<MapMetadata> {
   return getDatabase().collection<MapMetadata>('mapMetadata');
+}
+
+export function getUnitsCollection(): Collection<Unit> {
+  return getDatabase().collection<Unit>('units');
+}
+
+export function getSettlementsCollection(): Collection<Settlement> {
+  return getDatabase().collection<Settlement>('settlements');
+}
+
+export function getPopulationCollection(): Collection<Population> {
+  return getDatabase().collection<Population>('population');
 }
 
 export async function closeDatabase(): Promise<void> {
