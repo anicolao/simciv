@@ -55,9 +55,9 @@ echo "🔍 Checking if server is running on port 3000..."
 if lsof -ti:3000 &>/dev/null; then
     echo "✅ Server is already running on port 3000"
 else
-    echo "🚀 Starting server with E2E_TEST_MODE..."
+    echo "🚀 Starting server..."
     cd "${PROJECT_ROOT}"
-    E2E_TEST_MODE=1 npm start &
+    npm start &
     SERVER_PID=$!
     
     # Wait for server to be ready
@@ -75,6 +75,15 @@ else
         echo "❌ Server failed to start"
         exit 1
     fi
+fi
+
+# Enable E2E test mode on the server
+echo ""
+echo "🧪 Enabling E2E test mode..."
+if curl -s -X POST http://localhost:3000/api/test/enable >/dev/null 2>&1; then
+    echo "✅ E2E test mode enabled"
+else
+    echo "⚠️  Warning: Failed to enable E2E test mode"
 fi
 
 # Build and start the game engine with test seed
