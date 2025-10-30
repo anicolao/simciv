@@ -64,11 +64,15 @@ async function createAndStartGame(page: Page): Promise<void> {
   // Wait for game to start
   await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 10000 });
   
-  // Click "View Map" button
-  await gameCard.locator('button:has-text("View Map")').click();
+  // Wait for map to be generated
+  await page.waitForTimeout(10000);
   
-  // Wait for map to load
-  await page.waitForSelector('canvas.map-canvas', { timeout: 10000 });
+  // Click "View" button to open game details
+  await gameCard.locator('button:has-text("View")').click();
+  
+  // Wait for map section and canvas to load
+  await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
 }
 
 test.describe('Minimal Settlers Implementation', () => {
