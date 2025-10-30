@@ -204,6 +204,187 @@ func (r *MongoRepository) GetStartingPosition(ctx context.Context, gameID string
 	return &position, nil
 }
 
+// CreateUnit creates a new unit
+func (r *MongoRepository) CreateUnit(ctx context.Context, unit *models.Unit) error {
+	collection := r.db.Collection("units")
+	_, err := collection.InsertOne(ctx, unit)
+	return err
+}
+
+// GetUnits retrieves units for a game
+func (r *MongoRepository) GetUnits(ctx context.Context, gameID string) ([]*models.Unit, error) {
+	collection := r.db.Collection("units")
+
+	cursor, err := collection.Find(ctx, bson.M{"gameId": gameID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var units []*models.Unit
+	if err := cursor.All(ctx, &units); err != nil {
+		return nil, err
+	}
+
+	return units, nil
+}
+
+// GetUnitsByPlayer retrieves units for a specific player
+func (r *MongoRepository) GetUnitsByPlayer(ctx context.Context, gameID string, playerID string) ([]*models.Unit, error) {
+	collection := r.db.Collection("units")
+
+	cursor, err := collection.Find(ctx, bson.M{
+		"gameId":   gameID,
+		"playerId": playerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var units []*models.Unit
+	if err := cursor.All(ctx, &units); err != nil {
+		return nil, err
+	}
+
+	return units, nil
+}
+
+// UpdateUnit updates a unit
+func (r *MongoRepository) UpdateUnit(ctx context.Context, unit *models.Unit) error {
+	collection := r.db.Collection("units")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		bson.M{"unitId": unit.UnitID},
+		bson.M{"$set": unit},
+	)
+
+	return err
+}
+
+// DeleteUnit deletes a unit
+func (r *MongoRepository) DeleteUnit(ctx context.Context, unitID string) error {
+	collection := r.db.Collection("units")
+	_, err := collection.DeleteOne(ctx, bson.M{"unitId": unitID})
+	return err
+}
+
+// CreateSettlement creates a new settlement
+func (r *MongoRepository) CreateSettlement(ctx context.Context, settlement *models.Settlement) error {
+	collection := r.db.Collection("settlements")
+	_, err := collection.InsertOne(ctx, settlement)
+	return err
+}
+
+// GetSettlements retrieves settlements for a game
+func (r *MongoRepository) GetSettlements(ctx context.Context, gameID string) ([]*models.Settlement, error) {
+	collection := r.db.Collection("settlements")
+
+	cursor, err := collection.Find(ctx, bson.M{"gameId": gameID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var settlements []*models.Settlement
+	if err := cursor.All(ctx, &settlements); err != nil {
+		return nil, err
+	}
+
+	return settlements, nil
+}
+
+// GetSettlementsByPlayer retrieves settlements for a specific player
+func (r *MongoRepository) GetSettlementsByPlayer(ctx context.Context, gameID string, playerID string) ([]*models.Settlement, error) {
+	collection := r.db.Collection("settlements")
+
+	cursor, err := collection.Find(ctx, bson.M{
+		"gameId":   gameID,
+		"playerId": playerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var settlements []*models.Settlement
+	if err := cursor.All(ctx, &settlements); err != nil {
+		return nil, err
+	}
+
+	return settlements, nil
+}
+
+// UpdateSettlement updates a settlement
+func (r *MongoRepository) UpdateSettlement(ctx context.Context, settlement *models.Settlement) error {
+	collection := r.db.Collection("settlements")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		bson.M{"settlementId": settlement.SettlementID},
+		bson.M{"$set": settlement},
+	)
+
+	return err
+}
+
+// CreatePopulation creates population tracking for a player
+func (r *MongoRepository) CreatePopulation(ctx context.Context, population *models.Population) error {
+	collection := r.db.Collection("population")
+	_, err := collection.InsertOne(ctx, population)
+	return err
+}
+
+// GetPopulation retrieves population for a player
+func (r *MongoRepository) GetPopulation(ctx context.Context, gameID string, playerID string) (*models.Population, error) {
+	collection := r.db.Collection("population")
+
+	var population models.Population
+	err := collection.FindOne(ctx, bson.M{
+		"gameId":   gameID,
+		"playerId": playerID,
+	}).Decode(&population)
+	if err != nil {
+		return nil, err
+	}
+
+	return &population, nil
+}
+
+// UpdatePopulation updates population tracking
+func (r *MongoRepository) UpdatePopulation(ctx context.Context, population *models.Population) error {
+	collection := r.db.Collection("population")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		bson.M{
+			"gameId":   population.GameID,
+			"playerId": population.PlayerID,
+		},
+		bson.M{"$set": population},
+	)
+
+	return err
+}
+
+// GetMapTile retrieves a specific tile by coordinates
+func (r *MongoRepository) GetMapTile(ctx context.Context, gameID string, x int, y int) (*models.MapTile, error) {
+	collection := r.db.Collection("mapTiles")
+
+	var tile models.MapTile
+	err := collection.FindOne(ctx, bson.M{
+		"gameId": gameID,
+		"x":      x,
+		"y":      y,
+	}).Decode(&tile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tile, nil
+}
+
 // Close closes the MongoDB connection
 func (r *MongoRepository) Close(ctx context.Context) error {
 	if r.client != nil {
