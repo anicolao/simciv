@@ -7,11 +7,47 @@ export function generateChallenge(length: number = 32): string {
   return crypto.randomBytes(length).toString('base64');
 }
 
+// Counter for deterministic UUID generation in E2E tests
+let deterministicUuidCounter = 0;
+
 /**
  * Generate a new session GUID (UUID v4)
  */
 export function generateGuid(): string {
   return crypto.randomUUID();
+}
+
+/**
+ * Generate a deterministic UUID for E2E testing
+ * Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx where x is deterministic hex and y is 8,9,a,or b
+ * This follows UUID v4 format but with predictable values
+ */
+export function generateDeterministicUuid(seed: string = ''): string {
+  if (process.env.NODE_ENV === 'test' || process.env.E2E_TEST_MODE === '1') {
+    // Create a deterministic hash from seed and counter
+    const hash = crypto.createHash('sha256').update(`${seed}${deterministicUuidCounter++}`).digest('hex');
+    
+    // Format as UUID v4: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+    // The '4' in position 14 indicates version 4
+    // The 'y' in position 19 must be 8, 9, a, or b (2 high bits are 10)
+    const uuid = [
+      hash.slice(0, 8),
+      hash.slice(8, 12),
+      '4' + hash.slice(13, 16), // Version 4
+      ((parseInt(hash.slice(16, 18), 16) & 0x3f) | 0x80).toString(16) + hash.slice(18, 21), // Variant bits
+      hash.slice(21, 33)
+    ].join('-');
+    
+    return uuid;
+  }
+  return crypto.randomUUID();
+}
+
+/**
+ * Reset the deterministic UUID counter (for test isolation)
+ */
+export function resetDeterministicUuidCounter(): void {
+  deterministicUuidCounter = 0;
 }
 
 /**
