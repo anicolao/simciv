@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { getMapTiles, getStartingPosition, getMapMetadata } from '../utils/api';
+  import { getMapTiles, getStartingPosition, getMapMetadata, getUnits, getSettlements } from '../utils/api';
   import { getTerrainSprite } from './terrainSprites';
+  import type { Unit, Settlement } from '../utils/api';
 
   export let gameId: string;
 
@@ -33,8 +34,11 @@
   let tiles: MapTile[] = [];
   let startingPosition: StartingPosition | null = null;
   let metadata: MapMetadata | null = null;
+  let units: Unit[] = [];
+  let settlements: Settlement[] = [];
   let loading = true;
   let error = '';
+  let pollInterval: number | null = null;
   let viewOffsetX = 0; // Pixel offset, not tile offset
   let viewOffsetY = 0; // Pixel offset, not tile offset
   let canvas: HTMLCanvasElement;
@@ -70,6 +74,11 @@
       // Continue anyway - will show error or fallback rendering
     }
     await loadMap();
+
+    // Poll for units and settlements updates every second
+    pollInterval = window.setInterval(async () => {
+      await loadUnitsAndSettlements();
+    }, 1000);
   });
   
   // Add wheel event listener when canvas is available
@@ -87,6 +96,9 @@
     if (canvas && wheelHandler) {
       canvas.removeEventListener('wheel', wheelHandler);
       console.log('[MapView] Wheel event listener removed');
+    }
+    if (pollInterval !== null) {
+      clearInterval(pollInterval);
     }
   });
 
@@ -140,6 +152,9 @@
         console.log('[MapView] View centered at:', { viewOffsetX, viewOffsetY });
       }
 
+      // Load initial units and settlements
+      await loadUnitsAndSettlements();
+
       loading = false;
       
       // Render the map once data is loaded
@@ -149,6 +164,26 @@
       console.error('[MapView] Error loading map:', errorMsg, err);
       error = errorMsg;
       loading = false;
+    }
+  }
+
+  async function loadUnitsAndSettlements() {
+    try {
+      const [unitsResponse, settlementsResponse] = await Promise.all([
+        getUnits(gameId),
+        getSettlements(gameId)
+      ]);
+
+      units = unitsResponse.units;
+      settlements = settlementsResponse.settlements;
+
+      // Trigger re-render if canvas is ready
+      if (canvas && tiles.length > 0) {
+        renderMap();
+      }
+    } catch (err: any) {
+      console.error('[MapView] Error loading units and settlements:', err);
+      // Don't set error state for polling failures
     }
   }
 
@@ -197,8 +232,32 @@
       }
     }
 
-    // Render starting city marker
-    if (startingPosition) {
+    // Render units
+    for (const unit of units) {
+      const unitScreenX = (unit.location.x - startTileX) * DISPLAY_TILE_SIZE - pixelOffsetX;
+      const unitScreenY = (unit.location.y - startTileY) * DISPLAY_TILE_SIZE - pixelOffsetY;
+      
+      // Only render if visible on screen
+      if (unitScreenX >= -DISPLAY_TILE_SIZE && unitScreenX < canvas.width &&
+          unitScreenY >= -DISPLAY_TILE_SIZE && unitScreenY < canvas.height) {
+        renderUnit(ctx, unit, unitScreenX, unitScreenY);
+      }
+    }
+
+    // Render settlements
+    for (const settlement of settlements) {
+      const settlementScreenX = (settlement.location.x - startTileX) * DISPLAY_TILE_SIZE - pixelOffsetX;
+      const settlementScreenY = (settlement.location.y - startTileY) * DISPLAY_TILE_SIZE - pixelOffsetY;
+      
+      // Only render if visible on screen
+      if (settlementScreenX >= -DISPLAY_TILE_SIZE && settlementScreenX < canvas.width &&
+          settlementScreenY >= -DISPLAY_TILE_SIZE && settlementScreenY < canvas.height) {
+        renderSettlement(ctx, settlement, settlementScreenX, settlementScreenY);
+      }
+    }
+
+    // Render starting city marker (for reference - will be replaced by actual settlement)
+    if (startingPosition && settlements.length === 0) {
       const cityScreenX = (startingPosition.startingCityX - startTileX) * DISPLAY_TILE_SIZE - pixelOffsetX;
       const cityScreenY = (startingPosition.startingCityY - startTileY) * DISPLAY_TILE_SIZE - pixelOffsetY;
       
@@ -251,9 +310,33 @@
     ctx.fillText(resource.charAt(0), x + DISPLAY_TILE_SIZE - 8, y + 8);
   }
 
-  function renderCityMarker(ctx: CanvasRenderingContext2D, x: number, y: number) {
-    // Draw a star marker for the starting city
-    ctx.font = '20px sans-serif';
+  function renderUnit(ctx: CanvasRenderingContext2D, unit: Unit, x: number, y: number) {
+    // Draw settlers icon (walking person)
+    const fontSize = Math.max(16, Math.round(DISPLAY_TILE_SIZE * 0.6));
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw shadow
+    ctx.fillStyle = '#000';
+    ctx.fillText('🚶', x + DISPLAY_TILE_SIZE / 2 + 1, y + DISPLAY_TILE_SIZE / 2 + 1);
+    
+    // Draw unit
+    ctx.fillStyle = '#FFF';
+    ctx.fillText('🚶', x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2);
+
+    // Draw circle around unit for visibility
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2, DISPLAY_TILE_SIZE / 2.5, 0, 2 * Math.PI);
+    ctx.stroke();
+  }
+
+  function renderSettlement(ctx: CanvasRenderingContext2D, settlement: Settlement, x: number, y: number) {
+    // Draw settlement icon (star)
+    const fontSize = Math.max(20, Math.round(DISPLAY_TILE_SIZE * 0.8));
+    ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
@@ -263,6 +346,33 @@
     
     // Draw star
     ctx.fillStyle = '#FFD700';
+    ctx.fillText('⭐', x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2);
+
+    // Draw settlement name if zoom is sufficient
+    if (zoomLevel >= 1.0) {
+      const nameFontSize = Math.max(10, Math.round(DISPLAY_TILE_SIZE * 0.4));
+      ctx.font = `${nameFontSize}px Arial`;
+      ctx.fillStyle = 'white';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.strokeText(settlement.name, x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE + 8);
+      ctx.fillText(settlement.name, x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE + 8);
+    }
+  }
+
+  function renderCityMarker(ctx: CanvasRenderingContext2D, x: number, y: number) {
+    // Draw a star marker for the starting city (grayed out)
+    const fontSize = Math.max(20, Math.round(DISPLAY_TILE_SIZE * 0.8));
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw shadow
+    ctx.fillStyle = '#000';
+    ctx.fillText('⭐', x + DISPLAY_TILE_SIZE / 2 + 1, y + DISPLAY_TILE_SIZE / 2 + 1);
+    
+    // Draw star (grayed out to indicate it's a placeholder)
+    ctx.fillStyle = '#999';
     ctx.fillText('⭐', x + DISPLAY_TILE_SIZE / 2, y + DISPLAY_TILE_SIZE / 2);
   }
 
