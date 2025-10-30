@@ -140,6 +140,12 @@ func (e *GameEngine) processTick(ctx context.Context) error {
 
 // processGameTick processes a single game tick
 func (e *GameEngine) processGameTick(ctx context.Context, game *models.Game) error {
+	// Process settlers units (3-step walk and auto-settle)
+	if err := e.processSettlersUnits(ctx, game); err != nil {
+		log.Printf("Error processing settlers units for game %s: %v", game.GameID, err)
+		// Continue with tick processing even if settlers processing fails
+	}
+
 	// Increment year (1 year per second)
 	newYear := game.CurrentYear + 1
 
