@@ -74,4 +74,63 @@ router.get('/status', async (req: Request, res: Response): Promise<void> => {
   });
 });
 
+/**
+ * POST /api/test/tick - Trigger a manual tick for a specific game (E2E mode only)
+ */
+router.post('/tick', async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!isE2ETestModeEnabled()) {
+      res.status(403).json({ error: 'E2E test mode is not enabled' });
+      return;
+    }
+
+    const { gameId } = req.body;
+    if (!gameId) {
+      res.status(400).json({ error: 'gameId is required' });
+      return;
+    }
+
+    // Forward tick request to game engine control server using http module
+    const http = require('http');
+    const postData = JSON.stringify({ gameId });
+    
+    const options = {
+      hostname: 'localhost',
+      port: 3001,
+      path: '/tick',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const engineReq = http.request(options, (engineRes: any) => {
+      let data = '';
+      
+      engineRes.on('data', (chunk: any) => {
+        data += chunk;
+      });
+      
+      engineRes.on('end', () => {
+        try {
+          const result = JSON.parse(data);
+          res.status(engineRes.statusCode).json(result);
+        } catch (e) {
+          res.status(500).json({ error: 'Failed to parse engine response' });
+        }
+      });
+    });
+
+    engineReq.on('error', (error: any) => {
+      res.status(500).json({ error: 'Failed to connect to game engine' });
+    });
+
+    engineReq.write(postData);
+    engineReq.end();
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to trigger tick' });
+  }
+});
+
 export default router;

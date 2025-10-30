@@ -74,6 +74,34 @@ export async function resetUuidCounter() {
   }
 }
 
+/**
+ * Trigger a manual tick for a specific game (E2E test mode only)
+ */
+export async function triggerManualTick(gameId: string) {
+  const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+  
+  try {
+    const response = await fetch(`${baseURL}/api/test/tick`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ gameId })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[Manual Tick] Failed:', response.status, error);
+      throw new Error(`Failed to trigger tick: ${error.error || response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('[Manual Tick] Error:', error);
+    throw error;
+  }
+}
+
 async function globalSetup() {
   console.log('[Global Setup] Connecting to MongoDB...');
   console.log('[Global Setup] Clearing all collections...');

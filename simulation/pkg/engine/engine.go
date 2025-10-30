@@ -15,13 +15,36 @@ import (
 
 // GameEngine processes game ticks for all active games
 type GameEngine struct {
-	repo repository.GameRepository
+	repo         repository.GameRepository
+	e2eTestMode  bool
+	manualTickCh chan string // Channel for manual tick requests (gameID)
 }
 
 // NewGameEngine creates a new game engine
 func NewGameEngine(repo repository.GameRepository) *GameEngine {
+	e2eTestMode := os.Getenv("E2E_TEST_MODE") == "true"
+	if e2eTestMode {
+		log.Println("E2E Test Mode: Automatic ticking disabled, use manual tick endpoint")
+	}
+	
 	return &GameEngine{
-		repo: repo,
+		repo:         repo,
+		e2eTestMode:  e2eTestMode,
+		manualTickCh: make(chan string, 10),
+	}
+}
+
+// TriggerManualTick triggers a manual tick for a specific game (E2E test mode only)
+func (e *GameEngine) TriggerManualTick(gameID string) error {
+	if !e.e2eTestMode {
+		return nil // Silently ignore in production mode
+	}
+	
+	select {
+	case e.manualTickCh <- gameID:
+		return nil
+	default:
+		return nil // Channel full, ignore
 	}
 }
 
@@ -37,12 +60,55 @@ func (e *GameEngine) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			log.Println("Game engine stopping...")
 			return ctx.Err()
+		case gameID := <-e.manualTickCh:
+			// Manual tick for E2E test mode
+			if err := e.processManualTick(ctx, gameID); err != nil {
+				log.Printf("Error processing manual tick for game %s: %v", gameID, err)
+			}
 		case <-ticker.C:
-			if err := e.processTick(ctx); err != nil {
-				log.Printf("Error processing tick: %v", err)
+			// Only process automatic ticks if not in E2E test mode
+			if !e.e2eTestMode {
+				if err := e.processTick(ctx); err != nil {
+					log.Printf("Error processing tick: %v", err)
+				}
 			}
 		}
 	}
+}
+
+// processManualTick processes a manual tick for a specific game (E2E test mode)
+func (e *GameEngine) processManualTick(ctx context.Context, gameID string) error {
+	game, err := e.repo.GetGame(ctx, gameID)
+	if err != nil {
+		return err
+	}
+	
+	if game == nil {
+		log.Printf("Game %s not found for manual tick", gameID)
+		return nil
+	}
+	
+	if !game.IsStarted() {
+		log.Printf("Game %s is not started, cannot tick", gameID)
+		return nil
+	}
+	
+	// Check if map needs to be generated (new game just started)
+	if game.CurrentYear == -5000 && game.LastTickAt == nil {
+		if err := e.generateMapForGame(ctx, game); err != nil {
+			log.Printf("Error generating map for game %s: %v", game.GameID, err)
+			return err
+		}
+	}
+	
+	// Force tick regardless of timing
+	if err := e.processGameTick(ctx, game); err != nil {
+		log.Printf("Error processing manual tick for game %s: %v", game.GameID, err)
+		return err
+	}
+	
+	log.Printf("Manual tick processed for game %s", gameID)
+	return nil
 }
 
 // processTick processes all games that need ticking

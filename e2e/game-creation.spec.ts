@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { clearDatabase, enableE2ETestMode, resetUuidCounter } from './global-setup';
+import { clearDatabase, enableE2ETestMode, resetUuidCounter, triggerManualTick } from './global-setup';
 import { screenshotIfChanged } from './helpers/screenshot';
 import { mockDateInBrowser } from './helpers/mock-time';
 
@@ -139,6 +139,10 @@ test.describe('Game Creation and Management', () => {
     await page.selectOption('select#maxPlayers', '2');
     await page.click('button:has-text("Create Game")');
     await page.waitForSelector('.game-card');
+    
+    // Get the game ID from the game card
+    const gameIdText = await page.locator('.game-card').first().locator('.game-id').textContent();
+    const gameId = gameIdText?.replace('Game #', '').trim() || '';
 
     // Clear cookies and login as second player
     await page.context().clearCookies();
@@ -157,21 +161,21 @@ test.describe('Game Creation and Management', () => {
     const yearValue = page.locator('.value.year').first();
     await expect(yearValue).toBeVisible();
     
-    // Wait for game state to stabilize after game start
-    // The game engine needs a moment to initialize and set the initial year
-    await page.waitForTimeout(2000);
-    
-    // Get the current year value (could be 5000 BC or slightly progressed)
-    const initialYear = await yearValue.textContent();
-    
-    // Verify it matches the expected format (e.g., "5000 BC" or "4995 BC")
-    expect(initialYear).toMatch(/\d+ BC/);
+    // In E2E mode, time doesn't progress automatically
+    // Initial year should be 5000 BC and stay stable
+    await expect(yearValue).toContainText('5000 BC');
 
     // Take screenshot showing initial year
     await screenshotIfChanged(page, { path: 'e2e-screenshots/15-game-time-initial.png', fullPage: true });
 
-    // Wait for time to progress - wait for year to change from initial value
-    await expect(yearValue).not.toContainText(initialYear || '', { timeout: 10000 });
+    // Manually trigger a tick to progress time
+    await triggerManualTick(gameId);
+    
+    // Wait for the UI to update (give it a moment to refresh)
+    await page.waitForTimeout(500);
+
+    // Year should now have progressed
+    await expect(yearValue).toContainText('4999 BC');
 
     // Take screenshot showing time progression
     await screenshotIfChanged(page, { path: 'e2e-screenshots/16-game-time-progressed.png', fullPage: true });
