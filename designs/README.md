@@ -89,6 +89,16 @@ The version number indicates the **chronological order** based on the "Last Upda
     - Status: Design Review
     - Purpose: Minimal viable settlers with simple 3-step autonomous placement
 
+17. **0.0017_CIVILIZATION_DIMENSIONS.md** - Core dimensions of civilization development
+    - Date: 2025-10-30
+    - Status: Design Review
+    - Purpose: Ten fundamental dimensions driving civilization complexity and growth
+
+18. **0.0018_VICTORY_PROGRESSION_TREES.md** - Victory condition progression trees
+    - Date: 2025-10-30
+    - Status: Design Review
+    - Purpose: Development pathways for Military, Scientific, Cultural, and Economic victory conditions
+
 ## Document Structure
 
 Each design document follows a standard structure:
@@ -148,6 +158,8 @@ For understanding the complete system architecture, read documents in numerical 
 6. Study map interactions (0.0007)
 7. Review bug fixes and tuning (0.0008-0.0014)
 8. Understand unit systems (0.0015, 0.0016)
+9. Study civilization dimensions (0.0017)
+10. Learn victory progression systems (0.0018)
 
 Bug fix documents (0.0008-0.0014) can be read after their corresponding feature documents to understand implementation challenges and solutions.
 
