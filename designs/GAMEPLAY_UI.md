@@ -63,7 +63,6 @@ Currently, when a player views a game, the interface:
 2. **Minimum 50% Rule**: Map must never be less than 50% of total screen area
 3. **Orientation Awareness**: Layout changes based on portrait vs landscape
 4. **Square Window Handling**: Special rules for nearly-square aspect ratios
-5. **Touch-Friendly**: Controls sized appropriately for touch devices
 
 ---
 
@@ -158,133 +157,15 @@ The map must always be at least 50% of the screen area, **except** in square mod
 
 ---
 
-## Implementation Details
-
-### Layout Detection and Switching
-
-```typescript
-// Pseudo-code for layout mode detection
-function determineLayoutMode() {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const aspectRatio = width / height;
-  
-  if (aspectRatio < 0.8) {
-    // Portrait mode: height significantly greater than width
-    return 'portrait';
-  } else if (aspectRatio > 1.2) {
-    // Landscape mode: width significantly greater than height
-    return 'landscape';
-  } else {
-    // Square mode: approximately equal dimensions
-    return 'square';
-  }
-}
-
-function calculateLayout(mode: string) {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  
-  switch (mode) {
-    case 'landscape':
-      return {
-        mapWidth: width * 0.75,      // 75% of width
-        mapHeight: height,            // 100% of height
-        controlWidth: width * 0.25,   // 25% of width
-        controlHeight: height,        // 100% of height
-        controlPosition: 'right'
-      };
-      
-    case 'portrait':
-      return {
-        mapWidth: width,              // 100% of width
-        mapHeight: height * 0.75,     // 75% of height
-        controlWidth: width,          // 100% of width
-        controlHeight: height * 0.25, // 25% of height
-        controlPosition: 'bottom'
-      };
-      
-    case 'square':
-      // Use longer dimension to give map 66%
-      if (height >= width) {
-        // Portrait-ish square
-        return {
-          mapWidth: width,
-          mapHeight: height * 0.66,
-          controlWidth: width,
-          controlHeight: height * 0.34,
-          controlPosition: 'bottom'
-        };
-      } else {
-        // Landscape-ish square
-        return {
-          mapWidth: width * 0.66,
-          mapHeight: height,
-          controlWidth: width * 0.34,
-          controlHeight: height,
-          controlPosition: 'right'
-        };
-      }
-  }
-}
-```
+## Implementation Notes
 
 ### Canvas Sizing
 
-The map canvas must dynamically size to fill its allocated space:
-
-```typescript
-// Canvas should be sized to map area
-canvas.width = mapWidth;
-canvas.height = mapHeight;
-
-// Adjust tile size to fit viewport
-const tilesVisibleX = Math.floor(mapWidth / BASE_TILE_SIZE);
-const tilesVisibleY = Math.floor(mapHeight / BASE_TILE_SIZE);
-
-// Or scale tiles to show more of the map
-const scaleFactor = calculateOptimalScale(mapWidth, mapHeight, totalMapTiles);
-```
-
-**Considerations:**
-- Canvas should resize when window resizes
-- Maintain aspect ratio of tiles
-- Adjust zoom level to show appropriate map area
-- Redraw map when canvas size changes
+The map canvas must dynamically size to fill its allocated space, resizing when the window resizes while maintaining proper aspect ratio of tiles and adjusting zoom level to show an appropriate map area.
 
 ### Control Panel Content
 
-The control panel should contain:
-
-1. **Game Information Header**
-   - Game ID
-   - Current year
-   - Player name
-   - Current civilization
-
-2. **Quick Stats**
-   - Population
-   - Resources
-   - Science progress
-   - Military strength
-
-3. **Action Buttons**
-   - End turn (or current turn status in real-time)
-   - City management
-   - Unit commands
-   - Diplomacy
-   - Technology tree
-   - Settings
-
-4. **Navigation**
-   - Return to lobby button
-   - Help/tutorial
-   - Game menu
-
-**Layout Adaptation:**
-- In landscape mode (vertical panel): Stack items vertically
-- In portrait mode (horizontal panel): Use columns or scrollable horizontal layout
-- In square mode: Adapt based on chosen orientation
+The control panel displays game information and the current map view.
 
 ---
 
@@ -292,29 +173,11 @@ The control panel should contain:
 
 ### Entry to Game View
 
-**From Lobby:**
-1. Player clicks "View" button on a game card
-2. Application navigates to full-page game view
-3. URL updates to reflect game (e.g., `/game/{gameId}`)
-4. Game view loads map and controls
-5. Lobby is completely replaced (not overlaid)
-
-**Implementation Options:**
-- **Option A (Single-Page)**: Hide lobby component, show game component
-- **Option B (Routing)**: Use Svelte routing to change pages
-- **Option C (URL-based)**: Navigate to `/game/{gameId}` path
+When viewing a game, the application navigates to a full-page game view, replacing the lobby entirely (not overlaying it).
 
 ### Exit from Game View
 
-**Return to Lobby:**
-1. Player clicks "Back to Lobby" or "Leave Game" button
-2. Application navigates back to lobby
-3. URL updates to reflect lobby view
-4. Game view unloads, lobby reloads
-
-**Browser Back Button:**
-- Should return to lobby from game view
-- Requires proper routing/history management
+Navigation back to the lobby returns the user to the lobby view, unloading the game view.
 
 ---
 
@@ -333,13 +196,11 @@ The control panel should contain:
 ### Mobile Phones
 - **Width < 768px**: Compact layout
 - Map minimum: 100% of width (landscape) or 65% of height (portrait)
-- Controls: Minimum usable size, possibly scrollable
-- Consider collapsible control panel on mobile
+- Controls: Minimum usable size
 
 ### Minimum Viable Screen Size
 - **Absolute minimum**: 480px × 640px (or 640px × 480px)
-- Below this, show warning message suggesting larger screen
-- Game is technically playable but suboptimal
+- Game is technically playable but suboptimal below this size
 
 ---
 
@@ -347,81 +208,80 @@ The control panel should contain:
 
 ### Landscape Mode Example (1920×1080)
 
+Map extends to the left and top edges of the screen. Controls occupy right side.
+
 ```
 ┌─────────────────────────────────────────────────────┬──────────────────┐
-│ Game #abc123        Year: 4850 BC        Player: Alice  │ Back to Lobby   │
-├─────────────────────────────────────────────────────┤                  │
-│                                                     │ GAME STATS       │
-│                                                     │ ──────────────── │
-│                                                     │ Population: 125  │
-│                                                     │ Food: 45/100     │
-│                    MAP CANVAS                       │ Production: 12   │
-│                    (1440 × 1020)                    │ Science: 8       │
 │                                                     │                  │
-│             [Pan and zoom enabled]                  │ QUICK ACTIONS    │
-│                                                     │ ──────────────── │
-│        ⭐ = Your starting city                      │ [City Mgmt]      │
-│                                                     │ [Units]          │
-│                                                     │ [Tech Tree]      │
-│                                                     │ [Diplomacy]      │
 │                                                     │                  │
-│                                                     │ MINI MAP         │
-│                                                     │ ┌──────────────┐ │
-│                                                     │ │   [*]        │ │
-│                                                     │ │              │ │
-│                                                     │ └──────────────┘ │
+│                                                     │                  │
+│                                                     │                  │
+│                    MAP CANVAS                       │    CONTROLS      │
+│                    (1440 × 1080)                    │   (480 × 1080)   │
+│                                                     │                  │
+│                                                     │                  │
+│                                                     │                  │
+│                                                     │                  │
+│                                                     │                  │
+│                                                     │                  │
 └─────────────────────────────────────────────────────┴──────────────────┘
 ```
 
+**Dimensions:**
+- Map: 75% of width (1440px), 100% of height (1080px)
+- Controls: 25% of width (480px), 100% of height (1080px)
+
 ### Portrait Mode Example (768×1024)
+
+Map extends to the left and top edges of the screen. Controls occupy bottom.
 
 ```
 ┌────────────────────────────────────┐
-│ Game #abc123      Year: 4850 BC    │
-│ Player: Alice         [< Lobby]    │
-├────────────────────────────────────┤
+│                                    │
 │                                    │
 │                                    │
 │                                    │
 │           MAP CANVAS               │
-│            (768 × 718)             │
+│            (768 × 768)             │
 │                                    │
-│      [Pan and zoom enabled]        │
 │                                    │
-│         ⭐ = Your city              │
+│                                    │
 │                                    │
 ├────────────────────────────────────┤
-│ Pop: 125 │ Food: 45 │ Prod: 12    │
-│──────────────────────────────────  │
-│ [Cities] [Units] [Tech] [Diplo]   │
 │                                    │
-│ [Mini Map]  [Game Menu] [Help]    │
+│           CONTROLS                 │
+│          (768 × 256)               │
+│                                    │
 └────────────────────────────────────┘
 ```
 
+**Dimensions:**
+- Map: 100% of width (768px), 75% of height (768px)
+- Controls: 100% of width (768px), 25% of height (256px)
+
 ### Square Mode Example (900×900)
+
+Map extends to edges. Controls occupy bottom (since dimensions nearly equal).
 
 ```
 ┌────────────────────────────────────────┐
-│ Game #abc123         Year: 4850 BC     │
-│ Player: Alice            [< Lobby]     │
-├────────────────────────────────────────┤
 │                                        │
 │                                        │
 │                                        │
 │           MAP CANVAS                   │
 │            (900 × 594)                 │  ← 66% of height
 │                                        │
-│      [Pan and zoom enabled]            │
 │                                        │
 ├────────────────────────────────────────┤
-│ Population: 125    Food: 45/100       │  ← 34% of height
-│ Production: 12     Science: 8         │
-│────────────────────────────────────────│
-│ [Cities] [Units] [Tech] [Diplomacy]   │
-│ [Mini Map]       [Menu]       [Help]  │
+│                                        │
+│           CONTROLS                     │  ← 34% of height
+│          (900 × 306)                   │
 └────────────────────────────────────────┘
 ```
+
+**Dimensions:**
+- Map: 100% of width (900px), 66% of height (594px)
+- Controls: 100% of width (900px), 34% of height (306px)
 
 ---
 
@@ -441,37 +301,18 @@ The client must track:
 - Current layout mode (landscape/portrait/square)
 - Window dimensions
 - Canvas size
-- Control panel visibility state (for mobile collapse feature)
 - Current game ID being viewed
 
 ---
 
 ## Implementation Strategy
 
-### Phase 1: Basic Full-Page Layout
 1. Modify `GameLobby.svelte` to remove overlay dialog
 2. Create new `GameView.svelte` component for full-page game
-3. Implement basic landscape/portrait detection
-4. Add "Back to Lobby" navigation
-5. Size canvas to fill allocated map area
-
-### Phase 2: Responsive Layout
-1. Implement three layout modes (landscape/portrait/square)
-2. Add window resize handling
-3. Create responsive control panel layouts
-4. Test on various screen sizes and orientations
-
-### Phase 3: Enhanced Controls
-1. Design control panel UI
-2. Populate with game information and actions
-3. Add mini-map visualization
-4. Implement collapsible controls (mobile)
-
-### Phase 4: Polish
-1. Smooth transitions between layouts
-2. Loading states and error handling
-3. Accessibility improvements
-4. Performance optimization (canvas rendering)
+3. Implement landscape/portrait/square layout detection
+4. Size canvas to fill allocated map area
+5. Add window resize handling
+6. Test on various screen sizes and orientations
 
 ---
 
@@ -490,14 +331,6 @@ The client must track:
 ### Touch and Mouse Support
 - Map pan: Click/touch and drag
 - Map zoom: Mouse wheel or pinch gesture
-- Control interactions: Click or tap
-- Ensure controls are touch-friendly (minimum 44×44px touch targets)
-
-### Accessibility
-- Keyboard navigation support
-- Screen reader announcements for game state changes
-- High contrast mode support
-- Configurable text sizes
 
 ---
 
@@ -516,10 +349,8 @@ The client must track:
 - Mobile browser with/without address bar
 
 ### Navigation
-- Enter game from lobby (various games)
+- Enter game from lobby
 - Exit game back to lobby
-- Browser back/forward buttons
-- Direct URL access (e.g., `/game/abc123`)
 
 ### Performance
 - Canvas rendering performance with large maps
@@ -535,37 +366,7 @@ The client must track:
 
 ---
 
-## Future Enhancements
 
-### Not in Version 0.0004
-
-**Advanced UI Features:**
-- Picture-in-picture mini lobby (view other games while playing)
-- Split-screen multiplayer (two players on same screen)
-- Detachable control panel (drag to reposition)
-- Customizable control panel layout
-- Multiple map view modes (strategic, tactical, economic)
-
-**Mobile-Specific Features:**
-- Gesture shortcuts for common actions
-- Haptic feedback for important events
-- Mobile-optimized touch controls
-- Offline mode with sync
-
-**Accessibility:**
-- Voice commands
-- Screen reader full support
-- Colorblind-friendly palettes
-- Dyslexia-friendly fonts
-- One-handed mode
-
-**Performance:**
-- WebGL-based map rendering
-- Progressive map loading
-- Level-of-detail (LOD) for tiles
-- Background tile caching
-
----
 
 ## Success Criteria
 
@@ -576,65 +377,18 @@ The client must track:
 - [ ] Controls positioned correctly based on orientation
 - [ ] Canvas dynamically resizes to fill map area
 - [ ] Navigation to/from lobby works correctly
-- [ ] Browser back button returns to lobby
-
-### Non-Functional Requirements
-- [ ] Layout recalculation completes in < 100ms on orientation change
-- [ ] Canvas renders smoothly (60fps) during pan/zoom
-- [ ] Responsive breakpoints work on all target devices
-- [ ] Touch interactions feel native on mobile
-- [ ] No layout jank or visual glitches
-
-### User Experience
-- [ ] Interface feels immersive and focused
-- [ ] Controls are intuitive and easy to access
-- [ ] Map is clear and easy to navigate
-- [ ] Transitions are smooth and professional
-- [ ] Works well on phones, tablets, and desktops
 
 ---
 
 ## Design Alternatives Considered
 
-### Alternative 1: Floating Control Panel
+### Alternative 1: Single Layout (No Orientation Awareness)
 
-**Description:** Controls in a draggable, resizable floating panel over the map.
+Use the same layout regardless of orientation. Rejected because it wastes space in portrait mode and is not mobile-friendly.
 
-**Rejected Because:**
-- Obscures map content
-- Adds complexity for mobile users
-- Not as clean as dedicated layout sections
-- Can be added later as optional enhancement
+### Alternative 2: Fixed Map Percentage (Always 50/50)
 
-### Alternative 2: Single Layout (No Orientation Awareness)
-
-**Description:** Use the same layout (e.g., controls on right) regardless of orientation.
-
-**Rejected Because:**
-- Wastes space in portrait mode
-- Not mobile-friendly
-- Doesn't meet responsive design goals
-- Less intuitive on different devices
-
-### Alternative 3: Tabs for Map vs Controls
-
-**Description:** Switch between map view and controls view with tabs.
-
-**Rejected Because:**
-- Violates goal of seeing map and controls simultaneously
-- Poor UX for real-time gameplay
-- Requires constant tab switching
-- Reduces situational awareness
-
-### Alternative 4: Fixed Map Percentage (Always 50/50)
-
-**Description:** Always split screen 50/50 between map and controls.
-
-**Rejected Because:**
-- Controls don't need that much space
-- Wastes screen real estate
-- Doesn't maximize map visibility
-- 70/30 split is more appropriate
+Always split screen 50/50 between map and controls. Rejected because controls don't need that much space; a 70/30 split is more appropriate.
 
 ---
 
@@ -652,15 +406,13 @@ The client must track:
 - Ensure proper state cleanup when navigating away
 - Maintain polling for game updates while in lobby
 
-### API Layer (`utils/api.ts`)
+### API Layer
 - No API changes required
 - Same endpoints for game data, map tiles, etc.
-- May add endpoint for game state updates in real-time
 
 ### Authentication
-- Ensure navigation preserves authentication state
+- Navigation preserves authentication state
 - Session remains valid across view transitions
-- Game access control unchanged
 
 ---
 
@@ -670,16 +422,13 @@ This gameplay UI redesign transforms the SimCiv experience from a cramped overla
 
 **Key Strengths:**
 
-1. **Maximized Screen Usage**: Every pixel serves a purpose, no wasted space
-2. **Responsive Design**: Seamlessly adapts from phones to large monitors
+1. **Maximized Screen Usage**: Map extends to screen edges, no wasted space
+2. **Responsive Design**: Adapts from phones to large monitors
 3. **Orientation Awareness**: Layout automatically optimizes for device orientation
 4. **Square Mode Handling**: Elegant solution for edge case of square windows
 5. **Simple Navigation**: Clear path between lobby and game views
-6. **Future-Proof**: Foundation for advanced features and enhancements
 
-The 50% minimum map size guarantee (66% in square mode) ensures the game remains playable and enjoyable across all screen configurations, while the orientation-aware control panel positioning makes the interface feel native and intuitive on every device.
-
-This specification provides clear implementation guidance while remaining flexible enough to accommodate future enhancements and platform-specific optimizations. The design maintains consistency with SimCiv's database-centric architecture and existing client-side technologies.
+The 50% minimum map size guarantee (66% in square mode) ensures the game remains playable across all screen configurations, while the orientation-aware control panel positioning makes the interface feel intuitive on every device.
 
 ---
 
