@@ -55,9 +55,9 @@ echo "🔍 Checking if server is running on port 3000..."
 if lsof -ti:3000 &>/dev/null; then
     echo "✅ Server is already running on port 3000"
 else
-    echo "🚀 Starting server..."
+    echo "🚀 Starting server with E2E_TEST_MODE..."
     cd "${PROJECT_ROOT}"
-    npm start &
+    E2E_TEST_MODE=1 npm start &
     SERVER_PID=$!
     
     # Wait for server to be ready
