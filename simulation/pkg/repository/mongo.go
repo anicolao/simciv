@@ -57,12 +57,25 @@ func (r *MongoRepository) GetGame(ctx context.Context, gameID string) (*models.G
 	collection := r.db.Collection("games")
 
 	var game models.Game
+	
+	// Try exact match first
 	err := collection.FindOne(ctx, bson.M{"gameId": gameID}).Decode(&game)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		return &game, nil
 	}
-
-	return &game, nil
+	
+	// If exact match fails and gameID looks like a short ID (8 chars), try prefix match
+	if len(gameID) == 8 {
+		err = collection.FindOne(ctx, bson.M{
+			"gameId": bson.M{"$regex": "^" + gameID},
+		}).Decode(&game)
+		if err != nil {
+			return nil, err
+		}
+		return &game, nil
+	}
+	
+	return nil, err
 }
 
 // UpdateGameTick updates the game's current year and last tick time
