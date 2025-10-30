@@ -6,77 +6,88 @@ This directory contains all design specifications for SimCiv, organized chronolo
 
 All design documents follow the naming convention: `0.00XX_DESCRIPTIVE_NAME.md`
 
-The version number indicates the chronological order in which the design was created or the feature was planned. This makes it easy to understand the progression of the game's development.
+The version number indicates the **chronological order** based on the "Last Updated" or "Date" field in each document. This makes it easy to understand the progression of the game's development.
 
 ## Core Design Documents (Chronological Order)
 
 ### Implemented Features
 
 1. **0.0001_AUTHENTICATION.md** - User authentication and session management
+   - Date: 2025-10-22
    - Status: Implemented
    - Purpose: Cryptographic challenge/response auth, client-side key storage
 
 2. **0.0002_GAME_CREATION.md** - Game creation, discovery, and joining
+   - Date: 2025-10-22
    - Status: Implemented
    - Purpose: Multiplayer game lobby, game creation, player joining
 
 3. **0.0003_MAP_GENERATION.md** - Procedural terrain generation and player placement
+   - Date: 2025-10-23
    - Status: Implemented
    - Purpose: Great circle-based terrain generation, fair starting positions
 
 4. **0.0004_TECH_TREE.md** - Prehistoric technology tree (200,000 BCE to 4,000 BCE)
+   - Date: 2025-10-23
    - Status: Design Review
    - Purpose: Technology progression from Paleolithic to Neolithic era
 
 5. **0.0005_HUMAN_ATTRIBUTES.md** - Individual human behavior and decision-making
+   - Date: 2025-10-23
    - Status: Design Review
    - Purpose: Five-attribute system, resource allocation, population mechanics
 
 6. **0.0006_MINIMAL_SIMULATOR.md** - Viability verification simulator
+   - Date: 2025-10-23
    - Status: Implemented
    - Purpose: Minimal simulator to verify starting positions support population growth
 
-7. **0.0007_UNIT_CREATION.md** - Population-based unit system with settlers
-   - Status: Design Review
-   - Purpose: Unit creation from population thresholds, autonomous settlers behavior
-
-8. **0.0008_MINIMAL_SETTLERS.md** - First cut minimal settlers implementation
-   - Status: Design Review
-   - Purpose: Minimal viable implementation of settlers for initial gameplay validation
+7. **0.0007_MAP_INTERACTIONS.md** - Interactive map controls
+   - Date: 2025-10-25
+   - Status: Implementation
+   - Purpose: Pan, zoom, and touch controls for map navigation
 
 ### Bug Fixes and Tuning Documents
 
-9. **0.0009_HUMAN_SCENARIO_COMPARISON.md** - Design vs implementation comparison
-   - Date: 2025-10-26
+8. **0.0008_HUMAN_SCENARIO_COMPARISON.md** - Design vs implementation comparison
+   - Date: 2025-10-25 (started), 2025-10-26 (updated)
    - Purpose: Identify bugs between design spec and Go implementation
 
-10. **0.0010_HEALTH_FIX_IMPACT.md** - Health formula bug fix analysis
-    - Date: 2025-10-26
-    - Purpose: Document impact of health formula correction
+9. **0.0009_HEALTH_FIX_IMPACT.md** - Health formula bug fix analysis
+   - Date: 2025-10-26
+   - Purpose: Document impact of health formula correction
 
-11. **0.0011_FERTILITY_AGE_FIX.md** - Fertility age correction
+10. **0.0010_FERTILITY_AGE_FIX.md** - Fertility age correction
     - Date: 2025-10-26
     - Purpose: Fix minimum fertility age from 15 to 13 per design spec
 
-12. **0.0012_SCIENCE_RATE_TUNING.md** - Science rate parameter tuning
+11. **0.0011_SCIENCE_RATE_TUNING.md** - Science rate parameter tuning
     - Date: 2025-10-26
     - Purpose: Tune science production to achieve 5-10 year Fire Mastery goal
 
-13. **0.0013_SCIENCE_DISCONTINUITY_ANALYSIS.md** - Science production analysis
+12. **0.0012_SCIENCE_DISCONTINUITY_ANALYSIS.md** - Science production analysis
     - Date: 2025-10-26
     - Purpose: Analyze discontinuity in science production rates
 
-14. **0.0014_SCIENCE_DISCONTINUITY_FIX.md** - Science discontinuity fix
+13. **0.0013_SCIENCE_DISCONTINUITY_FIX.md** - Science discontinuity fix
     - Date: 2025-10-26
     - Purpose: Fix cliff effect in science production by removing log10 bonus
 
-15. **0.0015_SCIENCE_RATE_FINAL.md** - Final science rate recommendation
+14. **0.0014_SCIENCE_RATE_FINAL.md** - Final science rate recommendation
     - Date: 2025-10-26
     - Purpose: Final science rate selection after testing
 
-16. **0.0016_MAP_INTERACTIONS.md** - Interactive map controls
-    - Status: Implementation
-    - Purpose: Pan, zoom, and touch controls for map navigation
+### Advanced Features
+
+15. **0.0015_UNIT_CREATION.md** - Population-based unit system with settlers
+    - Date: 2025-10-30
+    - Status: Design Review
+    - Purpose: Unit creation from population thresholds, autonomous settlers behavior
+
+16. **0.0016_MINIMAL_SETTLERS.md** - First cut minimal settlers implementation
+    - Date: 2025-10-30
+    - Status: Design Review
+    - Purpose: Minimal viable settlers with simple 3-step autonomous placement
 
 ## Document Structure
 
@@ -116,6 +127,15 @@ Summary and next steps
 - **Fix Applied**: Bug fix has been implemented
 - **Tuning Complete**: Parameter tuning has been finalized
 
+## Chronological Order Determination
+
+The version numbers are assigned based on the chronological order determined by:
+1. The "Last Updated" date field in implemented design documents
+2. The "Date" field in bug fix and analysis documents
+3. When multiple documents share the same date, they maintain their relative order within that date
+
+This ensures that reading documents in numerical order provides a clear progression of how the game evolved over time.
+
 ## Reading Order
 
 For understanding the complete system architecture, read documents in numerical order:
@@ -125,9 +145,11 @@ For understanding the complete system architecture, read documents in numerical 
 3. Follow through map generation (0.0003)
 4. Understand technology system (0.0004)
 5. Learn population mechanics (0.0005, 0.0006)
-6. Study unit systems (0.0007, 0.0008)
+6. Study map interactions (0.0007)
+7. Review bug fixes and tuning (0.0008-0.0014)
+8. Understand unit systems (0.0015, 0.0016)
 
-Bug fix documents (0.0009-0.0015) can be read after their corresponding feature documents to understand implementation challenges and solutions.
+Bug fix documents (0.0008-0.0014) can be read after their corresponding feature documents to understand implementation challenges and solutions.
 
 ## Cross-References
 
@@ -137,14 +159,15 @@ Design documents reference each other using their numbered names (e.g., `0.0003_
 
 When adding new design documents:
 
-1. Assign the next available version number (0.00XX)
-2. Use the standard naming convention: `0.00XX_DESCRIPTIVE_NAME.md`
-3. Include the Document Status section with complete metadata
-4. Reference related documents using their numbered names
-5. Update this README to include the new document
+1. Determine the date of the new design
+2. Assign the next available version number (0.00XX) based on chronological order
+3. Use the standard naming convention: `0.00XX_DESCRIPTIVE_NAME.md`
+4. Include the Document Status section with complete metadata
+5. Reference related documents using their numbered names
+6. Update this README to include the new document
 
 ## Version History
 
-- **2025-10-30**: Reorganized all design documents with chronological numbering
+- **2025-10-30**: Reorganized all design documents with chronological numbering based on document dates
 - **2025-10-26**: Added bug fix and tuning documents
 - **2025-10-23**: Initial design documents created
