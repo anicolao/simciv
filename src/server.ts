@@ -8,6 +8,7 @@ import authRoutes from './routes/auth';
 import sessionRoutes from './routes/session';
 import gamesRoutes from './routes/games';
 import mapRoutes from './routes/map';
+import settlersRoutes from './routes/settlers';
 import testUtilsRoutes from './routes/test-utils';
 
 const app = express();
@@ -58,6 +59,7 @@ async function startServer() {
     app.use('/api/session', sessionRoutes);
     app.use('/api/games', gamesRoutes);
     app.use('/api/map', mapRoutes);
+    app.use('/api/game', settlersRoutes);
     app.use('/api/test', testUtilsRoutes); // Test utilities for E2E testing
 
     // Error handler
