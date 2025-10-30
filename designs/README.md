@@ -97,7 +97,7 @@ The version number indicates the **chronological order** based on the "Last Upda
 18. **0.0018_VICTORY_PROGRESSION_TREES.md** - Victory condition progression trees
     - Date: 2025-10-30
     - Status: Design Review
-    - Purpose: Development pathways for Military, Scientific, Cultural, and Economic victory conditions
+    - Purpose: Application-focused progression trees (Military, Cultural, Economic) determining how civilizations apply technological knowledge toward victory. Scientific Victory achieved through unified Technology Tree advancement.
 
 ## Document Structure
 
