@@ -29,6 +29,29 @@ export async function clearDatabase() {
 }
 
 /**
+ * Enable E2E test mode on the server
+ */
+export async function enableE2ETestMode() {
+  const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+  
+  try {
+    const response = await fetch(`${baseURL}/api/test/enable`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error('[E2E Test Mode] Failed to enable:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('[E2E Test Mode] Error enabling:', error);
+    // Don't throw - this is not critical for test execution
+  }
+}
+
+/**
  * Reset deterministic UUID counter on the server
  */
 export async function resetUuidCounter() {

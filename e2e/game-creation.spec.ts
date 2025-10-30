@@ -1,10 +1,11 @@
 import { test, expect, Page } from '@playwright/test';
-import { clearDatabase, resetUuidCounter } from './global-setup';
+import { clearDatabase, enableE2ETestMode, resetUuidCounter } from './global-setup';
 import { screenshotIfChanged } from './helpers/screenshot';
 import { mockDateInBrowser } from './helpers/mock-time';
 
 // Clear database before each test to prevent data carryover between retries
 test.beforeEach(async ({ page }) => {
+  await enableE2ETestMode();
   await clearDatabase();
   await resetUuidCounter();
   // Mock the Date object to ensure stable timestamps in screenshots
