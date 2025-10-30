@@ -10,6 +10,9 @@ export function generateChallenge(length: number = 32): string {
 // Counter for deterministic UUID generation in E2E tests
 let deterministicUuidCounter = 0;
 
+// Runtime flag for E2E test mode (set via API endpoint)
+let isE2ETestMode = false;
+
 /**
  * Generate a new session GUID (UUID v4)
  */
@@ -18,12 +21,12 @@ export function generateGuid(): string {
 }
 
 /**
- * Generate a deterministic UUID for E2E testing
+ * Generate a UUID - deterministic in E2E test mode, random in production
  * Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx where x is deterministic hex and y is 8,9,a,or b
- * This follows UUID v4 format but with predictable values
+ * This follows UUID v4 format but with predictable values in test mode
  */
-export function generateDeterministicUuid(seed: string = ''): string {
-  if (process.env.NODE_ENV === 'test' || process.env.E2E_TEST_MODE === '1') {
+export function generateUuid(seed: string = ''): string {
+  if (isE2ETestMode) {
     // Create a deterministic hash from seed and counter
     const hash = crypto.createHash('sha256').update(`${seed}${deterministicUuidCounter++}`).digest('hex');
     
@@ -41,6 +44,27 @@ export function generateDeterministicUuid(seed: string = ''): string {
     return uuid;
   }
   return crypto.randomUUID();
+}
+
+/**
+ * Enable E2E test mode (for deterministic UUID generation)
+ */
+export function enableE2ETestMode(): void {
+  isE2ETestMode = true;
+}
+
+/**
+ * Disable E2E test mode
+ */
+export function disableE2ETestMode(): void {
+  isE2ETestMode = false;
+}
+
+/**
+ * Check if E2E test mode is enabled
+ */
+export function isE2ETestModeEnabled(): boolean {
+  return isE2ETestMode;
 }
 
 /**

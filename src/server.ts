@@ -58,11 +58,7 @@ async function startServer() {
     app.use('/api/session', sessionRoutes);
     app.use('/api/games', gamesRoutes);
     app.use('/api/map', mapRoutes);
-    
-    // Test utilities (only available in E2E test mode)
-    if (process.env.E2E_TEST_MODE === '1') {
-      app.use('/api/test', testUtilsRoutes);
-    }
+    app.use('/api/test', testUtilsRoutes); // Test utilities for E2E testing
 
     // Error handler
     app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

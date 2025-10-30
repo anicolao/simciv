@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getGamesCollection } from '../db/connection';
 import { Game } from '../models/types';
 import crypto from 'crypto';
-import { generateDeterministicUuid } from '../utils/crypto';
+import { generateUuid } from '../utils/crypto';
 
 const router = Router();
 
@@ -27,7 +27,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     }
 
     // Create game
-    const gameId = generateDeterministicUuid('game');
+    const gameId = generateUuid('game');
     const game: Game = {
       gameId,
       creatorUserId: userId,

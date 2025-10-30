@@ -53,11 +53,6 @@ export async function resetUuidCounter() {
 
 async function globalSetup() {
   console.log('[Global Setup] Connecting to MongoDB...');
-  console.log('[Global Setup] Setting E2E_TEST_MODE environment variable...');
-  
-  // Set E2E_TEST_MODE for deterministic UUID generation
-  process.env.E2E_TEST_MODE = '1';
-  
   console.log('[Global Setup] Clearing all collections...');
   await clearDatabase();
   
