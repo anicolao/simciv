@@ -254,3 +254,52 @@ export async function getMapMetadata(gameId: string): Promise<{ metadata: MapMet
   return await response.json();
 }
 
+/**
+ * Settlers-related types and functions
+ */
+export interface Unit {
+  unitId: string;
+  unitType: 'settlers';
+  location: {
+    x: number;
+    y: number;
+  };
+  stepsTaken: number;
+  populationCost: number;
+}
+
+export interface Settlement {
+  settlementId: string;
+  name: string;
+  type: 'nomadic_camp';
+  location: {
+    x: number;
+    y: number;
+  };
+  population: number;
+}
+
+/**
+ * Get units for a game
+ */
+export async function getUnits(gameId: string): Promise<{ units: Unit[] }> {
+  const response = await fetch(`/api/game/${gameId}/units`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch units');
+  }
+  return await response.json();
+}
+
+/**
+ * Get settlements for a game
+ */
+export async function getSettlements(gameId: string): Promise<{ settlements: Settlement[] }> {
+  const response = await fetch(`/api/game/${gameId}/settlements`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch settlements');
+  }
+  return await response.json();
+}
+
