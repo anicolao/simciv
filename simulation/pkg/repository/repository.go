@@ -35,6 +35,45 @@ type GameRepository interface {
 	// GetStartingPosition retrieves a player's starting position
 	GetStartingPosition(ctx context.Context, gameID string, playerID string) (*models.StartingPosition, error)
 
+	// CreateUnit creates a new unit
+	CreateUnit(ctx context.Context, unit *models.Unit) error
+
+	// GetUnits retrieves units for a game
+	GetUnits(ctx context.Context, gameID string) ([]*models.Unit, error)
+
+	// GetUnitsByPlayer retrieves units for a specific player
+	GetUnitsByPlayer(ctx context.Context, gameID string, playerID string) ([]*models.Unit, error)
+
+	// UpdateUnit updates a unit
+	UpdateUnit(ctx context.Context, unit *models.Unit) error
+
+	// DeleteUnit deletes a unit
+	DeleteUnit(ctx context.Context, unitID string) error
+
+	// CreateSettlement creates a new settlement
+	CreateSettlement(ctx context.Context, settlement *models.Settlement) error
+
+	// GetSettlements retrieves settlements for a game
+	GetSettlements(ctx context.Context, gameID string) ([]*models.Settlement, error)
+
+	// GetSettlementsByPlayer retrieves settlements for a specific player
+	GetSettlementsByPlayer(ctx context.Context, gameID string, playerID string) ([]*models.Settlement, error)
+
+	// UpdateSettlement updates a settlement
+	UpdateSettlement(ctx context.Context, settlement *models.Settlement) error
+
+	// CreatePopulation creates population tracking for a player
+	CreatePopulation(ctx context.Context, population *models.Population) error
+
+	// GetPopulation retrieves population for a player
+	GetPopulation(ctx context.Context, gameID string, playerID string) (*models.Population, error)
+
+	// UpdatePopulation updates population tracking
+	UpdatePopulation(ctx context.Context, population *models.Population) error
+
+	// GetMapTile retrieves a specific tile by coordinates
+	GetMapTile(ctx context.Context, gameID string, x int, y int) (*models.MapTile, error)
+
 	// Close closes the repository connection
 	Close(ctx context.Context) error
 }

@@ -162,6 +162,59 @@ func (e *GameEngine) generateMapForGame(ctx context.Context, game *models.Game) 
 		return err
 	}
 
+	// Initialize settlers units and population for each player
+	for _, position := range positions {
+		if position.PlayerID == "" {
+			continue
+		}
+
+		// Create initial settlers unit at starting position
+		unit := &models.Unit{
+			UnitID:         generateUUID(),
+			GameID:         game.GameID,
+			PlayerID:       position.PlayerID,
+			UnitType:       "settlers",
+			Location: models.Location{
+				X: position.StartingCityX,
+				Y: position.StartingCityY,
+			},
+			StepsTaken:     0,
+			PopulationCost: 100,
+			CreatedAt:      time.Now(),
+			LastUpdated:    time.Now(),
+		}
+
+		if err := e.repo.CreateUnit(ctx, unit); err != nil {
+			return err
+		}
+
+		// Initialize population tracking
+		population := &models.Population{
+			GameID:                game.GameID,
+			PlayerID:              position.PlayerID,
+			TotalPopulation:       100,
+			AllocatedToUnit:       100, // All pop in settlers unit initially
+			AllocatedToSettlement: 0,
+			Unallocated:           0,
+			LastUpdated:           time.Now(),
+		}
+
+		if err := e.repo.CreatePopulation(ctx, population); err != nil {
+			return err
+		}
+
+		log.Printf("Initialized settlers unit and population for player %s", position.PlayerID)
+	}
+
 	log.Printf("Map saved successfully for game %s", game.GameID)
 	return nil
+}
+
+// generateUUID generates a simple UUID for units and settlements
+func generateUUID() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return hex.EncodeToString(b)
+	}
+	return hex.EncodeToString(b)
 }
