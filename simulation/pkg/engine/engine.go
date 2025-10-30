@@ -80,12 +80,6 @@ func (e *GameEngine) processGameTick(ctx context.Context, game *models.Game) err
 		// Continue with tick processing even if settlers processing fails
 	}
 
-	// Process settlement population growth
-	if err := e.processSettlementGrowth(ctx, game); err != nil {
-		log.Printf("Error processing settlement growth for game %s: %v", game.GameID, err)
-		// Continue with tick processing even if growth processing fails
-	}
-
 	// Increment year (1 year per second)
 	newYear := game.CurrentYear + 1
 
@@ -97,60 +91,6 @@ func (e *GameEngine) processGameTick(ctx context.Context, game *models.Game) err
 	// Log significant milestones
 	if newYear%100 == 0 {
 		log.Printf("Game %s: Year %d", game.GameID, newYear)
-	}
-
-	return nil
-}
-
-// processSettlementGrowth processes population growth for all settlements
-func (e *GameEngine) processSettlementGrowth(ctx context.Context, game *models.Game) error {
-	settlements, err := e.repo.GetSettlements(ctx, game.GameID)
-	if err != nil {
-		return err
-	}
-
-	for _, settlement := range settlements {
-		// Simple population growth: 1% per year (1 tick = 1 year)
-		// At 100 population, this gives approximately 1 person per year
-		// This is a simplified model for minimal settlers implementation
-		growthRate := 0.01
-		growth := int(float64(settlement.Population) * growthRate)
-		
-		// Minimum growth of 1 if population > 0
-		if growth == 0 && settlement.Population > 0 {
-			growth = 1
-		}
-
-		if growth > 0 {
-			settlement.Population += growth
-			settlement.LastUpdated = time.Now()
-
-			if err := e.repo.UpdateSettlement(ctx, settlement); err != nil {
-				log.Printf("Error updating settlement %s: %v", settlement.SettlementID, err)
-				continue
-			}
-
-			// Update population tracking
-			population, err := e.repo.GetPopulation(ctx, game.GameID, settlement.PlayerID)
-			if err != nil {
-				log.Printf("Error getting population for player %s: %v", settlement.PlayerID, err)
-				continue
-			}
-
-			population.TotalPopulation += growth
-			population.AllocatedToSettlement += growth
-			population.LastUpdated = time.Now()
-
-			if err := e.repo.UpdatePopulation(ctx, population); err != nil {
-				log.Printf("Error updating population for player %s: %v", settlement.PlayerID, err)
-				continue
-			}
-
-			// Log every 10 population increase
-			if settlement.Population%10 == 0 {
-				log.Printf("Settlement %s (player %s) population: %d", settlement.SettlementID, settlement.PlayerID, settlement.Population)
-			}
-		}
 	}
 
 	return nil
@@ -228,7 +168,7 @@ func (e *GameEngine) generateMapForGame(ctx context.Context, game *models.Game) 
 		return err
 	}
 
-	// Initialize settlers units and population for each player
+	// Initialize settlers units for each player
 	for _, position := range positions {
 		if position.PlayerID == "" {
 			continue
@@ -254,22 +194,7 @@ func (e *GameEngine) generateMapForGame(ctx context.Context, game *models.Game) 
 			return err
 		}
 
-		// Initialize population tracking
-		population := &models.Population{
-			GameID:                game.GameID,
-			PlayerID:              position.PlayerID,
-			TotalPopulation:       100,
-			AllocatedToUnit:       100, // All pop in settlers unit initially
-			AllocatedToSettlement: 0,
-			Unallocated:           0,
-			LastUpdated:           time.Now(),
-		}
-
-		if err := e.repo.CreatePopulation(ctx, population); err != nil {
-			return err
-		}
-
-		log.Printf("Initialized settlers unit and population for player %s", position.PlayerID)
+		log.Printf("Initialized settlers unit for player %s", position.PlayerID)
 	}
 
 	log.Printf("Map saved successfully for game %s", game.GameID)

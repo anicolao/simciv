@@ -23,7 +23,6 @@ type Settlement struct {
 	Name         string    `bson:"name"`
 	Type         string    `bson:"type"` // "nomadic_camp" for minimal implementation
 	Location     Location  `bson:"location"`
-	Population   int       `bson:"population"`
 	Founded      time.Time `bson:"founded"`
 	LastUpdated  time.Time `bson:"lastUpdated"`
 }
@@ -32,15 +31,4 @@ type Settlement struct {
 type Location struct {
 	X int `bson:"x"`
 	Y int `bson:"y"`
-}
-
-// Population tracks population allocation for a player
-type Population struct {
-	GameID                 string    `bson:"gameId"`
-	PlayerID               string    `bson:"playerId"`
-	TotalPopulation        int       `bson:"totalPopulation"`
-	AllocatedToUnit        int       `bson:"allocatedToUnit"`
-	AllocatedToSettlement  int       `bson:"allocatedToSettlement"`
-	Unallocated            int       `bson:"unallocated"`
-	LastUpdated            time.Time `bson:"lastUpdated"`
 }

@@ -316,45 +316,6 @@ func (r *MongoRepository) UpdateSettlement(ctx context.Context, settlement *mode
 	return err
 }
 
-// CreatePopulation creates population tracking for a player
-func (r *MongoRepository) CreatePopulation(ctx context.Context, population *models.Population) error {
-	collection := r.db.Collection("population")
-	_, err := collection.InsertOne(ctx, population)
-	return err
-}
-
-// GetPopulation retrieves population for a player
-func (r *MongoRepository) GetPopulation(ctx context.Context, gameID string, playerID string) (*models.Population, error) {
-	collection := r.db.Collection("population")
-
-	var population models.Population
-	err := collection.FindOne(ctx, bson.M{
-		"gameId":   gameID,
-		"playerId": playerID,
-	}).Decode(&population)
-	if err != nil {
-		return nil, err
-	}
-
-	return &population, nil
-}
-
-// UpdatePopulation updates population tracking
-func (r *MongoRepository) UpdatePopulation(ctx context.Context, population *models.Population) error {
-	collection := r.db.Collection("population")
-
-	_, err := collection.UpdateOne(
-		ctx,
-		bson.M{
-			"gameId":   population.GameID,
-			"playerId": population.PlayerID,
-		},
-		bson.M{"$set": population},
-	)
-
-	return err
-}
-
 // GetMapTile retrieves a specific tile by coordinates
 func (r *MongoRepository) GetMapTile(ctx context.Context, gameID string, x int, y int) (*models.MapTile, error) {
 	collection := r.db.Collection("mapTiles")

@@ -62,15 +62,6 @@ type GameRepository interface {
 	// UpdateSettlement updates a settlement
 	UpdateSettlement(ctx context.Context, settlement *models.Settlement) error
 
-	// CreatePopulation creates population tracking for a player
-	CreatePopulation(ctx context.Context, population *models.Population) error
-
-	// GetPopulation retrieves population for a player
-	GetPopulation(ctx context.Context, gameID string, playerID string) (*models.Population, error)
-
-	// UpdatePopulation updates population tracking
-	UpdatePopulation(ctx context.Context, population *models.Population) error
-
 	// GetMapTile retrieves a specific tile by coordinates
 	GetMapTile(ctx context.Context, gameID string, x int, y int) (*models.MapTile, error)
 

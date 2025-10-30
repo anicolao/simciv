@@ -128,7 +128,6 @@ func (e *GameEngine) settleAtLocation(ctx context.Context, game *models.Game, un
 		Name:         "First Settlement",
 		Type:         "nomadic_camp",
 		Location:     location,
-		Population:   100,
 		Founded:      time.Now(),
 		LastUpdated:  time.Now(),
 	}
@@ -145,22 +144,6 @@ func (e *GameEngine) settleAtLocation(ctx context.Context, game *models.Game, un
 	}
 
 	log.Printf("Settlers unit %s removed after settlement", unit.UnitID)
-
-	// Update population allocation
-	population, err := e.repo.GetPopulation(ctx, game.GameID, unit.PlayerID)
-	if err != nil {
-		return err
-	}
-
-	population.AllocatedToUnit = 0
-	population.AllocatedToSettlement = 100
-	population.LastUpdated = time.Now()
-
-	if err := e.repo.UpdatePopulation(ctx, population); err != nil {
-		return err
-	}
-
-	log.Printf("Population allocation updated for player %s", unit.PlayerID)
 
 	return nil
 }

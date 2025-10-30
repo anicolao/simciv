@@ -110,17 +110,6 @@ export interface Settlement {
     x: number;
     y: number;
   };
-  population: number;
   founded: Date;
-  lastUpdated: Date;
-}
-
-export interface Population {
-  gameId: string;
-  playerId: string;
-  totalPopulation: number;
-  allocatedToUnit: number;
-  allocatedToSettlement: number;
-  unallocated: number;
   lastUpdated: Date;
 }
