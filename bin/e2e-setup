@@ -101,8 +101,9 @@ fi
 if pgrep -f "./engine" >/dev/null; then
     echo "✅ Game engine is already running"
 else
-    echo "🚀 Starting game engine with deterministic test seed..."
+    echo "🚀 Starting game engine with deterministic test seed and E2E mode..."
     export TEST_MAP_SEED="simciv-balanced-test-map"
+    export E2E_TEST_MODE="true"
     export MONGO_URI="${MONGO_URI:-mongodb://localhost:27017}"
     export DB_NAME="${DB_NAME:-simciv}"
     ./engine > /tmp/engine-e2e.log 2>&1 &

@@ -42,7 +42,12 @@ func main() {
 	log.Println("Connected to MongoDB")
 
 	// Create simulation engine
-	engine := engine.NewGameEngine(repo)
+	gameEngine := engine.NewGameEngine(repo)
+
+	// Start control server for manual ticks in E2E mode
+	if os.Getenv("E2E_TEST_MODE") == "true" {
+		go engine.StartControlServer(gameEngine, 3001)
+	}
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -50,7 +55,7 @@ func main() {
 
 	// Start engine in goroutine
 	go func() {
-		if err := engine.Run(ctx); err != nil {
+		if err := gameEngine.Run(ctx); err != nil {
 			log.Printf("Engine error: %v", err)
 		}
 	}()
