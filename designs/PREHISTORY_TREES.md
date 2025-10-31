@@ -22,7 +22,7 @@ During this vast timespan, humanity developed the fundamental capabilities that 
 3. **Cultural Tree** - Expression and influence from oral traditions to organized religion
 4. **Economic Tree** - Resource management from subsistence to trade networks
 
-Each tree contains approximately 30 developments across four levels, providing strategic choices that define civilization character and enable distinct victory conditions.
+Each tree contains 24-35 developments across four levels, providing strategic choices that define civilization character and enable distinct victory conditions.
 
 ---
 
@@ -64,7 +64,7 @@ Each tree contains approximately 30 developments across four levels, providing s
 **Scope**: Prehistoric military development from 200,000 BCE to 4,000 BCE covering organized violence and defense
 
 **Key Features**:
-- 28 military developments across 4 levels
+- 26 military developments across 4 levels
 - From defensive postures and primitive weapons to combined arms warfare and siege weapons
 - Strategic choices between offense, defense, and mobility
 - Unit types and tactical capabilities for conquest
@@ -94,9 +94,9 @@ Each tree contains approximately 30 developments across four levels, providing s
 **Scope**: Prehistoric cultural development from 200,000 BCE to 4,000 BCE covering arts, religion, and social organization
 
 **Key Features**:
-- 30 cultural developments across 4 levels
+- 26 cultural developments across 4 levels
 - From storytelling and rituals to organized religion and monumental architecture
-- Strategic choices between religious, artistic, and entertainment culture
+- Strategic choices between religious, artistic, and mystical culture
 - Cultural influence spreads to neighboring civilizations
 - Foundation for Cultural Victory through influence causing city defections
 
@@ -104,7 +104,7 @@ Each tree contains approximately 30 developments across four levels, providing s
 - **Level 0**: Oral Traditions (200,000 - 100,000 BCE) - Storytelling, rituals, music, burial practices
 - **Level 1**: Symbolic Expression (100,000 - 50,000 BCE) - Religious practices, cave art, poetry, festivals
 - **Level 2**: Organized Culture (50,000 - 10,000 BCE) - Organized religion, sacred sites, performance arts
-- **Level 3**: Cultural Sophistication (10,000 - 4,000 BCE) - State religion, great temples, theater, formal government
+- **Level 3**: Cultural Sophistication (10,000 - 4,000 BCE) - State religion, great temples, monumental sculpture
 
 **Strategic Importance**:
 - Culture provides population happiness and loyalty
@@ -125,9 +125,9 @@ Each tree contains approximately 30 developments across four levels, providing s
 **Scope**: Prehistoric economic development from 200,000 BCE to 4,000 BCE covering trade, resources, and wealth
 
 **Key Features**:
-- 29 economic developments across 4 levels
-- From basic barter and resource extraction to global trade and resource monopolies
-- Strategic choices between trade networks, manufacturing, and resource control
+- 24 economic developments across 4 levels
+- From basic barter and resource extraction to resource monopolies and specialized economies
+- Strategic choices between resource control, manufacturing, and agricultural focus
 - Resource control mechanics for economic dominance
 - Foundation for Economic Victory through controlling 75%+ of world resources
 
@@ -135,7 +135,7 @@ Each tree contains approximately 30 developments across four levels, providing s
 - **Level 0**: Subsistence Economy (200,000 - 100,000 BCE) - Foraging, hunting, stockpiling, barter, stone extraction
 - **Level 1**: Emerging Trade (100,000 - 50,000 BCE) - Trade routes, storage, specialized production, division of labor
 - **Level 2**: Trade Networks (50,000 - 10,000 BCE) - Long-distance trade, currency, maritime trade, granaries, manufacturing
-- **Level 3**: Economic Systems (10,000 - 4,000 BCE) - Global trade, banking, industrial production, monopolies, infrastructure
+- **Level 3**: Economic Systems (10,000 - 4,000 BCE) - Resource monopolies, agricultural/manufacturing/extraction economies
 
 **Strategic Importance**:
 - Economics funds all other activities (military, cultural, research)
@@ -563,11 +563,11 @@ All four prehistoric trees bridge to the Ancient Era (4,000 BCE - 500 CE):
 | Tree | Levels | Developments | Victory Type | Primary Focus |
 |------|---------|--------------|--------------|---------------|
 | Technology | 4 (0-3) | 35 | Scientific | Discoveries & Innovation |
-| Military | 4 (0-3) | 28 | Domination | Conquest & Defense |
-| Cultural | 4 (0-3) | 30 | Cultural | Influence & Expression |
-| Economic | 4 (0-3) | 29 | Economic | Resources & Wealth |
+| Military | 4 (0-3) | 26 | Domination | Conquest & Defense |
+| Cultural | 4 (0-3) | 26 | Cultural | Influence & Expression |
+| Economic | 4 (0-3) | 24 | Economic | Resources & Wealth |
 
-**Total Prehistoric Developments**: 122 across all four trees
+**Total Prehistoric Developments**: 111 across all four trees
 
 ### Victory Condition Requirements
 
