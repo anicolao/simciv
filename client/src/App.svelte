@@ -3,12 +3,15 @@
   import Register from './lib/Register.svelte';
   import Login from './lib/Login.svelte';
   import GameLobby from './lib/GameLobby.svelte';
+  import GameView from './lib/GameView.svelte';
   import { getSessionStatus, logout } from './utils/api';
   import { getSessionGuid } from './utils/storage';
 
   let activeTab: 'register' | 'login' = 'register';
   let isAuthenticated = false;
   let currentUser = '';
+  let currentView: 'lobby' | 'game' = 'lobby';
+  let selectedGameId: string | null = null;
 
   onMount(async () => {
     try {
@@ -45,46 +48,60 @@
   function switchTab(tab: 'register' | 'login') {
     activeTab = tab;
   }
+
+  function handleViewGame(event: CustomEvent) {
+    selectedGameId = event.detail.gameId;
+    currentView = 'game';
+  }
+
+  function handleBackToLobby() {
+    currentView = 'lobby';
+    selectedGameId = null;
+  }
 </script>
 
-<main>
-  <h1>SimCiv Authentication</h1>
+{#if isAuthenticated && currentView === 'game' && selectedGameId}
+  <GameView gameId={selectedGameId} onBack={handleBackToLobby} />
+{:else}
+  <main>
+    <h1>SimCiv Authentication</h1>
 
-  {#if isAuthenticated}
-    <div class="authenticated">
-      <div class="header">
-        <div class="user-info">
-          <h2>Welcome, {currentUser}!</h2>
+    {#if isAuthenticated}
+      <div class="authenticated">
+        <div class="header">
+          <div class="user-info">
+            <h2>Welcome, {currentUser}!</h2>
+          </div>
+          <button on:click={handleLogout} class="logout-btn">Logout</button>
         </div>
-        <button on:click={handleLogout} class="logout-btn">Logout</button>
+        <GameLobby {currentUser} on:viewGame={handleViewGame} />
       </div>
-      <GameLobby {currentUser} />
-    </div>
-  {:else}
-    <div class="tabs">
-      <button
-        class:active={activeTab === 'register'}
-        on:click={() => switchTab('register')}
-      >
-        Register
-      </button>
-      <button
-        class:active={activeTab === 'login'}
-        on:click={() => switchTab('login')}
-      >
-        Login
-      </button>
-    </div>
+    {:else}
+      <div class="tabs">
+        <button
+          class:active={activeTab === 'register'}
+          on:click={() => switchTab('register')}
+        >
+          Register
+        </button>
+        <button
+          class:active={activeTab === 'login'}
+          on:click={() => switchTab('login')}
+        >
+          Login
+        </button>
+      </div>
 
-    <div class="tab-content">
-      {#if activeTab === 'register'}
-        <Register on:registered={handleRegistered} />
-      {:else}
-        <Login on:loggedIn={handleLoggedIn} />
-      {/if}
-    </div>
-  {/if}
-</main>
+      <div class="tab-content">
+        {#if activeTab === 'register'}
+          <Register on:registered={handleRegistered} />
+        {:else}
+          <Login on:loggedIn={handleLoggedIn} />
+        {/if}
+      </div>
+    {/if}
+  </main>
+{/if}
 
 <style>
   :global(body) {

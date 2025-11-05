@@ -6,6 +6,7 @@
   import type { Unit, Settlement } from '../utils/api';
 
   export let gameId: string;
+  export let fillContainer = false; // If true, canvas fills its container
 
   interface MapTile {
     gameId: string;
@@ -54,6 +55,11 @@
   const TILE_SIZE = 30; // FreeCiv Trident tiles are 30x30
   const BASE_DISPLAY_TILE_SIZE = 32; // Base display size at 1.0x zoom
   
+  // Canvas size (default or dynamic)
+  let canvasWidth = 640;
+  let canvasHeight = 480;
+  let containerElement: HTMLDivElement;
+  
   // Interaction state
   let zoomLevel = 1.0; // Current zoom multiplier (0.5 to 2.0)
   let isDragging = false;
@@ -65,11 +71,25 @@
   
   // Computed values based on zoom
   $: DISPLAY_TILE_SIZE = Math.round(BASE_DISPLAY_TILE_SIZE * zoomLevel);
-  $: viewportTilesX = Math.floor(640 / DISPLAY_TILE_SIZE);
-  $: viewportTilesY = Math.floor(480 / DISPLAY_TILE_SIZE);
+  $: viewportTilesX = Math.floor(canvasWidth / DISPLAY_TILE_SIZE);
+  $: viewportTilesY = Math.floor(canvasHeight / DISPLAY_TILE_SIZE);
   
   let wheelHandler: ((e: WheelEvent) => void) | null = null;
   let wheelListenerAdded = false;
+
+  function updateCanvasSize() {
+    if (fillContainer && containerElement) {
+      const rect = containerElement.getBoundingClientRect();
+      canvasWidth = Math.floor(rect.width);
+      canvasHeight = Math.floor(rect.height);
+      console.log('[MapView] Canvas resized to container:', canvasWidth, 'x', canvasHeight);
+      
+      // Re-render if we have data
+      if (canvas && tiles.length > 0) {
+        renderMap();
+      }
+    }
+  }
 
   onMount(async () => {
     try {
@@ -78,6 +98,13 @@
       console.error('[MapView] Failed to load sprites in onMount:', err);
       // Continue anyway - will show error or fallback rendering
     }
+    
+    // Update canvas size if filling container
+    if (fillContainer) {
+      updateCanvasSize();
+      window.addEventListener('resize', updateCanvasSize);
+    }
+    
     await loadMap();
 
     // Poll for units and settlements updates every second
@@ -104,6 +131,9 @@
     }
     if (pollInterval !== null) {
       clearInterval(pollInterval);
+    }
+    if (fillContainer) {
+      window.removeEventListener('resize', updateCanvasSize);
     }
   });
 
@@ -595,8 +625,8 @@
     const maxOffsetY = metadata.height * DISPLAY_TILE_SIZE - DISPLAY_TILE_SIZE;
     
     // Minimum offset is when the first tile is at the bottom-right corner of viewport
-    const minOffsetX = -(640 - DISPLAY_TILE_SIZE);
-    const minOffsetY = -(480 - DISPLAY_TILE_SIZE);
+    const minOffsetX = -(canvasWidth - DISPLAY_TILE_SIZE);
+    const minOffsetY = -(canvasHeight - DISPLAY_TILE_SIZE);
     
     viewOffsetX = Math.max(minOffsetX, Math.min(viewOffsetX, maxOffsetX));
     viewOffsetY = Math.max(minOffsetY, Math.min(viewOffsetY, maxOffsetY));
@@ -613,28 +643,30 @@
   }
 </script>
 
-<div class="map-view">
+<div class="map-view" class:fill-container={fillContainer} bind:this={containerElement}>
   {#if loading}
     <div class="loading">Loading map...</div>
   {:else if error}
     <div class="error">{error}</div>
   {:else}
-    <div class="map-container">
-      <div class="map-header">
-        <h3>Game Map</h3>
-        {#if metadata}
-          <span class="map-info">
-            Map Size: {metadata.width}x{metadata.height} | 
-            Zoom: {Math.round(zoomLevel * 100)}%
-          </span>
-        {/if}
-      </div>
+    <div class="map-container" class:full-size={fillContainer}>
+      {#if !fillContainer}
+        <div class="map-header">
+          <h3>Game Map</h3>
+          {#if metadata}
+            <span class="map-info">
+              Map Size: {metadata.width}x{metadata.height} | 
+              Zoom: {Math.round(zoomLevel * 100)}%
+            </span>
+          {/if}
+        </div>
+      {/if}
       
-      <div class="canvas-container">
+      <div class="canvas-container" class:full-size={fillContainer}>
         <canvas
           bind:this={canvas}
-          width={640}
-          height={480}
+          width={canvasWidth}
+          height={canvasHeight}
           class="map-canvas"
           class:dragging={isDragging}
           on:mousedown={handleMouseDown}
@@ -647,13 +679,15 @@
         ></canvas>
       </div>
 
-      <div class="legend">
-        <h4>Terrain Legend</h4>
-        <div class="legend-text">
-          Map rendered using FreeCiv Trident tileset (30x30 pixel sprites)<br>
-          Drag to pan • Scroll to zoom • Pinch to zoom (touch)
+      {#if !fillContainer}
+        <div class="legend">
+          <h4>Terrain Legend</h4>
+          <div class="legend-text">
+            Map rendered using FreeCiv Trident tileset (30x30 pixel sprites)<br>
+            Drag to pan • Scroll to zoom • Pinch to zoom (touch)
+          </div>
         </div>
-      </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -663,10 +697,26 @@
     padding: 20px;
   }
 
+  .map-view.fill-container {
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
   .loading, .error {
     text-align: center;
     padding: 40px;
     font-size: 18px;
+  }
+
+  .map-view.fill-container .loading,
+  .map-view.fill-container .error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
   }
 
   .error {
@@ -675,12 +725,28 @@
     border-radius: 4px;
   }
 
+  .map-view.fill-container .error {
+    background: rgba(255, 235, 238, 0.1);
+  }
+
   .map-container {
     max-width: 100%;
     background: white;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     padding: 20px;
+  }
+
+  .map-container.full-size {
+    max-width: none;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .map-header {
@@ -707,6 +773,13 @@
     background: #000;
   }
 
+  .canvas-container.full-size {
+    flex: 1;
+    border: none;
+    justify-content: stretch;
+    align-items: stretch;
+  }
+
   .map-canvas {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
@@ -715,6 +788,11 @@
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  .full-size .map-canvas {
+    width: 100%;
+    height: 100%;
   }
 
   .map-canvas.dragging {
