@@ -123,6 +123,31 @@ test.describe('Gameplay UI E2E Tests', () => {
       console.log('[E2E] Verifying full-page game view...');
       await expect(page2.locator('.game-view')).toBeVisible({ timeout: 5000 });
       
+      // Wait for map data to load (MapView loads tiles in its onMount)
+      console.log('[E2E] Waiting for map data to load...');
+      
+      // Wait a bit for GameView to fetch game data
+      await page2.waitForTimeout(3000);
+      
+      // Check if we have a loading indicator
+      const loadingGame = await page2.locator('text=Loading game...').isVisible().catch(() => false);
+      console.log('[E2E] Loading game visible:', loadingGame);
+      
+      if (loadingGame) {
+        await expect(page2.locator('text=Loading game...')).not.toBeVisible({ timeout: 10000 });
+      }
+      
+      // Check for map loading
+      const loadingMap = await page2.locator('text=Loading map...').isVisible().catch(() => false);
+      console.log('[E2E] Loading map visible:', loadingMap);
+      
+      if (loadingMap) {
+        await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 });
+      }
+      
+      // Give a bit more time for rendering
+      await page2.waitForTimeout(2000);
+      
       // Verify back button is visible
       await expect(page2.locator('button:has-text("Back to Lobby")')).toBeVisible();
       
@@ -136,10 +161,17 @@ test.describe('Gameplay UI E2E Tests', () => {
       console.log('[E2E] Taking screenshot 24 (full-page game view)...');
       await screenshotIfChanged(page2, { path: 'e2e-screenshots/24-gameplay-ui-fullpage.png', fullPage: true });
       
+      // Debug: Check what's actually in the DOM
+      const gameViewHTML = await page2.locator('.game-view').innerHTML().catch(() => 'not found');
+      console.log('[E2E] GameView HTML length:', gameViewHTML.length);
+      
+      const mapAreaHTML = await page2.locator('.map-area').innerHTML().catch(() => 'not found');
+      console.log('[E2E] MapArea HTML:', mapAreaHTML.substring(0, 500));
+      
       // Verify map canvas is visible and rendering
       console.log('[E2E] Verifying map canvas...');
       const canvas = page2.locator('.map-canvas');
-      await expect(canvas).toBeVisible();
+      await expect(canvas).toBeVisible({ timeout: 10000 });
       
       // Get canvas dimensions (should be dynamic, filling the map area)
       const width = await canvas.getAttribute('width');
