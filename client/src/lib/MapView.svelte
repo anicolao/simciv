@@ -605,7 +605,6 @@
 
   // Utility: Update zoom level
   function updateZoomLevel(delta: number, mouseX?: number, mouseY?: number) {
-    console.log('[MapView] updateZoomLevel called with delta:', delta, 'mouse:', mouseX, mouseY);
     const oldZoom = zoomLevel;
     const oldDisplayTileSize = DISPLAY_TILE_SIZE;
     
@@ -614,18 +613,15 @@
       0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0
     ];
     const currentIndex = zoomLevels.findIndex(z => Math.abs(z - zoomLevel) < 0.01);
-    console.log('[MapView] Current zoom index:', currentIndex, 'zoom:', zoomLevel);
     
     let newIndex = currentIndex;
     // Increased threshold to make zoom less sensitive (0.05 instead of 0.01)
     if (delta > 0.05) {
       // Zoom in
       newIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
-      console.log('[MapView] Zooming in, newIndex:', newIndex);
     } else if (delta < -0.05) {
       // Zoom out
       newIndex = Math.max(currentIndex - 1, 0);
-      console.log('[MapView] Zooming out, newIndex:', newIndex);
     }
     
     if (newIndex !== currentIndex) {
@@ -633,57 +629,21 @@
       
       // If mouse position is provided, adjust view offset to keep the point under the mouse stationary
       if (mouseX !== undefined && mouseY !== undefined) {
-        // Calculate the world coordinate (in pixels) that is currently under the mouse
-        const worldX = viewOffsetX + mouseX;
-        const worldY = viewOffsetY + mouseY;
-        
-        // After zoom, we want the same world coordinate to be under the mouse
         // The new display tile size after zoom
         const newDisplayTileSize = Math.round(BASE_DISPLAY_TILE_SIZE * newZoom);
         
-        // Adjust view offset so that worldX and worldY remain under the mouse
-        // worldX = viewOffsetX + mouseX (before)
-        // worldX = newViewOffsetX + mouseX (after)
-        // Therefore: newViewOffsetX = worldX - mouseX = viewOffsetX + mouseX - mouseX = viewOffsetX
-        // But we need to account for the scale change:
-        // The world coordinate in the zoomed view needs to maintain the same relationship
-        
-        // Alternative approach: scale the offset proportionally
-        // The point at (mouseX, mouseY) screen coordinates represents:
-        // worldCoordX = viewOffsetX + mouseX
-        // worldCoordY = viewOffsetY + mouseY
-        // After zoom, to keep this point fixed:
-        // viewOffsetX' = worldCoordX - mouseX = viewOffsetX + mouseX - mouseX
-        // Actually, the tiles change size, so we need:
-        
-        // Before zoom: screen pixel mouseX corresponds to world pixel (viewOffsetX + mouseX)
-        // After zoom: screen pixel mouseX should correspond to same world pixel
-        // So: newViewOffsetX + mouseX = viewOffsetX + mouseX
-        // This would give newViewOffsetX = viewOffsetX, which doesn't account for scale
-        
-        // The correct approach:
-        // worldX/Y are in world pixel coordinates (at current zoom)
-        // We want to keep the same tile under the mouse
-        // tileX = worldX / oldDisplayTileSize = (viewOffsetX + mouseX) / oldDisplayTileSize
-        // After zoom: tileX = (newViewOffsetX + mouseX) / newDisplayTileSize
-        // Solving: newViewOffsetX = tileX * newDisplayTileSize - mouseX
-        //                         = ((viewOffsetX + mouseX) / oldDisplayTileSize) * newDisplayTileSize - mouseX
-        
+        // Calculate tile coordinate at mouse position before zoom
+        // Keep this tile coordinate at the same screen position after zoom
         const tileX = (viewOffsetX + mouseX) / oldDisplayTileSize;
         const tileY = (viewOffsetY + mouseY) / oldDisplayTileSize;
         
         viewOffsetX = tileX * newDisplayTileSize - mouseX;
         viewOffsetY = tileY * newDisplayTileSize - mouseY;
-        
-        console.log('[MapView] Adjusted view offset to keep mouse position fixed:', { viewOffsetX, viewOffsetY });
       }
       
       zoomLevel = newZoom;
-      console.log('[MapView] Zoom level changed to:', zoomLevel);
       clampViewOffset();
       renderMap();
-    } else {
-      console.log('[MapView] Zoom level not changed');
     }
   }
 
