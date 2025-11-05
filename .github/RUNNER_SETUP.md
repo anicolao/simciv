@@ -8,7 +8,7 @@ The SimCiv project uses Nix flakes for reproducible development environments. Th
 
 ## Workflow Configuration
 
-The workflow is defined in `.github/workflows/copilot-runner-setup.yml` and performs:
+The workflow is defined in `.github/workflows/copilot-workspace-setup.yml` and performs:
 
 1. **Environment Setup**
    - Installs Nix with flakes support on Ubuntu 24.04
@@ -210,7 +210,7 @@ nix flake update nixpkgs
 
 ### Workflow Modifications
 
-When modifying `.github/workflows/copilot-runner-setup.yml`:
+When modifying `.github/workflows/copilot-workspace-setup.yml`:
 
 1. Test changes in a PR
 2. Check GitHub Actions summary output
