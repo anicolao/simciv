@@ -115,6 +115,14 @@ When `npm run test:e2e` is executed, the following screenshots are validated:
 30. `30-map-zoom-max.png` - Map at maximum zoom (200%)
 31. `31-map-pan-zoom-combined.png` - Map with combined pan and zoom operations
 32. `32-map-cursor-feedback.png` - Map with grab cursor feedback
+33-35. _(Reserved for future use)_
+36. `36-initial-settlers-unit.png` - Initial settlers unit at game start
+37. _(Reserved for future use)_
+38. `38-settlement-created.png` - Settlement created from settlers unit
+39. _(Reserved for future use)_
+40. `40-canvas-initial-size.png` - Full-screen canvas at initial viewport size (960x720)
+41. `41-canvas-resized-small.png` - Canvas resized to smaller viewport (520x600)
+42. `42-canvas-resized-large.png` - Canvas resized to larger viewport (1200x1200)
 
 ## Purpose
 
