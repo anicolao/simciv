@@ -89,17 +89,15 @@
         canvasHeight = newHeight;
         console.log('[MapView] Canvas resized to container:', canvasWidth, 'x', canvasHeight);
         
-        // Re-render after a short delay to ensure canvas is updated
-        if (tiles.length > 0) {
-          setTimeout(() => {
-            if (canvas) {
-              renderMap();
-            }
-          }, 100);
+        // Trigger re-render immediately when canvas is ready
+        if (tiles.length > 0 && canvas) {
+          renderMap();
         }
       }
     }
   }
+
+  let resizeObserver: ResizeObserver | null = null;
 
   onMount(async () => {
     try {
@@ -110,9 +108,15 @@
     }
     
     // Update canvas size if filling container
-    if (fillContainer) {
+    if (fillContainer && containerElement) {
       updateCanvasSize();
-      window.addEventListener('resize', updateCanvasSize);
+      
+      // Use ResizeObserver to detect container size changes
+      resizeObserver = new ResizeObserver(() => {
+        updateCanvasSize();
+      });
+      resizeObserver.observe(containerElement);
+      console.log('[MapView] ResizeObserver attached to container');
     }
     
     await loadMap();
@@ -142,8 +146,9 @@
     if (pollInterval !== null) {
       clearInterval(pollInterval);
     }
-    if (fillContainer) {
-      window.removeEventListener('resize', updateCanvasSize);
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      console.log('[MapView] ResizeObserver disconnected');
     }
   });
 
@@ -642,18 +647,8 @@
     viewOffsetY = Math.max(minOffsetY, Math.min(viewOffsetY, maxOffsetY));
   }
 
-  // Re-render when canvas is mounted, tiles are loaded, or view changes
-  $: if (canvas && tiles.length > 0) {
-    renderMap();
-  }
-  
-  // Re-render when zoom level changes
-  $: if (canvas && tiles.length > 0 && zoomLevel) {
-    renderMap();
-  }
-  
-  // Re-render when canvas size changes
-  $: if (canvas && tiles.length > 0 && (canvasWidth || canvasHeight)) {
+  // Re-render when canvas is mounted, tiles are loaded, or dimensions change
+  $: if (canvas && tiles.length > 0 && canvasWidth && canvasHeight) {
     renderMap();
   }
 </script>
