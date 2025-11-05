@@ -1,0 +1,251 @@
+name: Copilot Runner Setup and Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+env:
+  MONGO_URI: mongodb://localhost:27017
+  DB_NAME: simciv
+  PORT: 3000
+
+jobs:
+  setup-and-test:
+    runs-on: ubuntu-24.04
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix with flakes support
+        uses: cachix/install-nix-action@v26
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            sandbox = true
+            connect-timeout = 5
+            stalled-download-timeout = 10
+            max-substitution-jobs = 1
+            fallback = true
+
+      - name: Cache Nix store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nix-profile
+            ~/.nix-defexpr/channels
+            /nix/var/nix/profiles
+            /nix/store
+          key: ${{ runner.os }}-nix-${{ hashFiles('flake.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nix-
+
+      - name: Install direnv
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y direnv screen
+          mkdir -p ~/.config/direnv
+          echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+
+      - name: Initialize Nix environment
+        run: |
+          cd ${{ github.workspace }}
+          direnv allow
+          # Load the Nix environment
+          eval "$(direnv export bash)"
+          
+      - name: Verify Nix environment
+        run: |
+          eval "$(direnv export bash)"
+          echo "Node.js: $(node --version)"
+          echo "npm: $(npm --version)"
+          echo "Go: $(go version)"
+          which node
+          which npm
+          which go
+
+      - name: Start MongoDB
+        run: |
+          eval "$(direnv export bash)"
+          bin/mongo start
+          sleep 5
+          bin/mongo status
+
+      - name: Install Node.js dependencies
+        run: |
+          eval "$(direnv export bash)"
+          npm install
+
+      - name: Build application
+        run: |
+          eval "$(direnv export bash)"
+          npm run build
+
+      - name: Run unit tests
+        id: unit-tests
+        run: |
+          eval "$(direnv export bash)"
+          npm test 2>&1 | tee unit-test-output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Generate unit test summary
+        if: always()
+        run: |
+          echo "## Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f unit-test-output.txt ]; then
+            # Extract test summary from vitest output
+            if grep -q "Test Files" unit-test-output.txt; then
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              grep -A 10 "Test Files" unit-test-output.txt | head -n 15 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              tail -n 30 unit-test-output.txt >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ Unit test output not found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.unit-tests.outputs.exit_code }}" = "0" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Unit tests failed!**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-output
+          path: unit-test-output.txt
+
+      - name: Build Go simulation engine
+        run: |
+          eval "$(direnv export bash)"
+          cd simulation
+          go build -o engine main.go
+
+      - name: Setup E2E environment
+        run: |
+          eval "$(direnv export bash)"
+          bin/e2e-setup
+
+      - name: Install Playwright browsers
+        run: |
+          npx playwright install chromium --with-deps
+
+      - name: Run E2E tests
+        id: e2e-tests
+        run: |
+          # E2E tests run outside Nix environment as per docs
+          npm run test:e2e 2>&1 | tee e2e-test-output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Generate E2E test summary
+        if: always()
+        run: |
+          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f e2e-test-output.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 30 e2e-test-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ E2E test output not found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.e2e-tests.outputs.exit_code }}" = "0" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All E2E tests passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **E2E tests failed!**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            e2e-test-output.txt
+            playwright-report/
+            test-results/
+
+      - name: Upload E2E screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: e2e-screenshots/
+
+      - name: Cleanup
+        if: always()
+        run: |
+          eval "$(direnv export bash)"
+          bin/mongo stop || true
+          pkill -f "./engine" || true
+          pkill -f "node dist/server.js" || true
+
+      - name: Create startup summary for Copilot
+        if: always()
+        run: |
+          cat > startup-summary.md << 'EOF'
+          # SimCiv Development Environment Status
+          
+          ## Environment Setup
+          - ✅ Ubuntu 24.04 with Nix flakes
+          - ✅ Node.js, Go, MongoDB configured
+          - ✅ Dependencies installed
+          - ✅ Application built
+          
+          ## Test Status
+          
+          ### Unit Tests
+          $(if [ "${{ steps.unit-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
+          
+          ### E2E Tests  
+          $(if [ "${{ steps.e2e-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
+          
+          ## Quick Commands
+          ```bash
+          # Run in Nix environment
+          direnv allow
+          eval "$(direnv export bash)"
+          
+          # MongoDB management
+          bin/mongo start|stop|status
+          
+          # Development
+          npm run dev              # Start dev server
+          npm test                 # Run unit tests
+          npm run test:e2e         # Run E2E tests (outside Nix)
+          
+          # Build
+          npm run build            # Build TypeScript & Svelte
+          cd simulation && go build -o engine main.go  # Build Go engine
+          ```
+          
+          ## Architecture Notes
+          - Database-centric: MongoDB is single source of truth
+          - Complete modularity: Simulation engine and clients are independent
+          - Security first: Cryptographic challenge/response auth
+          - All tests require MongoDB running on localhost:27017
+          EOF
+          
+          cat startup-summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload startup summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-summary
+          path: startup-summary.md
