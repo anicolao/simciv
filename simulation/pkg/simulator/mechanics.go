@@ -24,7 +24,7 @@ const (
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production
-	ScienceBaseRate = 0.00015 // Science points per hour (tuned for 5-10 year Fire Mastery without pop bonus)
+	ScienceBaseRate = 0.0088 // Science points per hour (tuned to reach 600 science in ~20 years)
 	ScienceHealthThreshold = 30.0 // Tuned for viability (originally 50 per design, relaxed to reduce pressure)
 	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
 
@@ -62,7 +62,9 @@ const (
 	InfantSurvivalRate = 0.7 // 70% survival at birth
 
 	// Technology unlock
-	FireMasteryScienceRequired = 100.0
+	FireMasteryScienceRequired     = 100.0
+	StoneKnappingScienceRequired   = 600.0 // Total 600 science (500 more than Fire Mastery)
+	StoneKnappingFoodBonus         = 1.20  // +20% from better tools
 )
 
 // calculateAvailableLabor calculates total work hours available from the population
@@ -99,10 +101,15 @@ func allocateLabor(totalWorkHours, foodRatio float64) (foodHours, scienceHours f
 }
 
 // produceFood calculates food production for the day
-func produceFood(foodHours float64, hasFireMastery bool, terrainMultiplier float64) float64 {
+func produceFood(foodHours float64, hasFireMastery bool, hasStoneKnapping bool, terrainMultiplier float64) float64 {
 	multiplier := 1.0
+	
 	if hasFireMastery {
-		multiplier = FireMasteryFoodBonus
+		multiplier *= FireMasteryFoodBonus // +15% from cooking
+	}
+	
+	if hasStoneKnapping {
+		multiplier *= StoneKnappingFoodBonus // +20% from better tools
 	}
 
 	return foodHours * FoodBaseRate * multiplier * terrainMultiplier
@@ -337,13 +344,23 @@ func attemptReproduction(humans []*MinimalHuman, rng *RandomGenerator) []*Minima
 	return newborns
 }
 
-// checkTechnologyUnlock checks if Fire Mastery should be unlocked
-func checkTechnologyUnlock(state *MinimalCivilizationState) bool {
+// checkTechnologyUnlocks checks if any technologies should be unlocked
+func checkTechnologyUnlocks(state *MinimalCivilizationState) []string {
+	unlocked := []string{}
+	
+	// Check Fire Mastery
 	if !state.HasFireMastery && state.SciencePoints >= FireMasteryScienceRequired {
 		state.HasFireMastery = true
-		return true
+		unlocked = append(unlocked, "Fire Mastery")
 	}
-	return false
+	
+	// Check Stone Knapping
+	if !state.HasStoneKnapping && state.SciencePoints >= StoneKnappingScienceRequired {
+		state.HasStoneKnapping = true
+		unlocked = append(unlocked, "Stone Knapping")
+	}
+	
+	return unlocked
 }
 
 // calculateAverageHealth calculates the average health of alive humans
