@@ -80,13 +80,23 @@
   function updateCanvasSize() {
     if (fillContainer && containerElement) {
       const rect = containerElement.getBoundingClientRect();
-      canvasWidth = Math.floor(rect.width);
-      canvasHeight = Math.floor(rect.height);
-      console.log('[MapView] Canvas resized to container:', canvasWidth, 'x', canvasHeight);
+      const newWidth = Math.floor(rect.width);
+      const newHeight = Math.floor(rect.height);
       
-      // Re-render if we have data
-      if (canvas && tiles.length > 0) {
-        renderMap();
+      // Only update if dimensions actually changed
+      if (newWidth !== canvasWidth || newHeight !== canvasHeight) {
+        canvasWidth = newWidth;
+        canvasHeight = newHeight;
+        console.log('[MapView] Canvas resized to container:', canvasWidth, 'x', canvasHeight);
+        
+        // Re-render after a short delay to ensure canvas is updated
+        if (tiles.length > 0) {
+          setTimeout(() => {
+            if (canvas) {
+              renderMap();
+            }
+          }, 100);
+        }
       }
     }
   }
@@ -639,6 +649,11 @@
   
   // Re-render when zoom level changes
   $: if (canvas && tiles.length > 0 && zoomLevel) {
+    renderMap();
+  }
+  
+  // Re-render when canvas size changes
+  $: if (canvas && tiles.length > 0 && (canvasWidth || canvasHeight)) {
     renderMap();
   }
 </script>
