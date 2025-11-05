@@ -24,7 +24,10 @@ const (
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production
-	ScienceBaseRate = 0.0088 // Science points per hour (tuned to reach 600 science in ~20 years)
+	// Note: Design 0.0022 specified 5-10 years for Fire Mastery, but actual simulation
+	// dynamics (growing population, compound effects) result in faster progression.
+	// This rate ensures both technologies unlock reliably within 20-year timeframe.
+	ScienceBaseRate = 0.0088 // Science points per hour
 	ScienceHealthThreshold = 30.0 // Tuned for viability (originally 50 per design, relaxed to reduce pressure)
 	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
 
