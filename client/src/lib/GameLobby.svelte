@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { getGames, createGame, joinGame, getGame } from '../utils/api';
-  import MapView from './MapView.svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { getGames, createGame, joinGame } from '../utils/api';
 
   export let currentUser: string;
+  
+  const dispatch = createEventDispatcher();
 
   interface Game {
     gameId: string;
@@ -22,7 +23,6 @@
   let maxPlayers = 4;
   let loading = false;
   let error = '';
-  let selectedGame: Game | null = null;
   let pollingInterval: number;
 
   onMount(() => {
@@ -41,19 +41,6 @@
     try {
       const response = await getGames();
       games = response.games;
-      
-      // If a game is selected, refresh its data without replacing the object
-      if (selectedGame) {
-        const updated = games.find(g => g.gameId === selectedGame!.gameId);
-        if (updated) {
-          // Preserve playerList when updating from list API (which doesn't include it)
-          const preservedPlayerList = selectedGame.playerList;
-          Object.assign(selectedGame, updated);
-          if (preservedPlayerList && !updated.playerList) {
-            selectedGame.playerList = preservedPlayerList;
-          }
-        }
-      }
     } catch (err) {
       console.error('Failed to load games:', err);
     }
@@ -87,13 +74,8 @@
     }
   }
 
-  async function handleViewGame(gameId: string) {
-    try {
-      const response = await getGame(gameId);
-      selectedGame = response.game;
-    } catch (err: any) {
-      error = err.message || 'Failed to load game';
-    }
+  function handleViewGame(gameId: string) {
+    dispatch('viewGame', { gameId });
   }
 
   function formatYear(year: number): string {
@@ -200,53 +182,7 @@
     {/if}
   </div>
 
-  {#if selectedGame}
-    <div class="game-details">
-      <h3>Game Details</h3>
-      <button on:click={() => selectedGame = null} class="close-btn">×</button>
-      
-      <div class="detail-grid">
-        <div class="detail-row">
-          <span class="label">Game ID:</span>
-          <span class="value">{selectedGame.gameId}</span>
-        </div>
-        <div class="detail-row">
-          <span class="label">Creator:</span>
-          <span class="value">{selectedGame.creatorUserId}</span>
-        </div>
-        <div class="detail-row">
-          <span class="label">State:</span>
-          <span class="value">{selectedGame.state}</span>
-        </div>
-        <div class="detail-row">
-          <span class="label">Players:</span>
-          <span class="value">{selectedGame.currentPlayers}/{selectedGame.maxPlayers}</span>
-        </div>
-        <div class="detail-row">
-          <span class="label">Current Year:</span>
-          <span class="value year">{formatYear(selectedGame.currentYear)}</span>
-        </div>
-        <div class="detail-row">
-          <span class="label">Created:</span>
-          <span class="value">{new Date(selectedGame.createdAt).toLocaleString()}</span>
-        </div>
-        {#if selectedGame.startedAt}
-          <div class="detail-row">
-            <span class="label">Started:</span>
-            <span class="value">{new Date(selectedGame.startedAt).toLocaleString()}</span>
-          </div>
-        {/if}
-      </div>
 
-      {#if selectedGame.state === 'started' && isInGame(selectedGame)}
-        <div class="map-section">
-          {#key selectedGame.gameId}
-            <MapView gameId={selectedGame.gameId} />
-          {/key}
-        </div>
-      {/if}
-    </div>
-  {/if}
 </div>
 
 <style>
@@ -466,66 +402,5 @@
 
   .view-btn:hover {
     background: #1976D2;
-  }
-
-  .game-details {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    min-width: 400px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    z-index: 1000;
-  }
-
-  .close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #999;
-  }
-
-  .close-btn:hover {
-    color: #333;
-  }
-
-  .detail-grid {
-    margin-top: 20px;
-  }
-
-  .detail-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #f0f0f0;
-  }
-
-  .detail-row:last-child {
-    border-bottom: none;
-  }
-
-  .detail-row .label {
-    font-weight: bold;
-    color: #666;
-  }
-
-  .detail-row .value {
-    color: #333;
-  }
-
-  .map-section {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 2px solid #e0e0e0;
   }
 </style>
