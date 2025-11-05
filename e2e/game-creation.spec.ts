@@ -219,7 +219,7 @@ test.describe('Game Creation and Management', () => {
     await screenshotIfChanged(page, { path: 'e2e-screenshots/17-game-full-no-join.png', fullPage: true });
   });
 
-  test('should show game details when viewing', async ({ page }) => {
+  test('should navigate to full-page game view when viewing', async ({ page }) => {
     const alias = 'gameuser';
     const password = 'TestPassword123!';
     
@@ -235,17 +235,20 @@ test.describe('Game Creation and Management', () => {
     // Click view button
     await page.locator('.game-card').first().locator('button:has-text("View")').click();
 
-    // Wait for details modal
-    await page.waitForSelector('.game-details', { timeout: 5000 });
+    // Wait for game view to load
+    await page.waitForTimeout(2000);
 
-    // Verify details are shown
-    await expect(page.locator('.game-details h3:has-text("Game Details")')).toBeVisible();
+    // Verify we're in the full-page game view
+    await expect(page.locator('.game-view')).toBeVisible({ timeout: 5000 });
 
-    // Take screenshot of game details
+    // Take screenshot of game view
     await screenshotIfChanged(page, { path: 'e2e-screenshots/18-game-details-modal.png', fullPage: true });
 
-    // Close modal
-    await page.locator('.close-btn').click();
-    await expect(page.locator('.game-details')).not.toBeVisible();
+    // Navigate back to lobby
+    await page.click('button:has-text("Back to Lobby")');
+    
+    // Verify we're back in the lobby
+    await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.game-view')).not.toBeVisible();
   });
 });
