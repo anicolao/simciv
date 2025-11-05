@@ -559,9 +559,14 @@
       const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
       const delta = currentDistance - lastTouchDistance;
       
+      // Calculate the center point of the pinch gesture
+      const rect = canvas.getBoundingClientRect();
+      const centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+      const centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+      
       // Convert distance change to zoom delta (adjust sensitivity)
       const zoomDelta = delta / 200;
-      updateZoomLevel(zoomDelta);
+      updateZoomLevel(zoomDelta, centerX, centerY);
       
       lastTouchDistance = currentDistance;
     }
@@ -578,10 +583,17 @@
   function handleWheel(e: WheelEvent) {
     e.preventDefault();
     
+    if (!canvas) return;
+    
+    // Get mouse position relative to canvas
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
     // Determine zoom direction (negative deltaY = zoom in)
     // deltaY is typically ~100 per scroll tick
     const zoomDelta = -e.deltaY / 100;
-    updateZoomLevel(zoomDelta);
+    updateZoomLevel(zoomDelta, mouseX, mouseY);
   }
 
   // Utility: Get distance between two touch points
@@ -592,9 +604,10 @@
   }
 
   // Utility: Update zoom level
-  function updateZoomLevel(delta: number) {
-    console.log('[MapView] updateZoomLevel called with delta:', delta);
+  function updateZoomLevel(delta: number, mouseX?: number, mouseY?: number) {
+    console.log('[MapView] updateZoomLevel called with delta:', delta, 'mouse:', mouseX, mouseY);
     const oldZoom = zoomLevel;
+    const oldDisplayTileSize = DISPLAY_TILE_SIZE;
     
     // More granular zoom levels for smoother experience (50% to 200% in 10% increments)
     const zoomLevels = [
@@ -616,7 +629,56 @@
     }
     
     if (newIndex !== currentIndex) {
-      zoomLevel = zoomLevels[newIndex];
+      const newZoom = zoomLevels[newIndex];
+      
+      // If mouse position is provided, adjust view offset to keep the point under the mouse stationary
+      if (mouseX !== undefined && mouseY !== undefined) {
+        // Calculate the world coordinate (in pixels) that is currently under the mouse
+        const worldX = viewOffsetX + mouseX;
+        const worldY = viewOffsetY + mouseY;
+        
+        // After zoom, we want the same world coordinate to be under the mouse
+        // The new display tile size after zoom
+        const newDisplayTileSize = Math.round(BASE_DISPLAY_TILE_SIZE * newZoom);
+        
+        // Adjust view offset so that worldX and worldY remain under the mouse
+        // worldX = viewOffsetX + mouseX (before)
+        // worldX = newViewOffsetX + mouseX (after)
+        // Therefore: newViewOffsetX = worldX - mouseX = viewOffsetX + mouseX - mouseX = viewOffsetX
+        // But we need to account for the scale change:
+        // The world coordinate in the zoomed view needs to maintain the same relationship
+        
+        // Alternative approach: scale the offset proportionally
+        // The point at (mouseX, mouseY) screen coordinates represents:
+        // worldCoordX = viewOffsetX + mouseX
+        // worldCoordY = viewOffsetY + mouseY
+        // After zoom, to keep this point fixed:
+        // viewOffsetX' = worldCoordX - mouseX = viewOffsetX + mouseX - mouseX
+        // Actually, the tiles change size, so we need:
+        
+        // Before zoom: screen pixel mouseX corresponds to world pixel (viewOffsetX + mouseX)
+        // After zoom: screen pixel mouseX should correspond to same world pixel
+        // So: newViewOffsetX + mouseX = viewOffsetX + mouseX
+        // This would give newViewOffsetX = viewOffsetX, which doesn't account for scale
+        
+        // The correct approach:
+        // worldX/Y are in world pixel coordinates (at current zoom)
+        // We want to keep the same tile under the mouse
+        // tileX = worldX / oldDisplayTileSize = (viewOffsetX + mouseX) / oldDisplayTileSize
+        // After zoom: tileX = (newViewOffsetX + mouseX) / newDisplayTileSize
+        // Solving: newViewOffsetX = tileX * newDisplayTileSize - mouseX
+        //                         = ((viewOffsetX + mouseX) / oldDisplayTileSize) * newDisplayTileSize - mouseX
+        
+        const tileX = (viewOffsetX + mouseX) / oldDisplayTileSize;
+        const tileY = (viewOffsetY + mouseY) / oldDisplayTileSize;
+        
+        viewOffsetX = tileX * newDisplayTileSize - mouseX;
+        viewOffsetY = tileY * newDisplayTileSize - mouseY;
+        
+        console.log('[MapView] Adjusted view offset to keep mouse position fixed:', { viewOffsetX, viewOffsetY });
+      }
+      
+      zoomLevel = newZoom;
       console.log('[MapView] Zoom level changed to:', zoomLevel);
       clampViewOffset();
       renderMap();
