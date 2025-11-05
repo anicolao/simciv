@@ -111,13 +111,16 @@ test.describe('Map View E2E Tests', () => {
       console.log('[E2E] Waiting 10 seconds for map generation...');
       await page2.waitForTimeout(10000);
       
-      // Click the View button to open details modal
-      console.log('[E2E] Opening game details modal...');
+      // Click the View button to navigate to full-page game view
+      console.log('[E2E] Navigating to full-page game view...');
       await gameCard.locator('button:has-text("View")').click();
       
-      // Wait for modal and game data to load
-      console.log('[E2E] Waiting for game details to load...');
-      await page2.waitForTimeout(3000); // Wait for handleViewGame API call
+      // Wait for game view to load
+      console.log('[E2E] Waiting for game view to load...');
+      await page2.waitForTimeout(2000);
+      
+      // Verify we're in the full-page game view
+      await expect(page2.locator('.game-view')).toBeVisible({ timeout: 5000 });
       
       // Wait for map data to load (MapView loads tiles in its onMount)
       console.log('[E2E] Waiting for map data to load...');
@@ -125,36 +128,35 @@ test.describe('Map View E2E Tests', () => {
       await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
       await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
       
-      // Now the map section should be visible
-      console.log('[E2E] Waiting for map section to appear...');
-      await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
-      await expect(page2.locator('h3:has-text("Game Map")')).toBeVisible({ timeout: 5000 });
-      console.log('[E2E] Map section visible');
+      // Now the map area should be visible
+      console.log('[E2E] Waiting for map area to appear...');
+      await expect(page2.locator('.map-area')).toBeVisible({ timeout: 5000 });
+      console.log('[E2E] Map area visible');
       
-      // Screenshot 19: Map section visible
+      // Screenshot 19: Full-page game view with map
       console.log('[E2E] Taking screenshot 19...');
       await screenshotIfChanged(page2, { path: 'e2e-screenshots/19-map-section-visible.png', fullPage: true });
       
-      // Verify map components
-      console.log('[E2E] Verifying map legend...');
-      await expect(page2.locator('.legend')).toBeVisible();
+      // Verify map canvas
       console.log('[E2E] Verifying map canvas...');
       await expect(page2.locator('.map-canvas')).toBeVisible();
       
-      // Screenshot 20: Complete map view with legend and canvas
+      // Screenshot 20: Complete full-page game view
       console.log('[E2E] Taking screenshot 20...');
       await screenshotIfChanged(page2, { path: 'e2e-screenshots/20-map-view-complete.png', fullPage: true });
       
-      // Verify that canvas has correct dimensions (20x15 tiles at 32px each)
+      // Verify that canvas has dynamic dimensions (filling container, not fixed 640x480)
       console.log('[E2E] Verifying canvas dimensions...');
       const canvas = page2.locator('.map-canvas');
       const width = await canvas.getAttribute('width');
       const height = await canvas.getAttribute('height');
-      const expectedWidth = 20 * 32; // viewportTilesX * DISPLAY_TILE_SIZE
-      const expectedHeight = 15 * 32; // viewportTilesY * DISPLAY_TILE_SIZE
-      console.log(`[E2E] Canvas dimensions: ${width}x${height}, expected ${expectedWidth}x${expectedHeight}`);
-      expect(width).toBe(expectedWidth.toString());
-      expect(height).toBe(expectedHeight.toString());
+      console.log(`[E2E] Canvas dimensions: ${width}x${height}`);
+      
+      // In full-page mode, canvas should be larger than the old fixed size
+      const canvasWidth = parseInt(width || '0');
+      const canvasHeight = parseInt(height || '0');
+      expect(canvasWidth).toBeGreaterThan(640); // Should be wider in full-page mode
+      expect(canvasHeight).toBeGreaterThan(480); // Should be taller in full-page mode
       
       // Screenshot 21: Map rendered with FreeCiv tiles
       console.log('[E2E] Taking screenshot 21 (map with FreeCiv tiles)...');
@@ -175,7 +177,7 @@ test.describe('Map View E2E Tests', () => {
     }
   });
 
-  test('should not show map for waiting games', async ({ page }) => {
+  test('should show placeholder for waiting games', async ({ page }) => {
     const alias = 'mapuser_waiting';
     const password = 'TestPassword123!';
     
@@ -184,19 +186,23 @@ test.describe('Map View E2E Tests', () => {
     
     // Create game but don't start it
     await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
-      await page.click('button:has-text("Create New Game")');
-      await expect(page.locator('h3:has-text("Create New Game")')).toBeVisible();
-      await page.selectOption('select#maxPlayers', '2');
-      await page.click('button:has-text("Create Game")');
-      await page.waitForSelector('.game-card', { timeout: 10000 });
-      
-      // Click the View button to open details
-      await page.locator('.game-card').first().locator('button:has-text("View")').click();
-      
-      // Map section should NOT be visible for waiting games (should show "Game Map" if it were)
-      await expect(page.locator('h3:has-text("Game Map")')).not.toBeVisible();
-      
-      // Screenshot 23: No map for waiting game
-      await screenshotIfChanged(page, { path: 'e2e-screenshots/23-game-waiting-no-map.png', fullPage: true });
+    await page.click('button:has-text("Create New Game")');
+    await expect(page.locator('h3:has-text("Create New Game")')).toBeVisible();
+    await page.selectOption('select#maxPlayers', '2');
+    await page.click('button:has-text("Create Game")');
+    await page.waitForSelector('.game-card', { timeout: 10000 });
+    
+    // Click the View button to navigate to game view
+    await page.locator('.game-card').first().locator('button:has-text("View")').click();
+    
+    // Wait for game view to load
+    await page.waitForTimeout(2000);
+    
+    // Map placeholder should be visible for waiting games
+    await expect(page.locator('.map-placeholder')).toBeVisible();
+    await expect(page.locator('text=Game has not started yet')).toBeVisible();
+    
+    // Screenshot 23: Waiting game placeholder
+    await screenshotIfChanged(page, { path: 'e2e-screenshots/23-game-waiting-no-map.png', fullPage: true });
   });
 });
