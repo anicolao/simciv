@@ -22,7 +22,8 @@ type MinimalCivilizationState struct {
 	FoodAllocationRatio float64 // 0.0 to 1.0 (default 0.8 = 80%)
 
 	// Technology
-	HasFireMastery bool // Research goal (unlocks at 100 science)
+	HasFireMastery   bool // Research goal 1 (unlocks at 100 science, 5-10 years)
+	HasStoneKnapping bool // Research goal 2 (unlocks at 600 science, 12-17 years)
 
 	// Simulation State
 	CurrentDay int // Day counter (increments until completion or failure)
@@ -50,6 +51,7 @@ type DailyMetrics struct {
 	Births            int     // Number of births this day
 	Deaths            int     // Number of deaths this day
 	HasFireMastery    bool    // Whether Fire Mastery is unlocked
+	HasStoneKnapping  bool    // Whether Stone Knapping is unlocked
 }
 
 // ViabilityResult contains the results of a viability assessment
@@ -58,17 +60,20 @@ type ViabilityResult struct {
 	FailureReasons []string // List of failure reasons if not viable
 
 	// Metrics
-	FinalPopulation      int     // Final population
-	FinalScience         float64 // Final science points
-	AverageHealth        float64 // Average health across entire simulation
-	DaysToFireMastery    int     // Days until Fire Mastery was unlocked (-1 if never)
-	DaysToNonViable      int     // Days until population became non-viable (-1 if never)
-	FinalAverageHealth   float64 // Final average health
-	PeakPopulation       int     // Peak population during simulation
-	MinimumPopulation    int     // Minimum population during simulation
-	FireMasteryUnlocked  bool    // Whether Fire Mastery was unlocked
-	TotalBirths          int     // Total births during simulation
-	HasFireMastery       bool    // Final Fire Mastery status
+	FinalPopulation        int     // Final population
+	FinalScience           float64 // Final science points
+	AverageHealth          float64 // Average health across entire simulation
+	DaysToFireMastery      int     // Days until Fire Mastery was unlocked (-1 if never)
+	DaysToStoneKnapping    int     // Days until Stone Knapping was unlocked (-1 if never)
+	DaysToNonViable        int     // Days until population became non-viable (-1 if never)
+	FinalAverageHealth     float64 // Final average health
+	PeakPopulation         int     // Peak population during simulation
+	MinimumPopulation      int     // Minimum population during simulation
+	FireMasteryUnlocked    bool    // Whether Fire Mastery was unlocked
+	StoneKnappingUnlocked  bool    // Whether Stone Knapping was unlocked
+	TotalBirths            int     // Total births during simulation
+	HasFireMastery         bool    // Final Fire Mastery status
+	HasStoneKnapping       bool    // Final Stone Knapping status
 
 	// All daily metrics for analysis
 	AllMetrics []*DailyMetrics
