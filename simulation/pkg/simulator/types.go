@@ -2,11 +2,12 @@ package simulator
 
 // MinimalHuman represents a single human in the minimal simulation
 type MinimalHuman struct {
-	ID       string  // Unique identifier
-	Age      float64 // Age in years (0-60)
-	Gender   string  // "male" or "female"
-	Health   float64 // 0-100 (fully implemented)
-	IsAlive  bool    // Alive status
+	ID                     string  // Unique identifier
+	Age                    float64 // Age in years (0-60)
+	Gender                 string  // "male" or "female"
+	Health                 float64 // 0-100 (fully implemented)
+	IsAlive                bool    // Alive status
+	PregnancyDaysRemaining int     // Days remaining in pregnancy (0 if not pregnant, only for females)
 }
 
 // MinimalCivilizationState represents the complete state of a civilization

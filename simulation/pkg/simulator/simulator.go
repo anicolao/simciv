@@ -147,15 +147,18 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 			}
 		}
 
-		// Step 8: Process reproduction checks
-		newborns := attemptReproduction(state.Humans, rng)
+		// Step 8: Process pregnancies (decrement counters and handle births)
+		newborns := processPregnancies(state.Humans, rng)
 		births := len(newborns)
 		state.Humans = append(state.Humans, newborns...)
 
-		// Step 9: Check for Fire Mastery unlock
+		// Step 9: Attempt new conceptions
+		attemptReproduction(state.Humans, rng)
+
+		// Step 10: Check for Fire Mastery unlock
 		checkTechnologyUnlock(state)
 
-		// Step 10: Record metrics
+		// Step 11: Record metrics
 		metrics := &DailyMetrics{
 			Day:               state.CurrentDay,
 			Population:        countAlive(state.Humans),

@@ -389,15 +389,19 @@ func TestCheckReproduction(t *testing.T) {
 	male := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "male"}
 	female := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "female"}
 	
-	child := checkReproduction(male, female, 20, rng)
+	conceived := checkReproduction(male, female, 20, rng)
 	
 	avgHealth := (male.Health + female.Health) / 2.0
 	healthMod := (avgHealth - 50.0) / 50.0
 	ageMod := 1.0
 	finalChance := MonthlyConceptionBase * healthMod * ageMod
 	
-	t.Logf("Manual test: child=%v, health_mod=%.3f, age_mod=%.3f, chance=%.6f", 
-		child != nil, healthMod, ageMod, finalChance)
+	t.Logf("Manual test: conceived=%v, health_mod=%.3f, age_mod=%.3f, chance=%.6f", 
+		conceived, healthMod, ageMod, finalChance)
+	
+	if conceived {
+		t.Logf("Female pregnancy days remaining: %d", female.PregnancyDaysRemaining)
+	}
 
 	tests := []struct {
 		name          string
@@ -441,15 +445,22 @@ func TestCheckReproduction(t *testing.T) {
 			population:    5, // belonging = 2.5, below threshold
 			shouldSucceed: false,
 		},
+		{
+			name:          "Already pregnant",
+			male:          &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "male"},
+			female:        &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "female", PregnancyDaysRemaining: 100},
+			population:    20,
+			shouldSucceed: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			child := checkReproduction(tt.male, tt.female, tt.population, rng)
-			if tt.shouldSucceed && child == nil {
+			conceived := checkReproduction(tt.male, tt.female, tt.population, rng)
+			if tt.shouldSucceed && !conceived {
 				t.Error("Expected reproduction to succeed")
 			}
-			if !tt.shouldSucceed && child != nil {
+			if !tt.shouldSucceed && conceived {
 				t.Error("Expected reproduction to fail")
 			}
 		})
@@ -458,22 +469,20 @@ func TestCheckReproduction(t *testing.T) {
 	// Test that reproduction can succeed with good conditions
 	// Note: With health=80, age=25, and MonthlyConceptionBase=0.06 (doubled):
 	// (80-50)/50 * 1.0 * 0.002 = 0.0012 per day
-	// Over 10000 trials, we expect about 12 conceptions, and ~8 surviving births
-	// However, due to the random nature and low probability, we'll just log the results
+	// Over 10000 trials, we expect about 12 conceptions
 	successCount := 0
 	for i := 0; i < 10000; i++ {
 		male := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "male"}
 		female := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "female"}
-		child := checkReproduction(male, female, 20, NewRandomGenerator(i))
-		if child != nil {
+		if checkReproduction(male, female, 20, NewRandomGenerator(i)) {
 			successCount++
 		}
 	}
 	
-	t.Logf("Reproduction success rate: %d/10000 (%.2f%%) - expected ~8-12 with doubled rate", 
+	t.Logf("Conception success rate: %d/10000 (%.2f%%) - expected ~12 conceptions", 
 		successCount, float64(successCount)/100.0)
 	
-	// The test is mainly to ensure the function doesn't crash or always return nil
+	// The test is mainly to ensure the function doesn't crash or always return false
 	// With such low probabilities, we can't strictly require successes
 }
 
