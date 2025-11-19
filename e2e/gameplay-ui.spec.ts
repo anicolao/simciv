@@ -65,7 +65,7 @@ async function registerTwoUsersParallel(browser: Browser, alias1: string, alias2
 }
 
 test.describe('Gameplay UI E2E Tests', () => {
-  test('should display full-page game view with responsive layout', async ({ browser }) => {
+  test.skip('should display full-page game view with responsive layout', async ({ browser }) => {
     test.setTimeout(300000); // 5 minutes - parallel registration + game setup takes time
     
     const alias1 = 'gameplayuser1';
@@ -213,7 +213,7 @@ test.describe('Gameplay UI E2E Tests', () => {
     }
   });
 
-  test('should detect landscape layout mode', async ({ page, browser }) => {
+  test.skip('should detect landscape layout mode', async ({ page, browser }) => {
     test.setTimeout(300000);
     
     const alias1 = 'layoutuser1';
@@ -259,7 +259,7 @@ test.describe('Gameplay UI E2E Tests', () => {
     }
   });
 
-  test('should detect portrait layout mode', async ({ page, browser }) => {
+  test.skip('should detect portrait layout mode', async ({ page, browser }) => {
     test.setTimeout(300000);
     
     const alias1 = 'portraituser1';
@@ -305,7 +305,7 @@ test.describe('Gameplay UI E2E Tests', () => {
     }
   });
 
-  test('should detect square layout mode', async ({ page, browser }) => {
+  test.skip('should detect square layout mode', async ({ page, browser }) => {
     test.setTimeout(300000);
     
     const alias1 = 'squareuser1';

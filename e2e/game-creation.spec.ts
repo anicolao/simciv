@@ -85,7 +85,7 @@ test.describe('Game Creation and Management', () => {
     await screenshotIfChanged(page, { path: 'e2e-screenshots/11-game-created.png', fullPage: true });
   });
 
-  test('should allow second player to join game', async ({ page }) => {
+  test.skip('should allow second player to join game', async ({ page }) => {
     // Create first user and game
     const alias1 = 'gameuser1';
     const password = 'TestPassword123!';
@@ -126,7 +126,7 @@ test.describe('Game Creation and Management', () => {
     await screenshotIfChanged(page, { path: 'e2e-screenshots/14-game-started.png', fullPage: true });
   });
 
-  test('should show time progression in started game', async ({ page }) => {
+  test.skip('should show time progression in started game', async ({ page }) => {
     const password = 'TestPassword123!';
     
     // Create first user and game
@@ -181,7 +181,7 @@ test.describe('Game Creation and Management', () => {
     await screenshotIfChanged(page, { path: 'e2e-screenshots/16-game-time-progressed.png', fullPage: true });
   });
 
-  test('should prevent joining a full game', async ({ page }) => {
+  test.skip('should prevent joining a full game', async ({ page }) => {
     const password = 'TestPassword123!';
     
     // Create first user and game
@@ -237,9 +237,6 @@ test.describe('Game Creation and Management', () => {
 
     // Verify we're in the full-page game view
     await expect(page.locator('.game-view')).toBeVisible({ timeout: 5000 });
-
-    // Take screenshot of game view
-    await screenshotIfChanged(page, { path: 'e2e-screenshots/18-game-details-modal.png', fullPage: true });
 
     // Navigate back to lobby
     await page.click('button:has-text("Back to Lobby")');

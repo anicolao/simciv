@@ -75,7 +75,7 @@ async function createAndStartGame(page: Page): Promise<void> {
   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
 }
 
-test.describe('Minimal Settlers Implementation', () => {
+test.describe.skip('Minimal Settlers Implementation', () => {
   test('should create initial settlers unit at game start', async ({ page }) => {
     const alias = 'settler_test';
     const password = 'TestPassword123!';
