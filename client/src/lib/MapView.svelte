@@ -647,8 +647,18 @@
     viewOffsetY = Math.max(minOffsetY, Math.min(viewOffsetY, maxOffsetY));
   }
 
-  // Re-render when canvas is mounted, tiles are loaded, or dimensions change
-  $: if (canvas && tiles.length > 0 && canvasWidth && canvasHeight) {
+  // Re-render when canvas is mounted, tiles are loaded, or view changes
+  $: if (canvas && tiles.length > 0) {
+    renderMap();
+  }
+  
+  // Re-render when zoom level changes
+  $: if (canvas && tiles.length > 0 && zoomLevel) {
+    renderMap();
+  }
+  
+  // Re-render when canvas size changes
+  $: if (canvas && tiles.length > 0 && (canvasWidth || canvasHeight)) {
     renderMap();
   }
 </script>
