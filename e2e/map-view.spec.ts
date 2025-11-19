@@ -107,6 +107,9 @@ test.describe('Map View E2E Tests', () => {
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       console.log('[E2E] Game started');
       
+      // Give game engine a moment to process first tick and generate map data
+      await page2.waitForTimeout(1000);
+      
       // Click the View button to navigate to full-page game view
       console.log('[E2E] Navigating to full-page game view...');
       await gameCard.locator('button:has-text("View")').click();
