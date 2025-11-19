@@ -731,16 +731,17 @@ func TestFoodAllocationComparison(t *testing.T) {
 	t.Logf("FOOD ALLOCATION COMPARISON (%d-YEAR SIMULATION)", years)
 	t.Log("================================================================================\n")
 	
-	t.Logf("%-15s %-12s %-12s %-12s %-12s %-12s %-12s %-12s",
-		"Allocation", "Viable", "Fire Days", "Final Pop", "Births", "Science", "Health", "Survival")
-	t.Log("--------------------------------------------------------------------------------")
+	t.Logf("%-15s %-12s %-12s %-13s %-12s %-12s %-12s %-12s %-12s",
+		"Allocation", "Viable", "Fire Days", "Decline Day", "Final Pop", "Births", "Science", "Health", "Survival")
+	t.Log("----------------------------------------------------------------------------------------")
 	
 	for _, allocation := range allocations {
 		conditions := DefaultStartingConditions()
 		conditions.FoodAllocationRatio = allocation
 		
 		viableCount := 0
-		var totalFireDays, totalFinalPop, totalBirths, totalScience, totalHealth float64
+		declineCount := 0
+		var totalFireDays, totalDeclineDays, totalFinalPop, totalBirths, totalScience, totalHealth float64
 		survivalCount := 0
 		
 		// Test with first 10 seeds for efficiency
@@ -762,6 +763,10 @@ func TestFoodAllocationComparison(t *testing.T) {
 			if result.DaysToFireMastery > 0 {
 				totalFireDays += float64(result.DaysToFireMastery)
 			}
+			if result.DaysToNonViable > 0 {
+				declineCount++
+				totalDeclineDays += float64(result.DaysToNonViable)
+			}
 			totalFinalPop += float64(result.FinalPopulation)
 			totalBirths += float64(result.TotalBirths)
 			totalScience += result.FinalScience
@@ -773,16 +778,22 @@ func TestFoodAllocationComparison(t *testing.T) {
 			avgFireDays = fmt.Sprintf("%.0f", totalFireDays/float64(viableCount))
 		}
 		
+		avgDeclineDays := "-"
+		if declineCount > 0 {
+			avgDeclineDays = fmt.Sprintf("%.0f", totalDeclineDays/float64(declineCount))
+		}
+		
 		avgFinalPop := totalFinalPop / 10.0
 		avgBirths := totalBirths / 10.0
 		avgScience := totalScience / 10.0
 		avgHealth := totalHealth / 10.0
 		survivalPct := float64(survivalCount) / 10.0 * 100
 		
-		t.Logf("%02d/%-12d %-12s %-12s %-12.1f %-12.0f %-12.1f %-12.1f %-12.1f%%",
+		t.Logf("%02d/%-12d %-12s %-12s %-13s %-12.1f %-12.0f %-12.1f %-12.1f %-12.1f%%",
 			int(allocation*100), int((1.0-allocation)*100),
 			fmt.Sprintf("%d/10", viableCount),
 			avgFireDays,
+			avgDeclineDays,
 			avgFinalPop,
 			avgBirths,
 			avgScience,
