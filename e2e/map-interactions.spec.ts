@@ -107,6 +107,9 @@ async function createAndStartGame(browser: Browser): Promise<{ context1: any, co
   await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
   console.log('[E2E] Game started');
   
+  // Give game engine a moment to process first tick and generate map data
+  await page2.waitForTimeout(1000);
+  
   // Open game details modal
   console.log('[E2E] Opening game details modal...');
   await gameCard.locator('button:has-text("View")').click();

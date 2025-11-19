@@ -107,6 +107,9 @@ test.describe('Gameplay UI E2E Tests', () => {
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       console.log('[E2E] Game started');
       
+      // Give game engine a moment to process first tick and generate map data
+      await page2.waitForTimeout(1000);
+      
       // Click the View button to navigate to full-page game view
       console.log('[E2E] Navigating to full-page game view...');
       await gameCard.locator('button:has-text("View")').click();
@@ -231,6 +234,9 @@ test.describe('Gameplay UI E2E Tests', () => {
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       
+      // Give game engine a moment to process first tick and generate map data
+      await page2.waitForTimeout(1000);
+      
       // Set viewport to landscape mode
       await page2.setViewportSize({ width: 1920, height: 1080 });
       
@@ -274,6 +280,9 @@ test.describe('Gameplay UI E2E Tests', () => {
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       
+      // Give game engine a moment to process first tick and generate map data
+      await page2.waitForTimeout(1000);
+      
       // Set viewport to portrait mode
       await page2.setViewportSize({ width: 768, height: 1024 });
       
@@ -316,6 +325,9 @@ test.describe('Gameplay UI E2E Tests', () => {
       const gameCard = page2.locator('.game-card').first();
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
+      
+      // Give game engine a moment to process first tick and generate map data
+      await page2.waitForTimeout(1000);
       
       // Set viewport to square mode
       await page2.setViewportSize({ width: 900, height: 900 });
