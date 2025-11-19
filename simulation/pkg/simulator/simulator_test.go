@@ -203,21 +203,54 @@ func TestProduceFood(t *testing.T) {
 		name              string
 		foodHours         float64
 		hasFireMastery    bool
+		hasStoneKnapping  bool
 		terrainMultiplier float64
 		expected          float64
 	}{
-		{"Base production", 100, false, 1.0, 100.0}, // 100 * 1.0 * 1.0 * 1.0
-		{"With Fire Mastery", 100, true, 1.0, 115.0}, // 100 * 1.0 * 1.15 * 1.0
-		{"Harsh terrain", 100, false, 0.6, 60.0}, // 100 * 1.0 * 1.0 * 0.6
-		{"Good terrain", 100, false, 1.5, 150.0}, // 100 * 1.0 * 1.0 * 1.5
+		{"Base production", 100, false, false, 1.0, 100.0}, // 100 * 1.0 * 1.0 * 1.0
+		{"With Fire Mastery", 100, true, false, 1.0, 115.0}, // 100 * 1.0 * 1.15 * 1.0
+		{"With Stone Knapping", 100, false, true, 1.0, 120.0}, // 100 * 1.0 * 1.20 * 1.0
+		{"With both technologies", 100, true, true, 1.0, 138.0}, // 100 * 1.0 * 1.15 * 1.20 = 138
+		{"Harsh terrain", 100, false, false, 0.6, 60.0}, // 100 * 1.0 * 1.0 * 0.6
+		{"Good terrain", 100, false, false, 1.5, 150.0}, // 100 * 1.0 * 1.0 * 1.5
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := produceFood(tt.foodHours, tt.hasFireMastery, tt.terrainMultiplier)
+			result := produceFood(tt.foodHours, tt.hasFireMastery, tt.hasStoneKnapping, tt.terrainMultiplier)
 			epsilon := 0.0001
 			if result < tt.expected-epsilon || result > tt.expected+epsilon {
 				t.Errorf("Expected %f food, got %f", tt.expected, result)
+			}
+		})
+	}
+}
+
+// TestTechnologyBonusStacking tests that Fire Mastery and Stone Knapping bonuses stack correctly
+func TestTechnologyBonusStacking(t *testing.T) {
+	baseFood := 100.0
+	terrain := 1.0
+
+	tests := []struct {
+		name               string
+		hasFireMastery     bool
+		hasStoneKnapping   bool
+		expectedMultiplier float64
+	}{
+		{"No technologies", false, false, 1.0},
+		{"Fire Mastery only", true, false, 1.15},
+		{"Stone Knapping only", false, true, 1.20},
+		{"Both technologies", true, true, 1.38}, // 1.15 * 1.20 = 1.38
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := produceFood(baseFood, tt.hasFireMastery, tt.hasStoneKnapping, terrain)
+			expected := baseFood * tt.expectedMultiplier
+
+			epsilon := 0.01
+			if result < expected-epsilon || result > expected+epsilon {
+				t.Errorf("Expected %f, got %f", expected, result)
 			}
 		})
 	}
@@ -237,11 +270,10 @@ func TestProduceScience(t *testing.T) {
 		minExpected   float64
 		maxExpected   float64
 	}{
-		// With ScienceBaseRate = 0.00015
+		// With ScienceBaseRate = 0.0088 (tuned to reach 600 science in ~20 years)
 		// Health penalty only applies when health < 30, so both healthy (60) and unhealthy (40) get full production
-		// 10 hours * 0.00015 = 0.0015
-		{"Healthy population", 10, population20, avgHealthy, 0.0014, 0.0016}, 
-		{"Unhealthy population", 10, population20, avgUnhealthy, 0.0014, 0.0016}, // No penalty above 30 health
+		{"Healthy population", 10, population20, avgHealthy, 0.085, 0.092}, // ~0.088
+		{"Unhealthy population", 10, population20, avgUnhealthy, 0.085, 0.092}, // ~0.088 (no penalty above 30 health)
 		{"Zero hours", 0, population20, avgHealthy, 0, 0},
 	}
 
@@ -491,7 +523,7 @@ func TestSimulation_BasicRun(t *testing.T) {
 	config := SimulationConfig{
 		Seed:               12345,
 		StartingConditions: DefaultStartingConditions(),
-		MaxDays:            100, // Short run for testing
+		MaxDays:            1000, // Longer run for meaningful progress with slower science rate
 	}
 
 	result := RunSimulation(config)
@@ -637,6 +669,48 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 	if variance < 0.1 {
 		t.Errorf("Population variance too low: %f (results may be too uniform)", variance)
 	}
+}
+
+// TestViabilityWithTwoTechnologies tests that populations can research both technologies
+func TestViabilityWithTwoTechnologies(t *testing.T) {
+	conditions := DefaultStartingConditions()
+	
+	viableCount := 0
+	bothTechsCount := 0
+	
+	for _, seed := range VIABILITY_TEST_SEEDS {
+		config := SimulationConfig{
+			Seed:               seed,
+			StartingConditions: conditions,
+			MaxDays:            7300, // 20 years (to allow for sequential research)
+		}
+		
+		result := RunSimulation(config)
+		
+		if result.IsViable {
+			viableCount++
+		}
+		
+		if result.HasFireMastery && result.HasStoneKnapping {
+			bothTechsCount++
+		}
+	}
+	
+	// Both technologies should be researched in 100% of viable runs
+	if bothTechsCount != len(VIABILITY_TEST_SEEDS) {
+		t.Errorf("Expected all %d seeds to unlock both technologies, got %d/%d", 
+			len(VIABILITY_TEST_SEEDS), bothTechsCount, len(VIABILITY_TEST_SEEDS))
+	}
+	
+	// Viability rate should remain 100% with two technologies
+	if viableCount != len(VIABILITY_TEST_SEEDS) {
+		t.Errorf("Expected 100%% viability with two technologies, got %d/%d viable",
+			viableCount, len(VIABILITY_TEST_SEEDS))
+	}
+	
+	t.Logf("Two-technology viability: %d/%d (%.1f%%) unlocked both Fire Mastery and Stone Knapping",
+		bothTechsCount, len(VIABILITY_TEST_SEEDS), 
+		float64(bothTechsCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
 }
 
 // TestViabilityStatistics validates aggregate statistics
