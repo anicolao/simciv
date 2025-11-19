@@ -19,19 +19,20 @@ Internal error: step id not found: fixture@56·✓ Screenshot matches expected: 
 ·✓ Screenshot matches expected: 10-game-create-form.png
 ✓ Screenshot matches expected: 11-game-created.png
 ·✓ Screenshot matches expected: 12-game-waiting-for-players.png
+✓ Screenshot matches expected: 13-game-second-player-view.png
 ×✓ Screenshot matches expected: 12-game-waiting-for-players.png
 ×✓ Screenshot matches expected: 12-game-waiting-for-players.png
-F××F✓ Screenshot matches expected: 17-game-full-no-join.png
-·✓ Screenshot matches expected: 18-game-details-modal.png
-·[E2E] Starting parallel user registration...
+F××F××✓ Screenshot matches expected: 17-game-full-no-join.png
+±×✓ Screenshot matches expected: 18-game-details-modal.png
+±[E2E] Starting parallel user registration...
 [E2E] Registering user: gameplayuser1
 [E2E] Registering user: gameplayuser2
-[E2E] Submitting registration for gameplayuser2...
 [E2E] Submitting registration for gameplayuser1...
+[E2E] Submitting registration for gameplayuser2...
 [E2E] Waiting for key generation for gameplayuser2...
 [E2E] Waiting for key generation for gameplayuser1...
-[E2E] Registration successful for gameplayuser2
 [E2E] Registration successful for gameplayuser1
+[E2E] Registration successful for gameplayuser2
 [E2E] gameplayuser2 is authenticated
 [E2E] gameplayuser1 is authenticated
 [E2E] User registration complete
@@ -41,23 +42,21 @@ F××F✓ Screenshot matches expected: 17-game-full-no-join.png
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Navigating to full-page game view...
-[E2E] Waiting for game view to load...
 [E2E] Verifying full-page game view...
 [E2E] Waiting for map data to load...
-[E2E] Loading game visible: [33mfalse[39m
+[E2E] Loading game visible: [33mtrue[39m
 [E2E] Loading map visible: [33mfalse[39m
 [E2E] Taking screenshot 24 (full-page game view)...
-Internal error: step id not found: fixture@80Internal error: step id not found: fixture@80×[E2E] Starting parallel user registration...
+Internal error: step id not found: fixture@78Internal error: step id not found: fixture@78×[E2E] Starting parallel user registration...
 [E2E] Registering user: gameplayuser1
 [E2E] Registering user: gameplayuser2
 [E2E] Submitting registration for gameplayuser2...
 [E2E] Submitting registration for gameplayuser1...
-[E2E] Waiting for key generation for gameplayuser2...
 [E2E] Waiting for key generation for gameplayuser1...
-[E2E] Registration successful for gameplayuser2
+[E2E] Waiting for key generation for gameplayuser2...
 [E2E] Registration successful for gameplayuser1
+[E2E] Registration successful for gameplayuser2
 [E2E] gameplayuser2 is authenticated
 [E2E] gameplayuser1 is authenticated
 [E2E] User registration complete
@@ -67,15 +66,13 @@ Internal error: step id not found: fixture@80Internal error: step id not found: 
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Navigating to full-page game view...
-[E2E] Waiting for game view to load...
 [E2E] Verifying full-page game view...
 [E2E] Waiting for map data to load...
 [E2E] Loading game visible: [33mfalse[39m
-[E2E] Loading map visible: [33mfalse[39m
+[E2E] Loading map visible: [33mtrue[39m
 [E2E] Taking screenshot 24 (full-page game view)...
-Internal error: step id not found: fixture@88Internal error: step id not found: fixture@88×[E2E] Starting parallel user registration...
+Internal error: step id not found: fixture@86Internal error: step id not found: fixture@86×[E2E] Starting parallel user registration...
 [E2E] Registering user: gameplayuser1
 [E2E] Registering user: gameplayuser2
 [E2E] Submitting registration for gameplayuser1...
@@ -93,62 +90,49 @@ Internal error: step id not found: fixture@88Internal error: step id not found: 
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Navigating to full-page game view...
-[E2E] Waiting for game view to load...
 [E2E] Verifying full-page game view...
 [E2E] Waiting for map data to load...
-[E2E] Loading game visible: [33mfalse[39m
+[E2E] Loading game visible: [33mtrue[39m
 [E2E] Loading map visible: [33mfalse[39m
 [E2E] Taking screenshot 24 (full-page game view)...
-Internal error: step id not found: fixture@88Internal error: step id not found: fixture@88F[E2E] Registering user: layoutuser1
+Internal error: step id not found: fixture@86Internal error: step id not found: fixture@86F[E2E] Registering user: layoutuser1
 [E2E] Registering user: layoutuser2
 [E2E] Submitting registration for layoutuser1...
 [E2E] Submitting registration for layoutuser2...
 [E2E] Waiting for key generation for layoutuser1...
 [E2E] Waiting for key generation for layoutuser2...
-[E2E] Registration successful for layoutuser2
 [E2E] Registration successful for layoutuser1
-[E2E] layoutuser1 is authenticated
-[E2E] layoutuser2 is authenticated
-[E2E] Taking screenshot 28 (landscape layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77×[E2E] Registering user: layoutuser1
-[E2E] Registering user: layoutuser2
-[E2E] Submitting registration for layoutuser2...
-[E2E] Submitting registration for layoutuser1...
-[E2E] Waiting for key generation for layoutuser1...
-[E2E] Waiting for key generation for layoutuser2...
 [E2E] Registration successful for layoutuser2
-[E2E] Registration successful for layoutuser1
-[E2E] layoutuser1 is authenticated
 [E2E] layoutuser2 is authenticated
+[E2E] layoutuser1 is authenticated
 [E2E] Taking screenshot 28 (landscape layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77×[E2E] Registering user: layoutuser1
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76×[E2E] Registering user: layoutuser1
 [E2E] Registering user: layoutuser2
 [E2E] Submitting registration for layoutuser1...
 [E2E] Submitting registration for layoutuser2...
-[E2E] Waiting for key generation for layoutuser2...
 [E2E] Waiting for key generation for layoutuser1...
-[E2E] Registration successful for layoutuser2
+[E2E] Waiting for key generation for layoutuser2...
 [E2E] Registration successful for layoutuser1
-[E2E] layoutuser2 is authenticated
+[E2E] Registration successful for layoutuser2
 [E2E] layoutuser1 is authenticated
+[E2E] layoutuser2 is authenticated
 [E2E] Taking screenshot 28 (landscape layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77F[E2E] Registering user: portraituser1
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76×[E2E] Registering user: layoutuser1
+[E2E] Registering user: layoutuser2
+[E2E] Submitting registration for layoutuser1...
+[E2E] Submitting registration for layoutuser2...
+[E2E] Waiting for key generation for layoutuser1...
+[E2E] Waiting for key generation for layoutuser2...
+[E2E] Registration successful for layoutuser1
+[E2E] Registration successful for layoutuser2
+[E2E] layoutuser1 is authenticated
+[E2E] layoutuser2 is authenticated
+[E2E] Taking screenshot 28 (landscape layout)...
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76F[E2E] Registering user: portraituser1
 [E2E] Registering user: portraituser2
 [E2E] Submitting registration for portraituser1...
 [E2E] Submitting registration for portraituser2...
-[E2E] Waiting for key generation for portraituser1...
-[E2E] Waiting for key generation for portraituser2...
-[E2E] Registration successful for portraituser1
-[E2E] Registration successful for portraituser2
-[E2E] portraituser1 is authenticated
-[E2E] portraituser2 is authenticated
-[E2E] Taking screenshot 29 (portrait layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77×[E2E] Registering user: portraituser1
-[E2E] Registering user: portraituser2
-[E2E] Submitting registration for portraituser2...
-[E2E] Submitting registration for portraituser1...
 [E2E] Waiting for key generation for portraituser1...
 [E2E] Waiting for key generation for portraituser2...
 [E2E] Registration successful for portraituser2
@@ -156,67 +140,78 @@ Internal error: step id not found: fixture@77Internal error: step id not found: 
 [E2E] portraituser2 is authenticated
 [E2E] portraituser1 is authenticated
 [E2E] Taking screenshot 29 (portrait layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77×[E2E] Registering user: portraituser1
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76×[E2E] Registering user: portraituser1
 [E2E] Registering user: portraituser2
-[E2E] Submitting registration for portraituser2...
 [E2E] Submitting registration for portraituser1...
+[E2E] Submitting registration for portraituser2...
 [E2E] Waiting for key generation for portraituser1...
 [E2E] Waiting for key generation for portraituser2...
-[E2E] Registration successful for portraituser1
 [E2E] Registration successful for portraituser2
+[E2E] Registration successful for portraituser1
+[E2E] portraituser2 is authenticated
+[E2E] portraituser1 is authenticated
+[E2E] Taking screenshot 29 (portrait layout)...
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76×[E2E] Registering user: portraituser1
+[E2E] Registering user: portraituser2
+[E2E] Submitting registration for portraituser1...
+[E2E] Submitting registration for portraituser2...
+[E2E] Waiting for key generation for portraituser2...
+[E2E] Waiting for key generation for portraituser1...
+[E2E] Registration successful for portraituser2
+[E2E] Registration successful for portraituser1
 [E2E] portraituser1 is authenticated
 [E2E] portraituser2 is authenticated
 [E2E] Taking screenshot 29 (portrait layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77F[E2E] Registering user: squareuser1
-[E2E] Registering user: squareuser2
-[E2E] Submitting registration for squareuser1...
-[E2E] Submitting registration for squareuser2...
-[E2E] Waiting for key generation for squareuser2...
-[E2E] Waiting for key generation for squareuser1...
-[E2E] Registration successful for squareuser2
-[E2E] Registration successful for squareuser1
-[E2E] squareuser2 is authenticated
-[E2E] squareuser1 is authenticated
-[E2E] Taking screenshot 30 (square layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77×[E2E] Registering user: squareuser1
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76F[E2E] Registering user: squareuser1
 [E2E] Registering user: squareuser2
 [E2E] Submitting registration for squareuser2...
 [E2E] Submitting registration for squareuser1...
-[E2E] Waiting for key generation for squareuser2...
-[E2E] Waiting for key generation for squareuser1...
-[E2E] Registration successful for squareuser2
-[E2E] Registration successful for squareuser1
-[E2E] squareuser2 is authenticated
-[E2E] squareuser1 is authenticated
-[E2E] Taking screenshot 30 (square layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77×[E2E] Registering user: squareuser1
-[E2E] Registering user: squareuser2
-[E2E] Submitting registration for squareuser1...
-[E2E] Submitting registration for squareuser2...
 [E2E] Waiting for key generation for squareuser1...
 [E2E] Waiting for key generation for squareuser2...
 [E2E] Registration successful for squareuser1
 [E2E] Registration successful for squareuser2
-[E2E] squareuser2 is authenticated
 [E2E] squareuser1 is authenticated
+[E2E] squareuser2 is authenticated
 [E2E] Taking screenshot 30 (square layout)...
-Internal error: step id not found: fixture@77Internal error: step id not found: fixture@77F[E2E] Registering user: waitinguser
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76×[E2E] Registering user: squareuser1
+[E2E] Registering user: squareuser2
+[E2E] Submitting registration for squareuser2...
+[E2E] Submitting registration for squareuser1...
+[E2E] Waiting for key generation for squareuser2...
+[E2E] Waiting for key generation for squareuser1...
+[E2E] Registration successful for squareuser2
+[E2E] Registration successful for squareuser1
+[E2E] squareuser1 is authenticated
+[E2E] squareuser2 is authenticated
+[E2E] Taking screenshot 30 (square layout)...
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76×[E2E] Registering user: squareuser1
+[E2E] Registering user: squareuser2
+[E2E] Submitting registration for squareuser2...
+[E2E] Submitting registration for squareuser1...
+[E2E] Waiting for key generation for squareuser1...
+[E2E] Waiting for key generation for squareuser2...
+[E2E] Registration successful for squareuser2
+[E2E] Registration successful for squareuser1
+[E2E] squareuser1 is authenticated
+[E2E] squareuser2 is authenticated
+[E2E] Taking screenshot 30 (square layout)...
+Internal error: step id not found: fixture@76Internal error: step id not found: fixture@76F[E2E] Registering user: waitinguser
 [E2E] Submitting registration for waitinguser...
 [E2E] Waiting for key generation for waitinguser...
 [E2E] Registration successful for waitinguser
 [E2E] waitinguser is authenticated
 ✓ Screenshot matches expected: 31-gameplay-ui-waiting-game.png
 ·[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763579967076
-[E2E] Registering user: mapint_user2_1763579967076
-[E2E] Submitting registration for mapint_user2_1763579967076...
-[E2E] Submitting registration for mapint_user1_1763579967076...
-[E2E] Waiting for key generation for mapint_user1_1763579967076...
-[E2E] Waiting for key generation for mapint_user2_1763579967076...
-[E2E] Registration successful for mapint_user2_1763579967076
-[E2E] Registration successful for mapint_user1_1763579967076
-[E2E] mapint_user1_1763579967076 is authenticated
-[E2E] mapint_user2_1763579967076 is authenticated
+[E2E] Registering user: mapint_user1_1763583547866
+[E2E] Registering user: mapint_user2_1763583547866
+[E2E] Submitting registration for mapint_user2_1763583547866...
+[E2E] Submitting registration for mapint_user1_1763583547866...
+[E2E] Waiting for key generation for mapint_user2_1763583547866...
+[E2E] Waiting for key generation for mapint_user1_1763583547866...
+[E2E] Registration successful for mapint_user2_1763583547866
+[E2E] Registration successful for mapint_user1_1763583547866
+[E2E] mapint_user1_1763583547866 is authenticated
+[E2E] mapint_user2_1763583547866 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -224,20 +219,19 @@ Internal error: step id not found: fixture@77Internal error: step id not found: 
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763579992419
-[E2E] Registering user: mapint_user2_1763579992419
-[E2E] Submitting registration for mapint_user1_1763579992419...
-[E2E] Submitting registration for mapint_user2_1763579992419...
-[E2E] Waiting for key generation for mapint_user2_1763579992419...
-[E2E] Waiting for key generation for mapint_user1_1763579992419...
-[E2E] Registration successful for mapint_user1_1763579992419
-[E2E] Registration successful for mapint_user2_1763579992419
-[E2E] mapint_user2_1763579992419 is authenticated
-[E2E] mapint_user1_1763579992419 is authenticated
+[E2E] Registering user: mapint_user1_1763583564218
+[E2E] Registering user: mapint_user2_1763583564218
+[E2E] Submitting registration for mapint_user1_1763583564218...
+[E2E] Submitting registration for mapint_user2_1763583564218...
+[E2E] Waiting for key generation for mapint_user2_1763583564218...
+[E2E] Waiting for key generation for mapint_user1_1763583564218...
+[E2E] Registration successful for mapint_user2_1763583564218
+[E2E] Registration successful for mapint_user1_1763583564218
+[E2E] mapint_user2_1763583564218 is authenticated
+[E2E] mapint_user1_1763583564218 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -245,20 +239,19 @@ Internal error: step id not found: fixture@77Internal error: step id not found: 
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580018121
-[E2E] Registering user: mapint_user2_1763580018121
-[E2E] Submitting registration for mapint_user2_1763580018121...
-[E2E] Submitting registration for mapint_user1_1763580018121...
-[E2E] Waiting for key generation for mapint_user2_1763580018121...
-[E2E] Waiting for key generation for mapint_user1_1763580018121...
-[E2E] Registration successful for mapint_user1_1763580018121
-[E2E] Registration successful for mapint_user2_1763580018121
-[E2E] mapint_user1_1763580018121 is authenticated
-[E2E] mapint_user2_1763580018121 is authenticated
+[E2E] Registering user: mapint_user1_1763583580214
+[E2E] Registering user: mapint_user2_1763583580214
+[E2E] Submitting registration for mapint_user1_1763583580214...
+[E2E] Submitting registration for mapint_user2_1763583580214...
+[E2E] Waiting for key generation for mapint_user1_1763583580214...
+[E2E] Waiting for key generation for mapint_user2_1763583580214...
+[E2E] Registration successful for mapint_user2_1763583580214
+[E2E] Registration successful for mapint_user1_1763583580214
+[E2E] mapint_user1_1763583580214 is authenticated
+[E2E] mapint_user2_1763583580214 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -266,20 +259,19 @@ Internal error: step id not found: fixture@77Internal error: step id not found: 
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 F[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580043493
-[E2E] Registering user: mapint_user2_1763580043493
-[E2E] Submitting registration for mapint_user1_1763580043493...
-[E2E] Submitting registration for mapint_user2_1763580043493...
-[E2E] Waiting for key generation for mapint_user1_1763580043493...
-[E2E] Waiting for key generation for mapint_user2_1763580043493...
-[E2E] Registration successful for mapint_user1_1763580043493
-[E2E] Registration successful for mapint_user2_1763580043493
-[E2E] mapint_user1_1763580043493 is authenticated
-[E2E] mapint_user2_1763580043493 is authenticated
+[E2E] Registering user: mapint_user1_1763583596604
+[E2E] Registering user: mapint_user2_1763583596604
+[E2E] Submitting registration for mapint_user2_1763583596604...
+[E2E] Submitting registration for mapint_user1_1763583596604...
+[E2E] Waiting for key generation for mapint_user2_1763583596604...
+[E2E] Waiting for key generation for mapint_user1_1763583596604...
+[E2E] Registration successful for mapint_user2_1763583596604
+[E2E] Registration successful for mapint_user1_1763583596604
+[E2E] mapint_user1_1763583596604 is authenticated
+[E2E] mapint_user2_1763583596604 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -287,20 +279,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580068125
-[E2E] Registering user: mapint_user2_1763580068125
-[E2E] Submitting registration for mapint_user2_1763580068125...
-[E2E] Submitting registration for mapint_user1_1763580068125...
-[E2E] Waiting for key generation for mapint_user1_1763580068125...
-[E2E] Waiting for key generation for mapint_user2_1763580068125...
-[E2E] Registration successful for mapint_user2_1763580068125
-[E2E] Registration successful for mapint_user1_1763580068125
-[E2E] mapint_user2_1763580068125 is authenticated
-[E2E] mapint_user1_1763580068125 is authenticated
+[E2E] Registering user: mapint_user1_1763583613039
+[E2E] Registering user: mapint_user2_1763583613039
+[E2E] Submitting registration for mapint_user1_1763583613039...
+[E2E] Submitting registration for mapint_user2_1763583613039...
+[E2E] Waiting for key generation for mapint_user2_1763583613039...
+[E2E] Waiting for key generation for mapint_user1_1763583613039...
+[E2E] Registration successful for mapint_user2_1763583613039
+[E2E] Registration successful for mapint_user1_1763583613039
+[E2E] mapint_user1_1763583613039 is authenticated
+[E2E] mapint_user2_1763583613039 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -308,20 +299,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580093063
-[E2E] Registering user: mapint_user2_1763580093063
-[E2E] Submitting registration for mapint_user2_1763580093063...
-[E2E] Submitting registration for mapint_user1_1763580093063...
-[E2E] Waiting for key generation for mapint_user1_1763580093063...
-[E2E] Waiting for key generation for mapint_user2_1763580093063...
-[E2E] Registration successful for mapint_user1_1763580093063
-[E2E] Registration successful for mapint_user2_1763580093063
-[E2E] mapint_user2_1763580093063 is authenticated
-[E2E] mapint_user1_1763580093063 is authenticated
+[E2E] Registering user: mapint_user1_1763583629776
+[E2E] Registering user: mapint_user2_1763583629776
+[E2E] Submitting registration for mapint_user1_1763583629776...
+[E2E] Submitting registration for mapint_user2_1763583629776...
+[E2E] Waiting for key generation for mapint_user2_1763583629776...
+[E2E] Waiting for key generation for mapint_user1_1763583629776...
+[E2E] Registration successful for mapint_user1_1763583629776
+[E2E] Registration successful for mapint_user2_1763583629776
+[E2E] mapint_user1_1763583629776 is authenticated
+[E2E] mapint_user2_1763583629776 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -329,20 +319,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 F[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580118420
-[E2E] Registering user: mapint_user2_1763580118420
-[E2E] Submitting registration for mapint_user2_1763580118420...
-[E2E] Submitting registration for mapint_user1_1763580118420...
-[E2E] Waiting for key generation for mapint_user2_1763580118420...
-[E2E] Waiting for key generation for mapint_user1_1763580118420...
-[E2E] Registration successful for mapint_user1_1763580118420
-[E2E] Registration successful for mapint_user2_1763580118420
-[E2E] mapint_user2_1763580118420 is authenticated
-[E2E] mapint_user1_1763580118420 is authenticated
+[E2E] Registering user: mapint_user1_1763583646170
+[E2E] Registering user: mapint_user2_1763583646170
+[E2E] Submitting registration for mapint_user1_1763583646170...
+[E2E] Submitting registration for mapint_user2_1763583646170...
+[E2E] Waiting for key generation for mapint_user2_1763583646170...
+[E2E] Waiting for key generation for mapint_user1_1763583646170...
+[E2E] Registration successful for mapint_user2_1763583646170
+[E2E] Registration successful for mapint_user1_1763583646170
+[E2E] mapint_user2_1763583646170 is authenticated
+[E2E] mapint_user1_1763583646170 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -350,20 +339,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580143778
-[E2E] Registering user: mapint_user2_1763580143778
-[E2E] Submitting registration for mapint_user2_1763580143778...
-[E2E] Submitting registration for mapint_user1_1763580143778...
-[E2E] Waiting for key generation for mapint_user2_1763580143778...
-[E2E] Waiting for key generation for mapint_user1_1763580143778...
-[E2E] Registration successful for mapint_user2_1763580143778
-[E2E] Registration successful for mapint_user1_1763580143778
-[E2E] mapint_user2_1763580143778 is authenticated
-[E2E] mapint_user1_1763580143778 is authenticated
+[E2E] Registering user: mapint_user1_1763583662585
+[E2E] Registering user: mapint_user2_1763583662585
+[E2E] Submitting registration for mapint_user2_1763583662585...
+[E2E] Submitting registration for mapint_user1_1763583662585...
+[E2E] Waiting for key generation for mapint_user2_1763583662585...
+[E2E] Waiting for key generation for mapint_user1_1763583662585...
+[E2E] Registration successful for mapint_user2_1763583662585
+[E2E] Registration successful for mapint_user1_1763583662585
+[E2E] mapint_user2_1763583662585 is authenticated
+[E2E] mapint_user1_1763583662585 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -371,20 +359,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580168734
-[E2E] Registering user: mapint_user2_1763580168734
-[E2E] Submitting registration for mapint_user1_1763580168734...
-[E2E] Submitting registration for mapint_user2_1763580168734...
-[E2E] Waiting for key generation for mapint_user2_1763580168734...
-[E2E] Waiting for key generation for mapint_user1_1763580168734...
-[E2E] Registration successful for mapint_user2_1763580168734
-[E2E] Registration successful for mapint_user1_1763580168734
-[E2E] mapint_user2_1763580168734 is authenticated
-[E2E] mapint_user1_1763580168734 is authenticated
+[E2E] Registering user: mapint_user1_1763583679334
+[E2E] Registering user: mapint_user2_1763583679334
+[E2E] Submitting registration for mapint_user1_1763583679334...
+[E2E] Submitting registration for mapint_user2_1763583679334...
+[E2E] Waiting for key generation for mapint_user1_1763583679334...
+[E2E] Waiting for key generation for mapint_user2_1763583679334...
+[E2E] Registration successful for mapint_user1_1763583679334
+[E2E] Registration successful for mapint_user2_1763583679334
+[E2E] mapint_user2_1763583679334 is authenticated
+[E2E] mapint_user1_1763583679334 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -392,20 +379,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 F[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580194096
-[E2E] Registering user: mapint_user2_1763580194096
-[E2E] Submitting registration for mapint_user2_1763580194096...
-[E2E] Submitting registration for mapint_user1_1763580194096...
-[E2E] Waiting for key generation for mapint_user2_1763580194096...
-[E2E] Waiting for key generation for mapint_user1_1763580194096...
-[E2E] Registration successful for mapint_user2_1763580194096
-[E2E] Registration successful for mapint_user1_1763580194096
-[E2E] mapint_user1_1763580194096 is authenticated
-[E2E] mapint_user2_1763580194096 is authenticated
+[E2E] Registering user: mapint_user1_1763583695731
+[E2E] Registering user: mapint_user2_1763583695731
+[E2E] Submitting registration for mapint_user1_1763583695731...
+[E2E] Submitting registration for mapint_user2_1763583695731...
+[E2E] Waiting for key generation for mapint_user1_1763583695731...
+[E2E] Waiting for key generation for mapint_user2_1763583695731...
+[E2E] Registration successful for mapint_user1_1763583695731
+[E2E] Registration successful for mapint_user2_1763583695731
+[E2E] mapint_user2_1763583695731 is authenticated
+[E2E] mapint_user1_1763583695731 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -413,20 +399,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580219456
-[E2E] Registering user: mapint_user2_1763580219456
-[E2E] Submitting registration for mapint_user1_1763580219456...
-[E2E] Submitting registration for mapint_user2_1763580219456...
-[E2E] Waiting for key generation for mapint_user1_1763580219456...
-[E2E] Waiting for key generation for mapint_user2_1763580219456...
-[E2E] Registration successful for mapint_user2_1763580219456
-[E2E] Registration successful for mapint_user1_1763580219456
-[E2E] mapint_user1_1763580219456 is authenticated
-[E2E] mapint_user2_1763580219456 is authenticated
+[E2E] Registering user: mapint_user1_1763583712126
+[E2E] Registering user: mapint_user2_1763583712126
+[E2E] Submitting registration for mapint_user1_1763583712126...
+[E2E] Submitting registration for mapint_user2_1763583712126...
+[E2E] Waiting for key generation for mapint_user1_1763583712126...
+[E2E] Waiting for key generation for mapint_user2_1763583712126...
+[E2E] Registration successful for mapint_user1_1763583712126
+[E2E] Registration successful for mapint_user2_1763583712126
+[E2E] mapint_user2_1763583712126 is authenticated
+[E2E] mapint_user1_1763583712126 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -434,20 +419,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580245133
-[E2E] Registering user: mapint_user2_1763580245133
-[E2E] Submitting registration for mapint_user1_1763580245133...
-[E2E] Submitting registration for mapint_user2_1763580245133...
-[E2E] Waiting for key generation for mapint_user2_1763580245133...
-[E2E] Waiting for key generation for mapint_user1_1763580245133...
-[E2E] Registration successful for mapint_user2_1763580245133
-[E2E] Registration successful for mapint_user1_1763580245133
-[E2E] mapint_user1_1763580245133 is authenticated
-[E2E] mapint_user2_1763580245133 is authenticated
+[E2E] Registering user: mapint_user1_1763583728100
+[E2E] Registering user: mapint_user2_1763583728100
+[E2E] Submitting registration for mapint_user1_1763583728100...
+[E2E] Submitting registration for mapint_user2_1763583728100...
+[E2E] Waiting for key generation for mapint_user1_1763583728100...
+[E2E] Waiting for key generation for mapint_user2_1763583728100...
+[E2E] Registration successful for mapint_user2_1763583728100
+[E2E] Registration successful for mapint_user1_1763583728100
+[E2E] mapint_user1_1763583728100 is authenticated
+[E2E] mapint_user2_1763583728100 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -455,20 +439,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 F[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580270507
-[E2E] Registering user: mapint_user2_1763580270507
-[E2E] Submitting registration for mapint_user1_1763580270507...
-[E2E] Submitting registration for mapint_user2_1763580270507...
-[E2E] Waiting for key generation for mapint_user1_1763580270507...
-[E2E] Waiting for key generation for mapint_user2_1763580270507...
-[E2E] Registration successful for mapint_user1_1763580270507
-[E2E] Registration successful for mapint_user2_1763580270507
-[E2E] mapint_user1_1763580270507 is authenticated
-[E2E] mapint_user2_1763580270507 is authenticated
+[E2E] Registering user: mapint_user1_1763583744499
+[E2E] Registering user: mapint_user2_1763583744499
+[E2E] Submitting registration for mapint_user1_1763583744499...
+[E2E] Submitting registration for mapint_user2_1763583744499...
+[E2E] Waiting for key generation for mapint_user1_1763583744499...
+[E2E] Waiting for key generation for mapint_user2_1763583744499...
+[E2E] Registration successful for mapint_user1_1763583744499
+[E2E] Registration successful for mapint_user2_1763583744499
+[E2E] mapint_user2_1763583744499 is authenticated
+[E2E] mapint_user1_1763583744499 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -476,20 +459,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580295889
-[E2E] Registering user: mapint_user2_1763580295889
-[E2E] Submitting registration for mapint_user2_1763580295889...
-[E2E] Submitting registration for mapint_user1_1763580295889...
-[E2E] Waiting for key generation for mapint_user2_1763580295889...
-[E2E] Waiting for key generation for mapint_user1_1763580295889...
-[E2E] Registration successful for mapint_user2_1763580295889
-[E2E] Registration successful for mapint_user1_1763580295889
-[E2E] mapint_user2_1763580295889 is authenticated
-[E2E] mapint_user1_1763580295889 is authenticated
+[E2E] Registering user: mapint_user1_1763583760880
+[E2E] Registering user: mapint_user2_1763583760880
+[E2E] Submitting registration for mapint_user1_1763583760880...
+[E2E] Submitting registration for mapint_user2_1763583760880...
+[E2E] Waiting for key generation for mapint_user1_1763583760880...
+[E2E] Waiting for key generation for mapint_user2_1763583760880...
+[E2E] Registration successful for mapint_user1_1763583760880
+[E2E] Registration successful for mapint_user2_1763583760880
+[E2E] mapint_user1_1763583760880 is authenticated
+[E2E] mapint_user2_1763583760880 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -497,20 +479,19 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 ×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapint_user1_1763580321559
-[E2E] Registering user: mapint_user2_1763580321559
-[E2E] Submitting registration for mapint_user2_1763580321559...
-[E2E] Submitting registration for mapint_user1_1763580321559...
-[E2E] Waiting for key generation for mapint_user2_1763580321559...
-[E2E] Waiting for key generation for mapint_user1_1763580321559...
-[E2E] Registration successful for mapint_user1_1763580321559
-[E2E] Registration successful for mapint_user2_1763580321559
-[E2E] mapint_user2_1763580321559 is authenticated
-[E2E] mapint_user1_1763580321559 is authenticated
+[E2E] Registering user: mapint_user1_1763583776872
+[E2E] Registering user: mapint_user2_1763583776872
+[E2E] Submitting registration for mapint_user2_1763583776872...
+[E2E] Submitting registration for mapint_user1_1763583776872...
+[E2E] Waiting for key generation for mapint_user2_1763583776872...
+[E2E] Waiting for key generation for mapint_user1_1763583776872...
+[E2E] Registration successful for mapint_user2_1763583776872
+[E2E] Registration successful for mapint_user1_1763583776872
+[E2E] mapint_user1_1763583776872 is authenticated
+[E2E] mapint_user2_1763583776872 is authenticated
 [E2E] User registration complete
 [E2E] Player 1: Creating game...
 [E2E] Game created with ID: 6da67f05
@@ -518,10 +499,34 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Opening game details modal...
 [E2E] Waiting for map data to load...
 F[E2E] Starting parallel user registration...
+[E2E] Registering user: mapuser1
+[E2E] Registering user: mapuser2
+[E2E] Submitting registration for mapuser1...
+[E2E] Submitting registration for mapuser2...
+[E2E] Waiting for key generation for mapuser2...
+[E2E] Waiting for key generation for mapuser1...
+[E2E] Registration successful for mapuser1
+[E2E] Registration successful for mapuser2
+[E2E] mapuser1 is authenticated
+[E2E] mapuser2 is authenticated
+[E2E] User registration complete
+[E2E] Player 1: Creating game...
+[E2E] Game created with ID: 6da67f05
+[E2E] Player 2: Joining game...
+[E2E] Player 2: Join button clicked
+[E2E] Waiting for game to start...
+[E2E] Game started
+[E2E] Navigating to full-page game view...
+[E2E] Waiting for map data to load...
+[E2E] Waiting for map area to appear...
+[E2E] Map area visible
+[E2E] Taking screenshot 19...
+✓ Screenshot matches expected: 19-map-section-visible.png
+[E2E] Verifying map canvas...
+Internal error: step id not found: fixture@84Internal error: step id not found: fixture@84×[E2E] Starting parallel user registration...
 [E2E] Registering user: mapuser1
 [E2E] Registering user: mapuser2
 [E2E] Submitting registration for mapuser2...
@@ -539,47 +544,18 @@ F[E2E] Starting parallel user registration...
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Navigating to full-page game view...
-[E2E] Waiting for game view to load...
 [E2E] Waiting for map data to load...
 [E2E] Waiting for map area to appear...
 [E2E] Map area visible
 [E2E] Taking screenshot 19...
 ✓ Screenshot matches expected: 19-map-section-visible.png
 [E2E] Verifying map canvas...
-Internal error: step id not found: fixture@85Internal error: step id not found: fixture@85×[E2E] Starting parallel user registration...
+Internal error: step id not found: fixture@84Internal error: step id not found: fixture@84×[E2E] Starting parallel user registration...
 [E2E] Registering user: mapuser1
 [E2E] Registering user: mapuser2
-[E2E] Submitting registration for mapuser1...
 [E2E] Submitting registration for mapuser2...
-[E2E] Waiting for key generation for mapuser1...
-[E2E] Waiting for key generation for mapuser2...
-[E2E] Registration successful for mapuser2
-[E2E] Registration successful for mapuser1
-[E2E] mapuser1 is authenticated
-[E2E] mapuser2 is authenticated
-[E2E] User registration complete
-[E2E] Player 1: Creating game...
-[E2E] Game created with ID: 6da67f05
-[E2E] Player 2: Joining game...
-[E2E] Player 2: Join button clicked
-[E2E] Waiting for game to start...
-[E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
-[E2E] Navigating to full-page game view...
-[E2E] Waiting for game view to load...
-[E2E] Waiting for map data to load...
-[E2E] Waiting for map area to appear...
-[E2E] Map area visible
-[E2E] Taking screenshot 19...
-✓ Screenshot matches expected: 19-map-section-visible.png
-[E2E] Verifying map canvas...
-Internal error: step id not found: fixture@85Internal error: step id not found: fixture@85×[E2E] Starting parallel user registration...
-[E2E] Registering user: mapuser1
-[E2E] Registering user: mapuser2
 [E2E] Submitting registration for mapuser1...
-[E2E] Submitting registration for mapuser2...
 [E2E] Waiting for key generation for mapuser2...
 [E2E] Waiting for key generation for mapuser1...
 [E2E] Registration successful for mapuser1
@@ -593,16 +569,14 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 [E2E] Player 2: Join button clicked
 [E2E] Waiting for game to start...
 [E2E] Game started
-[E2E] Waiting 10 seconds for map generation...
 [E2E] Navigating to full-page game view...
-[E2E] Waiting for game view to load...
 [E2E] Waiting for map data to load...
 [E2E] Waiting for map area to appear...
 [E2E] Map area visible
 [E2E] Taking screenshot 19...
 ✓ Screenshot matches expected: 19-map-section-visible.png
 [E2E] Verifying map canvas...
-Internal error: step id not found: fixture@85Internal error: step id not found: fixture@85F[E2E] Registering user: mapuser_waiting
+Internal error: step id not found: fixture@84Internal error: step id not found: fixture@84F[E2E] Registering user: mapuser_waiting
 [E2E] Submitting registration for mapuser_waiting...
 [E2E] Waiting for key generation for mapuser_waiting...
 [E2E] Registration successful for mapuser_waiting
@@ -612,19 +586,19 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
   1) [chromium] › e2e/game-creation.spec.ts:88:7 › Game Creation and Management › should allow second player to join game 
 
-    Error: Screenshot mismatch: 13-game-second-player-view.png
+    Error: Screenshot mismatch: 14-game-started.png
 
     The screenshot differs from the expected version.
 
     Next steps:
-    1. Inspect the screenshot at: e2e-screenshots/13-game-second-player-view.png
+    1. Inspect the screenshot at: e2e-screenshots/14-game-started.png
     2. If the visual change is correct and expected:
        - Run: UPDATE_SCREENSHOTS=1 npm run test:e2e
        - Verify tests pass: npm run test:e2e
        - Commit the updated screenshot
     3. If the visual change is incorrect:
        - Fix the source of the visual difference
-       - Revert the screenshot: git checkout -- e2e-screenshots/13-game-second-player-view.png
+       - Revert the screenshot: git checkout -- e2e-screenshots/14-game-started.png
        - Run tests again: npm run test:e2e
 
        at helpers/screenshot.ts:105
@@ -637,7 +611,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/game-creation.spec.ts:117:5
+        at /home/runner/work/simciv/simciv/e2e/game-creation.spec.ts:126:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/game-creation-Game-Creatio-634bd--second-player-to-join-game-chromium/test-failed-1.png
@@ -863,7 +837,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:162:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:151:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-5cba6-view-with-responsive-layout-chromium/test-failed-1.png
@@ -904,7 +878,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:162:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:151:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-5cba6-view-with-responsive-layout-chromium-retry1/test-failed-1.png
@@ -953,7 +927,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:162:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:151:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-5cba6-view-with-responsive-layout-chromium-retry2/test-failed-1.png
@@ -967,7 +941,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     test-results/gameplay-ui-Gameplay-UI-E2-5cba6-view-with-responsive-layout-chromium-retry2/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  4) [chromium] › e2e/gameplay-ui.spec.ts:227:7 › Gameplay UI E2E Tests › should detect landscape layout mode 
+  4) [chromium] › e2e/gameplay-ui.spec.ts:216:7 › Gameplay UI E2E Tests › should detect landscape layout mode 
 
     Error: Screenshot mismatch: 28-gameplay-ui-landscape.png
 
@@ -994,7 +968,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:261:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:251:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-6e24d-etect-landscape-layout-mode-chromium/test-failed-1.png
@@ -1035,7 +1009,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:261:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:251:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-6e24d-etect-landscape-layout-mode-chromium-retry1/test-failed-1.png
@@ -1084,7 +1058,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:261:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:251:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-6e24d-etect-landscape-layout-mode-chromium-retry2/test-failed-1.png
@@ -1098,7 +1072,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     test-results/gameplay-ui-Gameplay-UI-E2-6e24d-etect-landscape-layout-mode-chromium-retry2/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  5) [chromium] › e2e/gameplay-ui.spec.ts:272:7 › Gameplay UI E2E Tests › should detect portrait layout mode 
+  5) [chromium] › e2e/gameplay-ui.spec.ts:262:7 › Gameplay UI E2E Tests › should detect portrait layout mode 
 
     Error: Screenshot mismatch: 29-gameplay-ui-portrait.png
 
@@ -1125,7 +1099,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:306:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:297:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-3e52f-detect-portrait-layout-mode-chromium/test-failed-1.png
@@ -1166,7 +1140,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:306:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:297:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-3e52f-detect-portrait-layout-mode-chromium-retry1/test-failed-1.png
@@ -1215,7 +1189,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:306:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:297:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-3e52f-detect-portrait-layout-mode-chromium-retry2/test-failed-1.png
@@ -1229,7 +1203,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     test-results/gameplay-ui-Gameplay-UI-E2-3e52f-detect-portrait-layout-mode-chromium-retry2/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  6) [chromium] › e2e/gameplay-ui.spec.ts:317:7 › Gameplay UI E2E Tests › should detect square layout mode 
+  6) [chromium] › e2e/gameplay-ui.spec.ts:308:7 › Gameplay UI E2E Tests › should detect square layout mode 
 
     Error: Screenshot mismatch: 30-gameplay-ui-square.png
 
@@ -1256,7 +1230,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:351:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:343:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-02f3a-d-detect-square-layout-mode-chromium/test-failed-1.png
@@ -1297,7 +1271,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:351:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:343:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-02f3a-d-detect-square-layout-mode-chromium-retry1/test-failed-1.png
@@ -1346,7 +1320,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
       107 |         `The screenshot differs from the expected version.\n\n` +
       108 |         `Next steps:\n` +
         at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
-        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:351:7
+        at /home/runner/work/simciv/simciv/e2e/gameplay-ui.spec.ts:343:7
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/gameplay-ui-Gameplay-UI-E2-02f3a-d-detect-square-layout-mode-chromium-retry2/test-failed-1.png
@@ -1360,7 +1334,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     test-results/gameplay-ui-Gameplay-UI-E2-02f3a-d-detect-square-layout-mode-chromium-retry2/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  7) [chromium] › e2e/map-interactions.spec.ts:129:7 › Map Interaction E2E Tests › should allow dragging to pan the map with mouse 
+  7) [chromium] › e2e/map-interactions.spec.ts:128:7 › Map Interaction E2E Tests › should allow dragging to pan the map with mouse 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -1374,26 +1348,26 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:132:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:131:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     Error Context: test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium/error-context.md
@@ -1412,15 +1386,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:132:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:131:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium-retry1/test-failed-2.png
@@ -1458,22 +1432,22 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:132:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:131:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium-retry2/test-failed-3.png
+    test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium-retry2/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium-retry2/test-failed-2.png
+    test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium-retry2/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
@@ -1482,7 +1456,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
     Error Context: test-results/map-interactions-Map-Inter-c53cc-g-to-pan-the-map-with-mouse-chromium-retry2/error-context.md
 
-  8) [chromium] › e2e/map-interactions.spec.ts:173:7 › Map Interaction E2E Tests › should allow scrolling to zoom in and out 
+  8) [chromium] › e2e/map-interactions.spec.ts:172:7 › Map Interaction E2E Tests › should allow scrolling to zoom in and out 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -1496,15 +1470,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:176:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:175:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-c0f4b-crolling-to-zoom-in-and-out-chromium/test-failed-2.png
@@ -1534,15 +1508,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:176:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:175:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-c0f4b-crolling-to-zoom-in-and-out-chromium-retry1/test-failed-2.png
@@ -1580,15 +1554,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:176:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:175:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-c0f4b-crolling-to-zoom-in-and-out-chromium-retry2/test-failed-2.png
@@ -1604,7 +1578,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
     Error Context: test-results/map-interactions-Map-Inter-c0f4b-crolling-to-zoom-in-and-out-chromium-retry2/error-context.md
 
-  9) [chromium] › e2e/map-interactions.spec.ts:263:7 › Map Interaction E2E Tests › should allow combined pan and zoom operations 
+  9) [chromium] › e2e/map-interactions.spec.ts:262:7 › Map Interaction E2E Tests › should allow combined pan and zoom operations 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -1618,26 +1592,26 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:266:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:265:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium/test-failed-1.png
+    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium/test-failed-3.png
+    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     Error Context: test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium/error-context.md
@@ -1656,22 +1630,22 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:266:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:265:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium-retry1/test-failed-2.png
+    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium-retry1/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium-retry1/test-failed-3.png
+    test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium-retry1/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
@@ -1702,15 +1676,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:266:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:265:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium-retry2/test-failed-2.png
@@ -1726,7 +1700,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
     Error Context: test-results/map-interactions-Map-Inter-dab1f-ned-pan-and-zoom-operations-chromium-retry2/error-context.md
 
-  10) [chromium] › e2e/map-interactions.spec.ts:303:7 › Map Interaction E2E Tests › should maintain canvas dimensions at fixed size 
+  10) [chromium] › e2e/map-interactions.spec.ts:302:7 › Map Interaction E2E Tests › should maintain canvas dimensions at fixed size 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -1740,26 +1714,26 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:306:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:305:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium/test-failed-3.png
+    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium/test-failed-1.png
+    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     Error Context: test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium/error-context.md
@@ -1778,22 +1752,22 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:306:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:305:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium-retry1/test-failed-3.png
+    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium-retry1/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium-retry1/test-failed-2.png
+    test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium-retry1/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
@@ -1824,15 +1798,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:306:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:305:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium-retry2/test-failed-2.png
@@ -1848,7 +1822,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
     Error Context: test-results/map-interactions-Map-Inter-8b082-as-dimensions-at-fixed-size-chromium-retry2/error-context.md
 
-  11) [chromium] › e2e/map-interactions.spec.ts:334:7 › Map Interaction E2E Tests › should show proper cursor feedback during drag 
+  11) [chromium] › e2e/map-interactions.spec.ts:333:7 › Map Interaction E2E Tests › should show proper cursor feedback during drag 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -1862,26 +1836,26 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:337:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:336:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium/test-failed-1.png
+    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium/test-failed-3.png
+    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     Error Context: test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium/error-context.md
@@ -1900,22 +1874,22 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:337:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:336:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry1/test-failed-2.png
+    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry1/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry1/test-failed-3.png
+    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry1/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
@@ -1946,26 +1920,26 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      120 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
-      121 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-    > 122 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      119 |   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+      120 |   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+    > 121 |   await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
           |                                               ^
-      123 |   console.log('[E2E] Map section visible');
-      124 |   
-      125 |   return { context1, context2, page1, page2, gameId };
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:122:47)
-        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:337:43
+      122 |   console.log('[E2E] Map section visible');
+      123 |   
+      124 |   return { context1, context2, page1, page2, gameId };
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:121:47)
+        at /home/runner/work/simciv/simciv/e2e/map-interactions.spec.ts:336:43
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry2/test-failed-2.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry2/test-failed-3.png
+    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry2/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry2/test-failed-1.png
+    test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry2/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     Error Context: test-results/map-interactions-Map-Inter-d2bb6-cursor-feedback-during-drag-chromium-retry2/error-context.md
@@ -1984,14 +1958,14 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-canvas')[22m
 
 
-      140 |       // Verify map canvas
-      141 |       console.log('[E2E] Verifying map canvas...');
-    > 142 |       await expect(page2.locator('.map-canvas')).toBeVisible();
+      135 |       // Verify map canvas
+      136 |       console.log('[E2E] Verifying map canvas...');
+    > 137 |       await expect(page2.locator('.map-canvas')).toBeVisible();
           |                                                  ^
-      143 |       
-      144 |       // Screenshot 20: Complete full-page game view
-      145 |       console.log('[E2E] Taking screenshot 20...');
-        at /home/runner/work/simciv/simciv/e2e/map-view.spec.ts:142:50
+      138 |       
+      139 |       // Screenshot 20: Complete full-page game view
+      140 |       console.log('[E2E] Taking screenshot 20...');
+        at /home/runner/work/simciv/simciv/e2e/map-view.spec.ts:137:50
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-view-Map-View-E2E-Test-b8471-onents-when-game-is-started-chromium/test-failed-1.png
@@ -2019,14 +1993,14 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-canvas')[22m
 
 
-      140 |       // Verify map canvas
-      141 |       console.log('[E2E] Verifying map canvas...');
-    > 142 |       await expect(page2.locator('.map-canvas')).toBeVisible();
+      135 |       // Verify map canvas
+      136 |       console.log('[E2E] Verifying map canvas...');
+    > 137 |       await expect(page2.locator('.map-canvas')).toBeVisible();
           |                                                  ^
-      143 |       
-      144 |       // Screenshot 20: Complete full-page game view
-      145 |       console.log('[E2E] Taking screenshot 20...');
-        at /home/runner/work/simciv/simciv/e2e/map-view.spec.ts:142:50
+      138 |       
+      139 |       // Screenshot 20: Complete full-page game view
+      140 |       console.log('[E2E] Taking screenshot 20...');
+        at /home/runner/work/simciv/simciv/e2e/map-view.spec.ts:137:50
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-view-Map-View-E2E-Test-b8471-onents-when-game-is-started-chromium-retry1/test-failed-1.png
@@ -2062,14 +2036,14 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-canvas')[22m
 
 
-      140 |       // Verify map canvas
-      141 |       console.log('[E2E] Verifying map canvas...');
-    > 142 |       await expect(page2.locator('.map-canvas')).toBeVisible();
+      135 |       // Verify map canvas
+      136 |       console.log('[E2E] Verifying map canvas...');
+    > 137 |       await expect(page2.locator('.map-canvas')).toBeVisible();
           |                                                  ^
-      143 |       
-      144 |       // Screenshot 20: Complete full-page game view
-      145 |       console.log('[E2E] Taking screenshot 20...');
-        at /home/runner/work/simciv/simciv/e2e/map-view.spec.ts:142:50
+      138 |       
+      139 |       // Screenshot 20: Complete full-page game view
+      140 |       console.log('[E2E] Taking screenshot 20...');
+        at /home/runner/work/simciv/simciv/e2e/map-view.spec.ts:137:50
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/map-view-Map-View-E2E-Test-b8471-onents-when-game-is-started-chromium-retry2/test-failed-1.png
@@ -2083,7 +2057,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     test-results/map-view-Map-View-E2E-Test-b8471-onents-when-game-is-started-chromium-retry2/test-failed-3.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  13) [chromium] › e2e/minimal-settlers.spec.ts:79:7 › Minimal Settlers Implementation › should create initial settlers unit at game start 
+  13) [chromium] › e2e/minimal-settlers.spec.ts:76:7 › Minimal Settlers Implementation › should create initial settlers unit at game start 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -2097,15 +2071,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:84:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:81:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-831ae-settlers-unit-at-game-start-chromium/test-failed-1.png
@@ -2127,15 +2101,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:84:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:81:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-831ae-settlers-unit-at-game-start-chromium-retry1/test-failed-1.png
@@ -2165,15 +2139,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:84:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:81:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-831ae-settlers-unit-at-game-start-chromium-retry2/test-failed-1.png
@@ -2181,7 +2155,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
     Error Context: test-results/minimal-settlers-Minimal-S-831ae-settlers-unit-at-game-start-chromium-retry2/error-context.md
 
-  14) [chromium] › e2e/minimal-settlers.spec.ts:122:7 › Minimal Settlers Implementation › should move settlers unit autonomously for 3 steps 
+  14) [chromium] › e2e/minimal-settlers.spec.ts:117:7 › Minimal Settlers Implementation › should move settlers unit autonomously for 3 steps 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -2195,15 +2169,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:127:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:122:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-a3c85-it-autonomously-for-3-steps-chromium/test-failed-1.png
@@ -2225,15 +2199,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:127:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:122:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-a3c85-it-autonomously-for-3-steps-chromium-retry1/test-failed-1.png
@@ -2263,15 +2237,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:127:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:122:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-a3c85-it-autonomously-for-3-steps-chromium-retry2/test-failed-1.png
@@ -2279,7 +2253,7 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
     Error Context: test-results/minimal-settlers-Minimal-S-a3c85-it-autonomously-for-3-steps-chromium-retry2/error-context.md
 
-  15) [chromium] › e2e/minimal-settlers.spec.ts:187:7 › Minimal Settlers Implementation › should create settlement automatically after 3 steps 
+  15) [chromium] › e2e/minimal-settlers.spec.ts:179:7 › Minimal Settlers Implementation › should create settlement automatically after 3 steps 
 
     Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
 
@@ -2293,15 +2267,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:192:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:184:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-41ffb-automatically-after-3-steps-chromium/test-failed-1.png
@@ -2323,15 +2297,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:192:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:184:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-41ffb-automatically-after-3-steps-chromium-retry1/test-failed-1.png
@@ -2361,15 +2335,15 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
     [2m  - waiting for locator('.map-section')[22m
 
 
-      72 |   
-      73 |   // Wait for map section and canvas to load
-    > 74 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+      69 |   
+      70 |   // Wait for map section and canvas to load
+    > 71 |   await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
          |                                              ^
-      75 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
-      76 | }
-      77 |
-        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:74:46)
-        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:192:5
+      72 |   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+      73 | }
+      74 |
+        at createAndStartGame (/home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:71:46)
+        at /home/runner/work/simciv/simciv/e2e/minimal-settlers.spec.ts:184:5
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     test-results/minimal-settlers-Minimal-S-41ffb-automatically-after-3-steps-chromium-retry2/test-failed-1.png
@@ -2377,20 +2351,136 @@ Internal error: step id not found: fixture@85Internal error: step id not found: 
 
     Error Context: test-results/minimal-settlers-Minimal-S-41ffb-automatically-after-3-steps-chromium-retry2/error-context.md
 
+  16) [chromium] › e2e/game-creation.spec.ts:184:7 › Game Creation and Management › should prevent joining a full game 
+
+    Error: Screenshot mismatch: 17-game-full-no-join.png
+
+    The screenshot differs from the expected version.
+
+    Next steps:
+    1. Inspect the screenshot at: e2e-screenshots/17-game-full-no-join.png
+    2. If the visual change is correct and expected:
+       - Run: UPDATE_SCREENSHOTS=1 npm run test:e2e
+       - Verify tests pass: npm run test:e2e
+       - Commit the updated screenshot
+    3. If the visual change is incorrect:
+       - Fix the source of the visual difference
+       - Revert the screenshot: git checkout -- e2e-screenshots/17-game-full-no-join.png
+       - Run tests again: npm run test:e2e
+
+       at helpers/screenshot.ts:105
+
+      103 |       // Normal mode: fail the test with instructions
+      104 |       const filename = path.basename(screenshotPath);
+    > 105 |       throw new Error(
+          |             ^
+      106 |         `Screenshot mismatch: ${filename}\n\n` +
+      107 |         `The screenshot differs from the expected version.\n\n` +
+      108 |         `Next steps:\n` +
+        at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
+        at /home/runner/work/simciv/simciv/e2e/game-creation.spec.ts:219:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/game-creation-Game-Creatio-580d7-prevent-joining-a-full-game-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/game-creation-Game-Creatio-580d7-prevent-joining-a-full-game-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: Screenshot mismatch: 17-game-full-no-join.png
+
+    The screenshot differs from the expected version.
+
+    Next steps:
+    1. Inspect the screenshot at: e2e-screenshots/17-game-full-no-join.png
+    2. If the visual change is correct and expected:
+       - Run: UPDATE_SCREENSHOTS=1 npm run test:e2e
+       - Verify tests pass: npm run test:e2e
+       - Commit the updated screenshot
+    3. If the visual change is incorrect:
+       - Fix the source of the visual difference
+       - Revert the screenshot: git checkout -- e2e-screenshots/17-game-full-no-join.png
+       - Run tests again: npm run test:e2e
+
+       at helpers/screenshot.ts:105
+
+      103 |       // Normal mode: fail the test with instructions
+      104 |       const filename = path.basename(screenshotPath);
+    > 105 |       throw new Error(
+          |             ^
+      106 |         `Screenshot mismatch: ${filename}\n\n` +
+      107 |         `The screenshot differs from the expected version.\n\n` +
+      108 |         `Next steps:\n` +
+        at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
+        at /home/runner/work/simciv/simciv/e2e/game-creation.spec.ts:219:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/game-creation-Game-Creatio-580d7-prevent-joining-a-full-game-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/game-creation-Game-Creatio-580d7-prevent-joining-a-full-game-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/game-creation-Game-Creatio-580d7-prevent-joining-a-full-game-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/game-creation-Game-Creatio-580d7-prevent-joining-a-full-game-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [chromium] › e2e/game-creation.spec.ts:222:7 › Game Creation and Management › should navigate to full-page game view when viewing 
+
+    Error: Screenshot mismatch: 18-game-details-modal.png
+
+    The screenshot differs from the expected version.
+
+    Next steps:
+    1. Inspect the screenshot at: e2e-screenshots/18-game-details-modal.png
+    2. If the visual change is correct and expected:
+       - Run: UPDATE_SCREENSHOTS=1 npm run test:e2e
+       - Verify tests pass: npm run test:e2e
+       - Commit the updated screenshot
+    3. If the visual change is incorrect:
+       - Fix the source of the visual difference
+       - Revert the screenshot: git checkout -- e2e-screenshots/18-game-details-modal.png
+       - Run tests again: npm run test:e2e
+
+       at helpers/screenshot.ts:105
+
+      103 |       // Normal mode: fail the test with instructions
+      104 |       const filename = path.basename(screenshotPath);
+    > 105 |       throw new Error(
+          |             ^
+      106 |         `Screenshot mismatch: ${filename}\n\n` +
+      107 |         `The screenshot differs from the expected version.\n\n` +
+      108 |         `Next steps:\n` +
+        at takeScreenshotIfChanged (/home/runner/work/simciv/simciv/e2e/helpers/screenshot.ts:105:13)
+        at /home/runner/work/simciv/simciv/e2e/game-creation.spec.ts:242:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/game-creation-Game-Creatio-8f433-page-game-view-when-viewing-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/game-creation-Game-Creatio-8f433-page-game-view-when-viewing-chromium/error-context.md
+
   15 failed
     [chromium] › e2e/game-creation.spec.ts:88:7 › Game Creation and Management › should allow second player to join game 
     [chromium] › e2e/game-creation.spec.ts:129:7 › Game Creation and Management › should show time progression in started game 
     [chromium] › e2e/gameplay-ui.spec.ts:68:7 › Gameplay UI E2E Tests › should display full-page game view with responsive layout 
-    [chromium] › e2e/gameplay-ui.spec.ts:227:7 › Gameplay UI E2E Tests › should detect landscape layout mode 
-    [chromium] › e2e/gameplay-ui.spec.ts:272:7 › Gameplay UI E2E Tests › should detect portrait layout mode 
-    [chromium] › e2e/gameplay-ui.spec.ts:317:7 › Gameplay UI E2E Tests › should detect square layout mode 
-    [chromium] › e2e/map-interactions.spec.ts:129:7 › Map Interaction E2E Tests › should allow dragging to pan the map with mouse 
-    [chromium] › e2e/map-interactions.spec.ts:173:7 › Map Interaction E2E Tests › should allow scrolling to zoom in and out 
-    [chromium] › e2e/map-interactions.spec.ts:263:7 › Map Interaction E2E Tests › should allow combined pan and zoom operations 
-    [chromium] › e2e/map-interactions.spec.ts:303:7 › Map Interaction E2E Tests › should maintain canvas dimensions at fixed size 
-    [chromium] › e2e/map-interactions.spec.ts:334:7 › Map Interaction E2E Tests › should show proper cursor feedback during drag 
+    [chromium] › e2e/gameplay-ui.spec.ts:216:7 › Gameplay UI E2E Tests › should detect landscape layout mode 
+    [chromium] › e2e/gameplay-ui.spec.ts:262:7 › Gameplay UI E2E Tests › should detect portrait layout mode 
+    [chromium] › e2e/gameplay-ui.spec.ts:308:7 › Gameplay UI E2E Tests › should detect square layout mode 
+    [chromium] › e2e/map-interactions.spec.ts:128:7 › Map Interaction E2E Tests › should allow dragging to pan the map with mouse 
+    [chromium] › e2e/map-interactions.spec.ts:172:7 › Map Interaction E2E Tests › should allow scrolling to zoom in and out 
+    [chromium] › e2e/map-interactions.spec.ts:262:7 › Map Interaction E2E Tests › should allow combined pan and zoom operations 
+    [chromium] › e2e/map-interactions.spec.ts:302:7 › Map Interaction E2E Tests › should maintain canvas dimensions at fixed size 
+    [chromium] › e2e/map-interactions.spec.ts:333:7 › Map Interaction E2E Tests › should show proper cursor feedback during drag 
     [chromium] › e2e/map-view.spec.ts:68:7 › Map View E2E Tests › should display map and verify all components when game is started 
-    [chromium] › e2e/minimal-settlers.spec.ts:79:7 › Minimal Settlers Implementation › should create initial settlers unit at game start 
-    [chromium] › e2e/minimal-settlers.spec.ts:122:7 › Minimal Settlers Implementation › should move settlers unit autonomously for 3 steps 
-    [chromium] › e2e/minimal-settlers.spec.ts:187:7 › Minimal Settlers Implementation › should create settlement automatically after 3 steps 
-  9 passed (15.4m)
+    [chromium] › e2e/minimal-settlers.spec.ts:76:7 › Minimal Settlers Implementation › should create initial settlers unit at game start 
+    [chromium] › e2e/minimal-settlers.spec.ts:117:7 › Minimal Settlers Implementation › should move settlers unit autonomously for 3 steps 
+    [chromium] › e2e/minimal-settlers.spec.ts:179:7 › Minimal Settlers Implementation › should create settlement automatically after 3 steps 
+  2 flaky
+    [chromium] › e2e/game-creation.spec.ts:184:7 › Game Creation and Management › should prevent joining a full game 
+    [chromium] › e2e/game-creation.spec.ts:222:7 › Game Creation and Management › should navigate to full-page game view when viewing 
+  7 passed (8.9m)
