@@ -88,11 +88,8 @@
         canvasWidth = newWidth;
         canvasHeight = newHeight;
         console.log('[MapView] Canvas resized to container:', canvasWidth, 'x', canvasHeight);
-        
-        // Trigger re-render immediately when canvas is ready
-        if (tiles.length > 0 && canvas) {
-          renderMap();
-        }
+        // Don't call renderMap() here - let the reactive statement handle it
+        // This ensures the canvas element's width/height attributes are updated first
       }
     }
   }
@@ -647,19 +644,20 @@
     viewOffsetY = Math.max(minOffsetY, Math.min(viewOffsetY, maxOffsetY));
   }
 
-  // Re-render when canvas is mounted, tiles are loaded, or view changes
-  $: if (canvas && tiles.length > 0) {
-    renderMap();
-  }
-  
-  // Re-render when zoom level changes
-  $: if (canvas && tiles.length > 0 && zoomLevel) {
-    renderMap();
-  }
-  
-  // Re-render when canvas size changes
-  $: if (canvas && tiles.length > 0 && (canvasWidth || canvasHeight)) {
-    renderMap();
+  // Re-render when dependencies change
+  // Svelte will track all variables referenced in this block
+  $: {
+    // Reference all dependencies to ensure Svelte tracks them
+    canvas;
+    tiles.length;
+    canvasWidth;
+    canvasHeight;
+    zoomLevel;
+    
+    // Only render if canvas and tiles are ready
+    if (canvas && tiles.length > 0) {
+      renderMap();
+    }
   }
 </script>
 
