@@ -64,6 +64,9 @@ async function createAndStartGame(page: Page): Promise<void> {
   // Wait for game to start
   await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 10000 });
   
+  // Give game engine a moment to process first tick and generate map data
+  await page.waitForTimeout(1000);
+  
   // Click "View" button to open game details
   await gameCard.locator('button:has-text("View")').click();
   
