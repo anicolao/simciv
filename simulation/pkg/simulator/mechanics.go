@@ -60,6 +60,7 @@ const (
 	MonthlyConceptionBase = 0.06 / DaysPerMonth // 6% monthly -> daily (2x increase per testing)
 	BelongingThreshold = 40.0
 	InfantSurvivalRate = 0.7 // 70% survival at birth
+	GestationPeriod = 280 // Approximately 9 months in days
 
 	// Technology unlock
 	FireMasteryScienceRequired = 100.0
@@ -228,25 +229,31 @@ func checkMortality(human *MinimalHuman, rng *RandomGenerator) bool {
 }
 
 // checkReproduction checks if a male and female can conceive a child
-func checkReproduction(male, female *MinimalHuman, population int, rng *RandomGenerator) *MinimalHuman {
+// Returns true if conception occurred (pregnancy started)
+func checkReproduction(male, female *MinimalHuman, population int, rng *RandomGenerator) bool {
 	// Prerequisites
 	if !male.IsAlive || !female.IsAlive {
-		return nil
+		return false
 	}
 	if male.Age < AgeFertileMin || male.Age > AgeFertileMax {
-		return nil
+		return false
 	}
 	if female.Age < AgeFertileMin || female.Age > AgeFertileMax {
-		return nil
+		return false
 	}
 	if male.Health < HealthFullWork || female.Health < HealthFullWork {
-		return nil
+		return false
+	}
+	
+	// Check if female is already pregnant
+	if female.PregnancyDaysRemaining > 0 {
+		return false
 	}
 
 	// Calculate simplified belonging
 	belonging := math.Min(50.0, float64(population)/2.0)
 	if belonging < BelongingThreshold {
-		return nil
+		return false
 	}
 
 	// Calculate conception chance
@@ -273,34 +280,17 @@ func checkReproduction(male, female *MinimalHuman, population int, rng *RandomGe
 
 	// Roll for conception
 	if rng.NextBool(finalChance) {
-		// Instant birth (no pregnancy mechanics in minimal version)
-		childHealth := avgHealth * 0.8 // Child starts at 80% of parents' health
-
-		// 70% infant survival rate at birth
-		if !rng.NextBool(InfantSurvivalRate) {
-			return nil // Stillborn/infant mortality
-		}
-
-		child := &MinimalHuman{
-			ID:      generateID(rng),
-			Age:     0,
-			Gender:  "male",
-			Health:  childHealth,
-			IsAlive: true,
-		}
-		if rng.NextBool(0.5) {
-			child.Gender = "female"
-		}
-
-		return child
+		// Start pregnancy
+		female.PregnancyDaysRemaining = GestationPeriod
+		return true
 	}
 
-	return nil
+	return false
 }
 
-// attemptReproduction tries to create new births from the population
-func attemptReproduction(humans []*MinimalHuman, rng *RandomGenerator) []*MinimalHuman {
-	newborns := []*MinimalHuman{}
+// attemptReproduction tries to start pregnancies for eligible females
+func attemptReproduction(humans []*MinimalHuman, rng *RandomGenerator) int {
+	conceptions := 0
 
 	// Count alive population
 	aliveCount := 0
@@ -326,10 +316,49 @@ func attemptReproduction(humans []*MinimalHuman, rng *RandomGenerator) []*Minima
 	// Try to pair each eligible female with an eligible male
 	for _, female := range females {
 		for _, male := range males {
-			child := checkReproduction(male, female, aliveCount, rng)
-			if child != nil {
-				newborns = append(newborns, child)
-				break // Each female can only have one child per day check
+			if checkReproduction(male, female, aliveCount, rng) {
+				conceptions++
+				break // Each female can only conceive once per check
+			}
+		}
+	}
+
+	return conceptions
+}
+
+// processPregnancies decrements pregnancy counters and creates babies when pregnancy completes
+func processPregnancies(humans []*MinimalHuman, rng *RandomGenerator) []*MinimalHuman {
+	newborns := []*MinimalHuman{}
+
+	for _, human := range humans {
+		if !human.IsAlive || human.Gender != "female" {
+			continue
+		}
+
+		if human.PregnancyDaysRemaining > 0 {
+			human.PregnancyDaysRemaining--
+
+			// Check if pregnancy completed
+			if human.PregnancyDaysRemaining == 0 {
+				// Birth occurs
+				childHealth := human.Health * 0.8 // Child starts at 80% of mother's health
+
+				// 70% infant survival rate at birth
+				if rng.NextBool(InfantSurvivalRate) {
+					child := &MinimalHuman{
+						ID:                     generateID(rng),
+						Age:                    0,
+						Gender:                 "male",
+						Health:                 childHealth,
+						IsAlive:                true,
+						PregnancyDaysRemaining: 0,
+					}
+					if rng.NextBool(0.5) {
+						child.Gender = "female"
+					}
+					newborns = append(newborns, child)
+				}
+				// If not successful, it's stillborn/infant mortality
 			}
 		}
 	}
