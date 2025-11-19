@@ -102,22 +102,14 @@ test.describe('Gameplay UI E2E Tests', () => {
       await gameCard.locator('button:has-text("Join")').click();
       console.log('[E2E] Player 2: Join button clicked');
       
-      // Wait longer for game to transition to started state
+      // Wait for game to start
       console.log('[E2E] Waiting for game to start...');
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       console.log('[E2E] Game started');
       
-      // Wait for map to be generated (game engine processes first tick)
-      console.log('[E2E] Waiting 10 seconds for map generation...');
-      await page2.waitForTimeout(10000);
-      
       // Click the View button to navigate to full-page game view
       console.log('[E2E] Navigating to full-page game view...');
       await gameCard.locator('button:has-text("View")').click();
-      
-      // Wait for the game view to load
-      console.log('[E2E] Waiting for game view to load...');
-      await page2.waitForTimeout(2000);
       
       // Verify we're in the full-page game view
       console.log('[E2E] Verifying full-page game view...');
@@ -126,10 +118,7 @@ test.describe('Gameplay UI E2E Tests', () => {
       // Wait for map data to load (MapView loads tiles in its onMount)
       console.log('[E2E] Waiting for map data to load...');
       
-      // Wait a bit for GameView to fetch game data
-      await page2.waitForTimeout(3000);
-      
-      // Check if we have a loading indicator
+      // Check if we have a loading indicator - if so wait for it to disappear
       const loadingGame = await page2.locator('text=Loading game...').isVisible().catch(() => false);
       console.log('[E2E] Loading game visible:', loadingGame);
       
@@ -144,9 +133,6 @@ test.describe('Gameplay UI E2E Tests', () => {
       if (loadingMap) {
         await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 });
       }
-      
-      // Give a bit more time for rendering
-      await page2.waitForTimeout(2000);
       
       // Verify back button is visible
       await expect(page2.locator('button:has-text("Back to Lobby")')).toBeVisible();
@@ -244,14 +230,12 @@ test.describe('Gameplay UI E2E Tests', () => {
       const gameCard = page2.locator('.game-card').first();
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
-      await page2.waitForTimeout(10000); // Wait for map generation
       
       // Set viewport to landscape mode
       await page2.setViewportSize({ width: 1920, height: 1080 });
       
       // Navigate to game view
       await gameCard.locator('button:has-text("View")').click();
-      await page2.waitForTimeout(2000);
       
       // Verify landscape layout
       await expect(page2.locator('.game-view.landscape')).toBeVisible();
@@ -289,14 +273,12 @@ test.describe('Gameplay UI E2E Tests', () => {
       const gameCard = page2.locator('.game-card').first();
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
-      await page2.waitForTimeout(10000); // Wait for map generation
       
       // Set viewport to portrait mode
       await page2.setViewportSize({ width: 768, height: 1024 });
       
       // Navigate to game view
       await gameCard.locator('button:has-text("View")').click();
-      await page2.waitForTimeout(2000);
       
       // Verify portrait layout
       await expect(page2.locator('.game-view.portrait')).toBeVisible();
@@ -334,14 +316,12 @@ test.describe('Gameplay UI E2E Tests', () => {
       const gameCard = page2.locator('.game-card').first();
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
-      await page2.waitForTimeout(10000); // Wait for map generation
       
       // Set viewport to square mode
       await page2.setViewportSize({ width: 900, height: 900 });
       
       // Navigate to game view
       await gameCard.locator('button:has-text("View")').click();
-      await page2.waitForTimeout(2000);
       
       // Verify square layout
       await expect(page2.locator('.game-view.square')).toBeVisible();
@@ -376,9 +356,6 @@ test.describe('Gameplay UI E2E Tests', () => {
     
     // Click the View button to navigate to game view
     await page.locator('.game-card').first().locator('button:has-text("View")').click();
-    
-    // Wait for game view to load
-    await page.waitForTimeout(2000);
     
     // Map placeholder should be visible for waiting games
     await expect(page.locator('.map-placeholder')).toBeVisible();

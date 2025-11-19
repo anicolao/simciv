@@ -102,29 +102,21 @@ test.describe('Map View E2E Tests', () => {
       await gameCard.locator('button:has-text("Join")').click();
       console.log('[E2E] Player 2: Join button clicked');
       
-      // Wait longer for game to transition to started state
+      // Wait for game to start
       console.log('[E2E] Waiting for game to start...');
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       console.log('[E2E] Game started');
       
-      // Wait for map to be generated (game engine processes first tick)
-      console.log('[E2E] Waiting 10 seconds for map generation...');
-      await page2.waitForTimeout(10000);
-      
       // Click the View button to navigate to full-page game view
       console.log('[E2E] Navigating to full-page game view...');
       await gameCard.locator('button:has-text("View")').click();
-      
-      // Wait for game view to load
-      console.log('[E2E] Waiting for game view to load...');
-      await page2.waitForTimeout(2000);
       
       // Verify we're in the full-page game view
       await expect(page2.locator('.game-view')).toBeVisible({ timeout: 5000 });
       
       // Wait for map data to load (MapView loads tiles in its onMount)
       console.log('[E2E] Waiting for map data to load...');
-      // First wait for "Loading map..." to appear, then for it to disappear
+      // Wait for "Loading map..." to appear if present, then for it to disappear
       await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
       await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
       
@@ -194,9 +186,6 @@ test.describe('Map View E2E Tests', () => {
     
     // Click the View button to navigate to game view
     await page.locator('.game-card').first().locator('button:has-text("View")').click();
-    
-    // Wait for game view to load
-    await page.waitForTimeout(2000);
     
     // Map placeholder should be visible for waiting games
     await expect(page.locator('.map-placeholder')).toBeVisible();
