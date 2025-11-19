@@ -1,0 +1,38 @@
+
+> simciv@1.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.10 [39m[90m/home/runner/work/simciv/simciv[39m
+
+ [32m✓[39m src/__tests__/unit/games.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 515[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/auth.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 347[2mms[22m[39m
+[90mstdout[2m | src/__tests__/integration/map.test.ts[2m > [22m[2mMap API Integration Tests[2m > [22m[2mGET /api/map/:gameId/tiles[2m > [22m[2mshould return tiles with valid terrain data (not blank/invisible)
+[22m[39m
+=== Tile Data Verification ===
+Total tiles returned: 100
+
+First 5 tiles:
+  Tile 0: (0,0) terrainType=GRASSLAND elevation=600 visibleTo=["testuser"]
+  Tile 1: (1,0) terrainType=GRASSLAND elevation=600 visibleTo=["testuser"]
+  Tile 2: (2,0) terrainType=GRASSLAND elevation=600 visibleTo=["testuser"]
+  Tile 3: (3,0) terrainType=GRASSLAND elevation=600 visibleTo=["testuser"]
+  Tile 4: (4,0) terrainType=GRASSLAND elevation=600 visibleTo=["testuser"]
+
+Terrain type distribution:
+  GRASSLAND: 100 tiles
+
+Tiles in viewport (0-20, 0-15): 100/100
+=== End Tile Data Verification ===
+
+
+ [32m✓[39m src/__tests__/integration/map.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 735[2mms[22m[39m
+ [32m✓[39m src/__tests__/unit/crypto.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 446[2mms[22m[39m
+       [33m[2m✓[22m[39m should accept RSA 4096 public key [33m 333[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/games.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 582[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m60 passed[39m[22m[90m (60)[39m
+[2m   Start at [22m 19:13:47
+[2m   Duration [22m 2.10s[2m (transform 461ms, setup 0ms, collect 1.72s, tests 2.63s, environment 1ms, prepare 74ms)[22m
+
