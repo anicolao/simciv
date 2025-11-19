@@ -64,9 +64,6 @@ async function createAndStartGame(page: Page): Promise<void> {
   // Wait for game to start
   await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 10000 });
   
-  // Wait for map to be generated
-  await page.waitForTimeout(10000);
-  
   // Click "View" button to open game details
   await gameCard.locator('button:has-text("View")').click();
   
@@ -83,9 +80,7 @@ test.describe('Minimal Settlers Implementation', () => {
     await registerAndLogin(page, alias, password);
     await createAndStartGame(page);
 
-    // Wait for map to fully load
-    await page.waitForTimeout(2000);
-
+    // Map canvas should already be visible from createAndStartGame
     // Check if settlers unit is visible on the map by looking for the walking emoji
     // The unit should be rendered as 🚶 with a green circle
     const mapCanvas = page.locator('canvas.map-canvas');
@@ -126,10 +121,7 @@ test.describe('Minimal Settlers Implementation', () => {
     await registerAndLogin(page, alias, password);
     await createAndStartGame(page);
 
-    // Wait for map to load
-    await page.waitForTimeout(2000);
-
-    // Get initial unit position
+    // Get initial unit position (map already loaded from createAndStartGame)
     let gameState = await page.evaluate(async () => {
       const response = await fetch('/api/games/user/my-games');
       const data = await response.json();
@@ -191,10 +183,7 @@ test.describe('Minimal Settlers Implementation', () => {
     await registerAndLogin(page, alias, password);
     await createAndStartGame(page);
 
-    // Wait for map to load
-    await page.waitForTimeout(2000);
-
-    // Wait for 4 seconds (3 steps + 1 settlement tick)
+    // Wait for 4 seconds (3 steps + 1 settlement tick) - map already loaded from createAndStartGame
     await page.waitForTimeout(4500);
 
     // Take screenshot showing settlement
