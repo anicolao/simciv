@@ -284,8 +284,15 @@ export interface Settlement {
 export async function getUnits(gameId: string): Promise<{ units: Unit[] }> {
   const response = await fetch(`/api/game/${gameId}/units`);
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch units');
+    let errorMsg = 'Failed to fetch units';
+    try {
+      const error = await response.json();
+      errorMsg = error.error || errorMsg;
+    } catch {
+      // If JSON parsing fails, use the status text
+      errorMsg = `${errorMsg}: ${response.status} ${response.statusText}`;
+    }
+    throw new Error(errorMsg);
   }
   return await response.json();
 }
@@ -296,8 +303,15 @@ export async function getUnits(gameId: string): Promise<{ units: Unit[] }> {
 export async function getSettlements(gameId: string): Promise<{ settlements: Settlement[] }> {
   const response = await fetch(`/api/game/${gameId}/settlements`);
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch settlements');
+    let errorMsg = 'Failed to fetch settlements';
+    try {
+      const error = await response.json();
+      errorMsg = error.error || errorMsg;
+    } catch {
+      // If JSON parsing fails, use the status text
+      errorMsg = `${errorMsg}: ${response.status} ${response.statusText}`;
+    }
+    throw new Error(errorMsg);
   }
   return await response.json();
 }
