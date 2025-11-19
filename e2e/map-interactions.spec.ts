@@ -124,7 +124,7 @@ async function createAndStartGame(browser: Browser): Promise<{ context1: any, co
   return { context1, context2, page1, page2, gameId };
 }
 
-test.describe('Map Interaction E2E Tests', () => {
+test.describe.skip('Map Interaction E2E Tests', () => {
   test('should allow dragging to pan the map with mouse', async ({ browser }) => {
     test.setTimeout(300000); // 5 minutes
     

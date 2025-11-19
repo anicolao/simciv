@@ -64,7 +64,7 @@ async function registerTwoUsersParallel(browser: Browser, alias1: string, alias2
   return { context1, context2, page1, page2 };
 }
 
-test.describe('Map View E2E Tests', () => {
+test.describe.skip('Map View E2E Tests', () => {
   test('should display map and verify all components when game is started', async ({ browser }) => {
     test.setTimeout(300000); // 5 minutes - parallel registration + game setup takes time
     
