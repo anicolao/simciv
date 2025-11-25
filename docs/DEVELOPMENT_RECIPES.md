@@ -2,27 +2,16 @@
 
 Quick reference for common development tasks.
 
-## Prerequisites
-
-- Ubuntu 24.04+ (or other Debian-based system)
-
-## One-Time Setup
+## Setup
 
 ```bash
-# Run the automated setup script
-./SETUP_NIX_BIN.sh
-
-# Log out and log back in (required for group membership)
-# Then allow direnv in the project
+# Clone and enter the project
+git clone https://github.com/anicolao/simciv.git
 cd simciv
+
+# Allow direnv (first time only)
 direnv allow
 ```
-
-**What this does:**
-- Installs `nix-bin` and `direnv` from apt
-- Configures Nix to enable flakes
-- Adds you to the `nix-users` group
-- Sets up direnv hook in your shell
 
 ## Daily Development
 
@@ -221,14 +210,12 @@ npm run test:watch  # Terminal 3
 ### Outside Nix ❌
 
 - npm run test:e2e (Playwright)
-- ./SETUP_NIX_BIN.sh (initial setup)
 
 ## Related Documentation
 
 - [ENVIRONMENT_STRUCTURE.md](ENVIRONMENT_STRUCTURE.md) - Environment guide
 - [DEVELOPMENT.md](DEVELOPMENT.md) - General development setup
 - [NIX_TOOLING_FRICTION.md](NIX_TOOLING_FRICTION.md) - Playwright/Nix issues explained
-- [NIX_BIN_SETUP.md](NIX_BIN_SETUP.md) - nix-bin installation details
 
 ---
 

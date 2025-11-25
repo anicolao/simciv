@@ -102,26 +102,16 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed documentation 
 
 ### Getting Started
 
-#### Using Nix with direnv (Recommended)
-
 SimCiv uses Nix flakes with direnv for automatic environment activation. When you enter the project directory, direnv loads all required tools automatically.
 
-**One-time setup (Ubuntu/Debian):**
+**Setup:**
 ```bash
-# Run the setup script
-./SETUP_NIX_BIN.sh
-
-# Log out and log back in for group membership to take effect
-
-# Allow direnv in the project directory
+# Clone and enter the project directory
+git clone https://github.com/anicolao/simciv.git
 cd simciv
+
+# Allow direnv (first time only)
 direnv allow
-```
-
-**Daily development:**
-```bash
-# Just cd into the project - direnv activates automatically
-cd simciv
 
 # Build and test
 npm install
@@ -129,15 +119,12 @@ npm run build
 npm test
 
 # E2E tests run outside Nix shell (due to Playwright binary compatibility)
-# Exit the project directory first, then run tests
 cd /tmp && cd - && npm run test:e2e
 ```
 
-For detailed setup instructions, see [docs/NIX_BIN_SETUP.md](docs/NIX_BIN_SETUP.md).
+#### Standard Setup (Without Nix)
 
-#### Standard Setup
-
-To run SimCiv locally:
+To run SimCiv locally without Nix:
 
 ```bash
 # Install dependencies
