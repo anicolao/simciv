@@ -16,46 +16,92 @@ jobs:
     runs-on: ubuntu-24.04
     
     steps:
+      # -----------------------------------------------------------------------
+      # STEP 1: Checkout the repository
+      # This is essential - it provides access to your code
+      # Without this, Copilot would have an empty workspace
+      # -----------------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install Nix with flakes support
-        uses: cachix/install-nix-action@v26
         with:
+          # Fetch full history for better git operations
+          # Set to 1 for shallow clone (faster but limited git history)
+          fetch-depth: 0
+
+      # -----------------------------------------------------------------------
+      # STEP 2: Install Nix package manager
+      # Nix provides reproducible development environments
+      # This allows using nix-shell, nix develop, and flakes
+      # -----------------------------------------------------------------------
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          # Enable flakes and nix-command experimental features
           extra_nix_config: |
             experimental-features = nix-command flakes
-            sandbox = true
-            connect-timeout = 5
-            stalled-download-timeout = 10
-            max-substitution-jobs = 1
-            fallback = true
 
-      - name: Cache Nix store
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.nix-profile
-            ~/.nix-defexpr/channels
-            /nix/var/nix/profiles
-            /nix/store
-          key: ${{ runner.os }}-nix-${{ hashFiles('flake.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-nix-
-
+      # -----------------------------------------------------------------------
+      # STEP 3: Install and configure direnv
+      # direnv automatically loads environment variables from .envrc files
+      # Combined with Nix, it provides automatic environment activation
+      # -----------------------------------------------------------------------
       - name: Install direnv
         run: |
-          sudo apt-get update
-          sudo apt-get install -y direnv screen
-          mkdir -p ~/.config/direnv
-          echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
-
-      - name: Initialize Nix environment
-        run: |
-          cd ${{ github.workspace }}
-          direnv allow
-          # Load the Nix environment
-          eval "$(direnv export bash)"
+          # Install direnv using nix
+          nix profile install nixpkgs#direnv
           
+          # Verify installation
+          echo "direnv version: $(direnv --version)"
+
+      # -----------------------------------------------------------------------
+      # STEP 4: Allow direnv in the repository
+      # This pre-authorizes the .envrc file so Copilot doesn't need to
+      # -----------------------------------------------------------------------
+      - name: Allow direnv in repository
+        run: |
+          # Allow direnv for this repository
+          direnv allow . || echo "No .envrc file found (this is OK if the project doesn't use one yet)"
+          
+          # If .envrc exists, load it to set up the environment
+          if [ -f .envrc ]; then
+            echo "Found .envrc, loading environment..."
+            eval "$(direnv export bash)" || echo "Note: direnv export had non-zero exit (may be normal if .envrc has no exports)"
+          fi
+
+      # -----------------------------------------------------------------------
+      # EXPERIMENT: Print environment information
+      # This helps understand what's available in the runner
+      # -----------------------------------------------------------------------
+      - name: "[Experiment] Display runner environment info"
+        run: |
+          echo "=== RUNNER INFORMATION ==="
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner Arch: ${{ runner.arch }}"
+          echo "Runner Name: ${{ runner.name }}"
+          echo "Runner Temp: ${{ runner.temp }}"
+          echo "Runner Tool Cache: ${{ runner.tool_cache }}"
+          echo ""
+          echo "=== GITHUB CONTEXT ==="
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo ""
+          echo "=== DIRECTORY STRUCTURE ==="
+          echo "Current directory: $(pwd)"
+          echo "Home directory: $HOME"
+          echo "Workspace: ${{ github.workspace }}"
+          ls -la
+          echo ""
+          echo "=== SYSTEM RESOURCES ==="
+          echo "CPU Info:"
+          nproc
+          echo "Memory Info:"
+          free -h
+          echo "Disk Space:"
+          df -h
+
       - name: Verify Nix environment
         run: |
           eval "$(direnv export bash)"
@@ -186,14 +232,6 @@ jobs:
         with:
           name: e2e-screenshots
           path: e2e-screenshots/
-
-      - name: Cleanup
-        if: always()
-        run: |
-          eval "$(direnv export bash)"
-          bin/mongo stop || true
-          pkill -f "./engine" || true
-          pkill -f "node dist/server.js" || true
 
       - name: Create startup summary for Copilot
         if: always()
