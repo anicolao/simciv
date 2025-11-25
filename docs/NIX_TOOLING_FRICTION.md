@@ -2,7 +2,7 @@
 
 ## Issue
 
-When running Playwright E2E tests inside the `nix-shell-persistent` environment, the browser fails to launch due to missing system library dependencies.
+When running Playwright E2E tests inside the Nix environment, the browser fails to launch due to missing system library dependencies.
 
 ## Error Message
 
@@ -25,28 +25,29 @@ The Playwright browser executables (Chromium) look for system libraries in speci
 
 ## Workaround
 
-**Run Playwright E2E tests OUTSIDE the nix-shell-persistent environment:**
+**Run Playwright E2E tests OUTSIDE the Nix environment:**
 
 ```bash
-# Instead of:
-nix-shell-persistent exec "npx playwright test e2e/"
+# Exit Nix environment first (cd out of project directory)
+cd /tmp
 
-# Use:
-npx playwright test e2e/
+# Return and run tests
+cd /path/to/simciv
+npm run test:e2e
 ```
 
 The system-installed libraries (via `npx playwright install-deps chromium`) work correctly when running outside the Nix shell.
 
 ## What Works
 
-- **Unit tests**: Work fine with `nix-shell-persistent exec` 
-- **Integration tests**: Work fine with `nix-shell-persistent exec` when using `TEST_MONGO_URI`
-- **Building**: Works fine with `nix-shell-persistent exec "npm run build"`
-- **Server**: Works fine with `nix-shell-persistent exec "npm start"`
+- **Unit tests**: Work fine inside Nix environment
+- **Integration tests**: Work fine inside Nix environment
+- **Building**: Works fine with `npm run build` inside Nix
+- **Server**: Works fine with `npm start` inside Nix
 
 ## What Doesn't Work
 
-- **Playwright E2E tests**: Must run outside nix-shell-persistent
+- **Playwright E2E tests**: Must run outside Nix environment
 
 ## Attempted Fixes (Unsuccessful)
 
@@ -72,5 +73,4 @@ Potential solutions to explore:
 
 ## Related
 
-- [PERSISTENT_NIX_SHELL.md](PERSISTENT_NIX_SHELL.md) - Documentation for persistent Nix shell
 - [NIX_BIN_SETUP.md](NIX_BIN_SETUP.md) - Nix setup instructions
