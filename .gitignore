@@ -23,6 +23,9 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+e2e-test-output.txt
+unit-test-output.txt
+startup-summary.md
 
 # Environment
 .env
