@@ -126,7 +126,7 @@ test.describe('Game Creation and Management', () => {
     await screenshotIfChanged(page, { path: 'e2e-screenshots/14-game-started.png', fullPage: true });
   });
 
-  test.skip('should show time progression in started game', async ({ page }) => {
+  test('should show time progression in started game', async ({ page }) => {
     const password = 'TestPassword123!';
     
     // Create first user and game
@@ -181,7 +181,7 @@ test.describe('Game Creation and Management', () => {
     await screenshotIfChanged(page, { path: 'e2e-screenshots/16-game-time-progressed.png', fullPage: true });
   });
 
-  test.skip('should prevent joining a full game', async ({ page }) => {
+  test('should prevent joining a full game', async ({ page }) => {
     const password = 'TestPassword123!';
     
     // Create first user and game
