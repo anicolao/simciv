@@ -12,7 +12,7 @@
 $(if [ "0" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
 
 ### E2E Tests  
-$(if [ "1" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
+$(if [ "0" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
 
 ## Quick Commands
 ```bash
