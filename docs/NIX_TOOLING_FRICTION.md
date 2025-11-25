@@ -73,4 +73,5 @@ Potential solutions to explore:
 
 ## Related
 
-- [NIX_BIN_SETUP.md](NIX_BIN_SETUP.md) - Nix setup instructions
+- [DEVELOPMENT_RECIPES.md](DEVELOPMENT_RECIPES.md) - Development workflow guide
+- [ENVIRONMENT_STRUCTURE.md](ENVIRONMENT_STRUCTURE.md) - Environment structure
