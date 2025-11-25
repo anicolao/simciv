@@ -1,15 +1,12 @@
 # SimCiv Development Recipes
 
-Quick reference for common development tasks in the two-tier environment.
+Quick reference for common development tasks.
 
 ## Prerequisites
 
 - Ubuntu 24.04+ (or other Debian-based system)
-- System tools: `bash`, `screen` (for Nix setup)
 
 ## One-Time Setup
-
-### Install Nix Environment
 
 ```bash
 # Run the automated setup script
@@ -37,12 +34,10 @@ cd simciv
 
 # Verify environment loaded
 which node    # Should show /nix/store/.../bin/node
-node --version # Should show v20.19.5
+node --version # Should show v20.x
 ```
 
 ### Build and Run
-
-**Inside Nix (most work):**
 
 ```bash
 # Install Node.js dependencies
@@ -65,10 +60,11 @@ go build -o simciv-sim main.go
 
 ### Testing
 
-**Unit Tests (Inside Nix):**
+**Unit and Integration Tests:**
 
 ```bash
-# Run all unit tests
+# Run all unit tests (requires MongoDB running)
+mongo start
 npm test
 
 # Run tests in watch mode
@@ -79,34 +75,16 @@ cd simulation
 go test ./...
 ```
 
-**Integration Tests with MongoDB:**
-
-All tests require a running MongoDB instance:
-
-```bash
-# Inside Nix: Start MongoDB
-mongo start
-
-# In another terminal, inside Nix: Run integration tests
-npm test
-
-# Optional: Override MongoDB URI if using a different port
-TEST_MONGO_URI="mongodb://localhost:27018" npm test
-```
-
 **E2E Tests (OUTSIDE Nix):**
 
-E2E tests with Playwright **must** run outside the Nix shell:
+E2E tests with Playwright **must** run outside the Nix shell due to binary compatibility:
 
 ```bash
-# Exit Nix environment (if using direnv, cd to different directory)
+# Exit Nix environment (cd to different directory)
 cd /tmp
 
-# Run e2e setup script (sets up everything for E2E tests)
+# Return and run E2E tests
 cd /path/to/simciv
-bash bin/e2e-setup
-
-# Run E2E tests
 npm run test:e2e
 
 # Or run specific test file
@@ -144,9 +122,6 @@ mongo status
 
 # Restart MongoDB
 mongo restart
-
-# If using MongoDB in Docker, ensure Docker is running
-docker ps
 ```
 
 ### npm install fails
@@ -177,11 +152,10 @@ which node
 ### Verify all tools are available
 
 ```bash
-# Inside Nix, run:
-node --version  # v20.19.5
-go version      # go1.25.2
-mongod --version # db version v7.0.24
-npm --version   # 10.8.2
+node --version  # v20.x
+go version      # go1.25.x
+mongod --version # db version v7.0.x
+npm --version   # 10.x
 ```
 
 ## Common Workflows
@@ -189,7 +163,6 @@ npm --version   # 10.8.2
 ### Full Clean Build
 
 ```bash
-# Inside Nix:
 rm -rf node_modules dist public/assets
 npm install
 npm run build
@@ -204,54 +177,33 @@ cd ..
 ### Run Complete Test Suite
 
 ```bash
-# Inside Nix: Unit and integration tests (requires MongoDB)
+# Unit and integration tests (requires MongoDB)
 mongo start
 npm test
 
-# Inside Nix: Go tests
+# Go tests
 cd simulation && go test ./...
 
-# OUTSIDE Nix: E2E tests
+# E2E tests (OUTSIDE Nix)
 cd /tmp && cd - && npm run test:e2e
 ```
 
 ### Develop New Feature
 
 ```bash
-# Inside Nix: Start MongoDB and dev server
+# Start MongoDB and dev server
 mongo start
 npm run dev  # Terminal 1
 
-# Inside Nix: Start simulation engine
+# Start simulation engine
 cd simulation && ./simciv-sim  # Terminal 2
 
-# Inside Nix: Run tests in watch mode
+# Run tests in watch mode
 npm run test:watch  # Terminal 3
 
 # Make your changes...
 # Tests re-run automatically on file save
 ```
-
-## Performance Tips
-
-### Use Persistent Nix Shell (Optional)
-
-For reduced overhead when running many commands:
-
-```bash
-# Initialize persistent shell (one-time per session)
-nix-shell-persistent init
-
-# Run commands instantly (no direnv reload)
-nix-shell-persistent exec npm install
-nix-shell-persistent exec npm run build
-nix-shell-persistent exec npm test
-
-# When done
-nix-shell-persistent cleanup
-```
-
-See [PERSISTENT_NIX_SHELL.md](PERSISTENT_NIX_SHELL.md) for details.
 
 ## What Goes Where
 
@@ -273,11 +225,10 @@ See [PERSISTENT_NIX_SHELL.md](PERSISTENT_NIX_SHELL.md) for details.
 
 ## Related Documentation
 
-- [ENVIRONMENT_STRUCTURE.md](ENVIRONMENT_STRUCTURE.md) - Complete two-tier environment guide
+- [ENVIRONMENT_STRUCTURE.md](ENVIRONMENT_STRUCTURE.md) - Environment guide
 - [DEVELOPMENT.md](DEVELOPMENT.md) - General development setup
 - [NIX_TOOLING_FRICTION.md](NIX_TOOLING_FRICTION.md) - Playwright/Nix issues explained
 - [NIX_BIN_SETUP.md](NIX_BIN_SETUP.md) - nix-bin installation details
-- [PERSISTENT_NIX_SHELL.md](PERSISTENT_NIX_SHELL.md) - Persistent shell for efficiency
 
 ---
 

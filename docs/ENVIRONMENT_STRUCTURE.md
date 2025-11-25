@@ -118,11 +118,7 @@ Missing libraries:
 
 **Workaround:** Run Playwright E2E tests outside the Nix shell using system-installed dependencies.
 
-#### 2. **screen** (Nix setup dependency)
-
-**Why outside Nix:** Required by `SETUP_NIX_BIN.sh` to create the persistent shell manager. Must be installed via system package manager before Nix setup.
-
-#### 3. **bash** (Nix setup dependency)
+#### 2. **bash** (Nix setup dependency)
 
 **Why outside Nix:** Required to run the initial `SETUP_NIX_BIN.sh` script. Available on all Unix-like systems.
 
@@ -132,7 +128,6 @@ These tools run in your normal system environment (outside Nix):
 
 ```bash
 # Outside Nix: System dependencies for setup
-sudo apt-get install screen   # Ubuntu/Debian (if not already installed)
 ./SETUP_NIX_BIN.sh            # Initial Nix environment setup
 
 # Outside Nix: Playwright E2E tests
@@ -146,12 +141,8 @@ npx playwright test e2e/      # Alternative command
 
 **Prerequisites (System Dependencies):**
 ```bash
-# Verify system has bash and screen
+# Verify system has bash
 which bash    # Should return /bin/bash or /usr/bin/bash
-which screen  # Should return /usr/bin/screen
-
-# If screen is missing on Ubuntu/Debian:
-sudo apt-get install screen
 ```
 
 **Setup Nix Environment:**
@@ -333,7 +324,6 @@ Potential areas for enhancement:
 - [NIX_TOOLING_FRICTION.md](NIX_TOOLING_FRICTION.md) - Detailed Playwright/Nix issues
 - [DEVELOPMENT.md](DEVELOPMENT.md) - General development environment setup
 - [NIX_BIN_SETUP.md](NIX_BIN_SETUP.md) - nix-bin installation instructions
-- [PERSISTENT_NIX_SHELL.md](PERSISTENT_NIX_SHELL.md) - Persistent shell manager for efficiency
 - [E2E_TEST_SETUP.md](E2E_TEST_SETUP.md) - E2E test environment setup
 - [README.md](../README.md) - Project overview and quick start
 

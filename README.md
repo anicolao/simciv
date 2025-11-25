@@ -102,51 +102,36 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed documentation 
 
 ### Getting Started
 
-#### Using Nix (NixOS/nix-darwin)
+#### Using Nix with direnv (Recommended)
 
-If you're on NixOS or macOS with nix-darwin, you can use Nix flakes to set up your development environment with all required tools:
+SimCiv uses Nix flakes with direnv for automatic environment activation. When you enter the project directory, direnv loads all required tools automatically.
 
-```bash
-# Enter the development shell with all tools installed
-nix develop
-
-# This will provide:
-# - Node.js 20.x
-# - Go 1.24.x
-# - MongoDB 7.0
-# - All other development dependencies
-
-# Then follow the standard setup steps below
-```
-
-#### Using nix-bin with direnv (Ubuntu/Debian)
-
-For a lighter-weight alternative on Ubuntu/Debian systems, you can use `nix-bin` from apt with direnv for automatic environment activation:
-
+**One-time setup (Ubuntu/Debian):**
 ```bash
 # Run the setup script
 ./SETUP_NIX_BIN.sh
 
 # Log out and log back in for group membership to take effect
 
-# Then allow direnv in the project directory
+# Allow direnv in the project directory
 cd simciv
 direnv allow
+```
 
-# The environment will be automatically loaded when you enter the directory
+**Daily development:**
+```bash
+# Just cd into the project - direnv activates automatically
+cd simciv
 
-# Inside Nix: Build and test
+# Build and test
 npm install
 npm run build
 npm test
 
-# OUTSIDE Nix: E2E tests (due to Playwright binary compatibility)
-# Exit direnv environment first (e.g., cd /tmp && cd -)
-e2e-setup
-npm run test:e2e
+# E2E tests run outside Nix shell (due to Playwright binary compatibility)
+# Exit the project directory first, then run tests
+cd /tmp && cd - && npm run test:e2e
 ```
-
-**Important Note:** SimCiv uses a **two-tier development environment** where most work happens in Nix, but Playwright E2E tests must run outside Nix due to binary compatibility. See [docs/ENVIRONMENT_STRUCTURE.md](docs/ENVIRONMENT_STRUCTURE.md) for the complete explanation and [docs/DEVELOPMENT_RECIPES.md](docs/DEVELOPMENT_RECIPES.md) for quick-start commands.
 
 For detailed setup instructions, see [docs/NIX_BIN_SETUP.md](docs/NIX_BIN_SETUP.md).
 

@@ -103,7 +103,7 @@ npm test
 
 # Set up E2E environment using the project's e2e-setup script
 # This script (bin/e2e-setup) builds the Go engine, starts MongoDB, server, and engine
-bin/nix-shell-persistent exec e2e-setup
+bin/e2e-setup
 
 # Run E2E tests (must be run outside Nix shell per project requirements)
 npm run test:e2e
