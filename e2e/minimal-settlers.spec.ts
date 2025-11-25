@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { clearDatabase, enableE2ETestMode, resetUuidCounter } from './global-setup';
+import { clearDatabase, enableE2ETestMode, resetUuidCounter, triggerManualTick } from './global-setup';
 import { screenshotIfChanged } from './helpers/screenshot';
 import { mockDateInBrowser } from './helpers/mock-time';
 
@@ -38,7 +38,7 @@ async function registerAndLogin(page: Page, alias: string, password: string): Pr
 }
 
 // Helper to create and start a game
-async function createAndStartGame(page: Page): Promise<void> {
+async function createAndStartGame(page: Page): Promise<string> {
   // Wait for game lobby
   await expect(page.locator('h2:has-text("Game Lobby")')).toBeVisible();
 
@@ -49,6 +49,10 @@ async function createAndStartGame(page: Page): Promise<void> {
   
   // Wait for game to appear
   await page.waitForSelector('.game-card', { timeout: 10000 });
+  
+  // Get the game ID
+  const gameIdText = await page.locator('.game-card').first().locator('.game-id').textContent();
+  const gameId = gameIdText?.replace('Game #', '').trim() || '';
 
   // Join the game to start it (since we're the creator and need 2 players)
   // First, we need a second user
@@ -64,18 +68,27 @@ async function createAndStartGame(page: Page): Promise<void> {
   // Wait for game to start
   await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 10000 });
   
-  // Give game engine a moment to process first tick and generate map data
-  await page.waitForTimeout(1000);
+  // Trigger manual tick to generate map in E2E test mode
+  console.log('[E2E] Triggering manual tick to generate map...');
+  await triggerManualTick(gameId);
+  
+  // Give game engine a moment to process the tick and generate map data
+  await page.waitForTimeout(2000);
   
   // Click "View" button to open game details
   await gameCard.locator('button:has-text("View")').click();
   
-  // Wait for map section and canvas to load
-  await expect(page.locator('.map-section')).toBeVisible({ timeout: 5000 });
+  // Wait for game view and map area to load
+  await expect(page.locator('.game-view')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
+  await expect(page.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
+  await expect(page.locator('.map-area')).toBeVisible({ timeout: 5000 });
   await expect(page.locator('canvas.map-canvas')).toBeVisible({ timeout: 10000 });
+  
+  return gameId;
 }
 
-test.describe.skip('Minimal Settlers Implementation', () => {
+test.describe('Minimal Settlers Implementation', () => {
   test('should create initial settlers unit at game start', async ({ page }) => {
     const alias = 'settler_test';
     const password = 'TestPassword123!';

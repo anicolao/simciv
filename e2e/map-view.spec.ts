@@ -1,5 +1,5 @@
 import { test, expect, Page, Browser } from '@playwright/test';
-import { clearDatabase, enableE2ETestMode, resetUuidCounter } from './global-setup';
+import { clearDatabase, enableE2ETestMode, resetUuidCounter, triggerManualTick } from './global-setup';
 import { screenshotIfChanged } from './helpers/screenshot';
 import { mockDateInBrowser } from './helpers/mock-time';
 
@@ -64,7 +64,7 @@ async function registerTwoUsersParallel(browser: Browser, alias1: string, alias2
   return { context1, context2, page1, page2 };
 }
 
-test.describe.skip('Map View E2E Tests', () => {
+test.describe('Map View E2E Tests', () => {
   test('should display map and verify all components when game is started', async ({ browser }) => {
     test.setTimeout(300000); // 5 minutes - parallel registration + game setup takes time
     
@@ -107,8 +107,12 @@ test.describe.skip('Map View E2E Tests', () => {
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       console.log('[E2E] Game started');
       
-      // Give game engine a moment to process first tick and generate map data
-      await page2.waitForTimeout(1000);
+      // Trigger manual tick to generate map in E2E test mode
+      console.log('[E2E] Triggering manual tick to generate map...');
+      await triggerManualTick(gameId || '');
+      
+      // Give game engine a moment to process the tick and generate map data
+      await page2.waitForTimeout(2000);
       
       // Click the View button to navigate to full-page game view
       console.log('[E2E] Navigating to full-page game view...');

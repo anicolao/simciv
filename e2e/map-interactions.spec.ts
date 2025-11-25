@@ -1,5 +1,5 @@
 import { test, expect, Page, Browser } from '@playwright/test';
-import { clearDatabase, enableE2ETestMode, resetUuidCounter } from './global-setup';
+import { clearDatabase, enableE2ETestMode, resetUuidCounter, triggerManualTick } from './global-setup';
 import {
   dragMapMouse,
   scrollZoom,
@@ -107,8 +107,12 @@ async function createAndStartGame(browser: Browser): Promise<{ context1: any, co
   await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
   console.log('[E2E] Game started');
   
-  // Give game engine a moment to process first tick and generate map data
-  await page2.waitForTimeout(1000);
+  // Trigger manual tick to generate map in E2E test mode
+  console.log('[E2E] Triggering manual tick to generate map...');
+  await triggerManualTick(gameId);
+  
+  // Give game engine a moment to process the tick and generate map data
+  await page2.waitForTimeout(2000);
   
   // Open game details modal
   console.log('[E2E] Opening game details modal...');
@@ -116,15 +120,16 @@ async function createAndStartGame(browser: Browser): Promise<{ context1: any, co
   
   // Wait for map data to load
   console.log('[E2E] Waiting for map data to load...');
+  await expect(page2.locator('.game-view')).toBeVisible({ timeout: 5000 });
   await expect(page2.locator('text=Loading map...')).toBeVisible({ timeout: 5000 }).catch(() => {});
   await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 }).catch(() => {});
-  await expect(page2.locator('.map-section')).toBeVisible({ timeout: 5000 });
-  console.log('[E2E] Map section visible');
+  await expect(page2.locator('.map-area')).toBeVisible({ timeout: 5000 });
+  console.log('[E2E] Map area visible');
   
   return { context1, context2, page1, page2, gameId };
 }
 
-test.describe.skip('Map Interaction E2E Tests', () => {
+test.describe('Map Interaction E2E Tests', () => {
   test('should allow dragging to pan the map with mouse', async ({ browser }) => {
     test.setTimeout(300000); // 5 minutes
     
