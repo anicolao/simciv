@@ -32,7 +32,10 @@ import pixelmatch from 'pixelmatch';
 const UPDATE_SCREENSHOTS = process.env.UPDATE_SCREENSHOTS === '1' || process.env.UPDATE_SCREENSHOTS === 'true';
 
 // Threshold for pixel comparison (0.0 to 1.0, lower is stricter)
-// 0.1 is a reasonable default that allows for anti-aliasing differences
+// This controls the sensitivity for individual pixel comparison in pixelmatch:
+// - 0.0 requires exact color match
+// - 0.1 allows small color variations (good for anti-aliasing)
+// - 1.0 would consider all pixels as matching
 const PIXEL_THRESHOLD = 0.1;
 
 // Maximum percentage of pixels that can differ (0.0 to 100.0)
@@ -46,9 +49,10 @@ function compareImages(img1Buffer: Buffer, img2Buffer: Buffer): { diffPixels: nu
   const img1 = PNG.sync.read(img1Buffer);
   const img2 = PNG.sync.read(img2Buffer);
   
-  // Images must have the same dimensions
+  // Images must have the same dimensions - treat different dimensions as 100% different
   if (img1.width !== img2.width || img1.height !== img2.height) {
-    return { diffPixels: img1.width * img1.height, totalPixels: img1.width * img1.height };
+    const maxPixels = Math.max(img1.width * img1.height, img2.width * img2.height);
+    return { diffPixels: maxPixels, totalPixels: maxPixels };
   }
   
   const totalPixels = img1.width * img1.height;
