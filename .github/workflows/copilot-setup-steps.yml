@@ -61,12 +61,6 @@ jobs:
         run: |
           # Allow direnv for this repository
           direnv allow . || echo "No .envrc file found (this is OK if the project doesn't use one yet)"
-          
-          # If .envrc exists, load it to set up the environment
-          if [ -f .envrc ]; then
-            echo "Found .envrc, loading environment..."
-            eval "$(direnv export bash)" || echo "Note: direnv export had non-zero exit (may be normal if .envrc has no exports)"
-          fi
 
       # -----------------------------------------------------------------------
       # EXPERIMENT: Print environment information
