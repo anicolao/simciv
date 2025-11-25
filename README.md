@@ -117,46 +117,6 @@ direnv allow
 npm install
 npm run build
 npm test
-
-# E2E tests run outside Nix shell (due to Playwright binary compatibility)
-cd /tmp && cd - && npm run test:e2e
-```
-
-#### Standard Setup (Without Nix)
-
-To run SimCiv locally without Nix:
-
-```bash
-# Install dependencies
-npm install
-
-# Build the application
-npm run build
-
-# Start MongoDB (required)
-# Note: If you're using the Nix flake on Linux, native MongoDB will be used automatically
-# Otherwise, Docker will be used (make sure Docker is running)
-./bin/mongo start
-
-# Run development server
-npm run dev
-
-# In a separate terminal, start the Go simulation engine
-cd simulation
-go build -o simciv-sim main.go
-./simciv-sim
-
-# Access the application
-# Navigate to http://localhost:3000
-# Register/login, then create or join games!
-
-# Run tests (requires MongoDB running on localhost:27017)
-npm test
-
-# Run Go tests
-cd simulation && go test ./...
-
-# Run E2E tests (requires running server and simulation engine)
 npm run test:e2e
 ```
 

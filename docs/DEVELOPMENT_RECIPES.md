@@ -49,11 +49,8 @@ go build -o simciv-sim main.go
 
 ### Testing
 
-**Unit and Integration Tests:**
-
 ```bash
-# Run all unit tests (requires MongoDB running)
-mongo start
+# Run all tests
 npm test
 
 # Run tests in watch mode
@@ -62,22 +59,9 @@ npm run test:watch
 # Run Go tests
 cd simulation
 go test ./...
-```
 
-**E2E Tests (OUTSIDE Nix):**
-
-E2E tests with Playwright **must** run outside the Nix shell due to binary compatibility:
-
-```bash
-# Exit Nix environment (cd to different directory)
-cd /tmp
-
-# Return and run E2E tests
-cd /path/to/simciv
+# Run E2E tests
 npm run test:e2e
-
-# Or run specific test file
-npx playwright test e2e/auth.spec.ts
 ```
 
 ## Quick Troubleshooting
@@ -90,17 +74,6 @@ echo $IN_NIX_SHELL  # Should output "1"
 
 # If not, navigate to project directory
 cd simciv  # direnv should activate
-```
-
-### Playwright tests fail with missing libraries
-
-```bash
-# Are you inside Nix? Exit it!
-cd /tmp  # Move out of project directory
-
-# Then run tests from outside
-cd /path/to/simciv
-npm run test:e2e
 ```
 
 ### MongoDB won't start
@@ -126,21 +99,11 @@ npm install
 
 ## Environment Verification
 
-### Check if you're in Nix
-
 ```bash
-# Method 1: Check environment variable
-echo $IN_NIX_SHELL  # "1" if in Nix, empty otherwise
+# Check environment variable
+echo $IN_NIX_SHELL  # "1" if in Nix
 
-# Method 2: Check tool paths
-which node
-# Inside Nix:  /nix/store/...../bin/node
-# Outside Nix: /usr/bin/node or similar
-```
-
-### Verify all tools are available
-
-```bash
+# Verify all tools are available
 node --version  # v20.x
 go version      # go1.25.x
 mongod --version # db version v7.0.x
@@ -166,15 +129,9 @@ cd ..
 ### Run Complete Test Suite
 
 ```bash
-# Unit and integration tests (requires MongoDB)
-mongo start
 npm test
-
-# Go tests
 cd simulation && go test ./...
-
-# E2E tests (OUTSIDE Nix)
-cd /tmp && cd - && npm run test:e2e
+npm run test:e2e
 ```
 
 ### Develop New Feature
@@ -194,32 +151,12 @@ npm run test:watch  # Terminal 3
 # Tests re-run automatically on file save
 ```
 
-## What Goes Where
-
-### Inside Nix ✅
-
-- npm install
-- npm run build
-- npm run dev
-- npm test (requires MongoDB running)
-- go build
-- go test
-- mongo start/stop/status
-- Most development work
-
-### Outside Nix ❌
-
-- npm run test:e2e (Playwright)
-
 ## Related Documentation
 
-- [ENVIRONMENT_STRUCTURE.md](ENVIRONMENT_STRUCTURE.md) - Environment guide
 - [DEVELOPMENT.md](DEVELOPMENT.md) - General development setup
-- [NIX_TOOLING_FRICTION.md](NIX_TOOLING_FRICTION.md) - Playwright/Nix issues explained
 
 ---
 
 **TL;DR:**
-- Do everything inside Nix except Playwright E2E tests
 - `direnv` makes Nix activation automatic when you `cd simciv`
-- E2E tests: `cd /tmp && cd - && npm run test:e2e`
+- All development commands work in the Nix environment
