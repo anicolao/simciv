@@ -85,7 +85,7 @@ test.describe('Game Creation and Management', () => {
     await screenshotIfChanged(page, { path: 'e2e-screenshots/11-game-created.png', fullPage: true });
   });
 
-  test.skip('should allow second player to join game', async ({ page }) => {
+  test('should allow second player to join game', async ({ page }) => {
     // Create first user and game
     const alias1 = 'gameuser1';
     const password = 'TestPassword123!';
