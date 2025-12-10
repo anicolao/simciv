@@ -88,7 +88,7 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 
 	// Set defaults
 	if config.MaxDays == 0 {
-		config.MaxDays = 18250 // 50 years (to allow for both technologies with realistic Fire Mastery timing)
+		config.MaxDays = 21900 // 60 years (to allow for sequential research with realistic Fire Mastery timing)
 	}
 
 	// Initialize population

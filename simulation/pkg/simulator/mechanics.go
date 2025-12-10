@@ -64,7 +64,7 @@ const (
 
 	// Technology unlock
 	FireMasteryScienceRequired     = 100.0
-	StoneKnappingScienceRequired   = 105.0 // Total 105 science (5 more than Fire Mastery, achievable in ~12-20 years total with realistic Fire Mastery timing)
+	StoneKnappingScienceRequired   = 150.0 // Total 150 science (50 more than Fire Mastery for sequential unlock)
 	StoneKnappingFoodBonus         = 1.20  // +20% from better tools
 )
 
