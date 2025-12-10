@@ -604,7 +604,7 @@
   }
 
   // Utility: Update zoom level
-  function updateZoomLevel(delta: number, mouseX?: number, mouseY?: number) {
+  function updateZoomLevel(delta: number, mouseX: number, mouseY: number) {
     const oldZoom = zoomLevel;
     const oldDisplayTileSize = DISPLAY_TILE_SIZE;
     
@@ -627,19 +627,16 @@
     if (newIndex !== currentIndex) {
       const newZoom = zoomLevels[newIndex];
       
-      // If mouse position is provided, adjust view offset to keep the point under the mouse stationary
-      if (mouseX !== undefined && mouseY !== undefined) {
-        // The new display tile size after zoom
-        const newDisplayTileSize = Math.round(BASE_DISPLAY_TILE_SIZE * newZoom);
-        
-        // Calculate tile coordinate at mouse position before zoom
-        // Keep this tile coordinate at the same screen position after zoom
-        const tileX = (viewOffsetX + mouseX) / oldDisplayTileSize;
-        const tileY = (viewOffsetY + mouseY) / oldDisplayTileSize;
-        
-        viewOffsetX = tileX * newDisplayTileSize - mouseX;
-        viewOffsetY = tileY * newDisplayTileSize - mouseY;
-      }
+      // Adjust view offset to keep the point under the mouse stationary
+      const newDisplayTileSize = Math.round(BASE_DISPLAY_TILE_SIZE * newZoom);
+      
+      // Calculate tile coordinate at mouse position before zoom
+      // Keep this tile coordinate at the same screen position after zoom
+      const tileX = (viewOffsetX + mouseX) / oldDisplayTileSize;
+      const tileY = (viewOffsetY + mouseY) / oldDisplayTileSize;
+      
+      viewOffsetX = tileX * newDisplayTileSize - mouseX;
+      viewOffsetY = tileY * newDisplayTileSize - mouseY;
       
       zoomLevel = newZoom;
       clampViewOffset();
