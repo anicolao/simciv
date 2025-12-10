@@ -81,14 +81,14 @@ func initializePopulation(conditions StartingConditions, rng *RandomGenerator) [
 	return humans
 }
 
-// RunSimulation executes the minimal simulator until Fire Mastery or failure
+// RunSimulation executes the minimal simulator until both technologies are unlocked or failure
 func RunSimulation(config SimulationConfig) ViabilityResult {
 	// Initialize RNG
 	rng := NewRandomGenerator(config.Seed)
 
 	// Set defaults
 	if config.MaxDays == 0 {
-		config.MaxDays = 1825 // 5 years
+		config.MaxDays = 21900 // 60 years (to allow for sequential research with realistic Fire Mastery timing)
 	}
 
 	// Initialize population
@@ -101,6 +101,7 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 		SciencePoints:       0,
 		FoodAllocationRatio: config.StartingConditions.FoodAllocationRatio,
 		HasFireMastery:      false,
+		HasStoneKnapping:    false,
 		CurrentDay:          0,
 	}
 
@@ -121,7 +122,7 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 		avgHealth := calculateAverageHealth(state.Humans)
 		population := countAlive(state.Humans)
 
-		foodProduced := produceFood(foodHours, state.HasFireMastery, config.StartingConditions.TerrainMultiplier)
+		foodProduced := produceFood(foodHours, state.HasFireMastery, state.HasStoneKnapping, config.StartingConditions.TerrainMultiplier)
 		scienceProduced := produceScience(scienceHours, population, avgHealth)
 
 		state.FoodStockpile += foodProduced
@@ -155,8 +156,8 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 		// Step 9: Attempt new conceptions
 		attemptReproduction(state.Humans, rng)
 
-		// Step 10: Check for Fire Mastery unlock
-		checkTechnologyUnlock(state)
+		// Step 9: Check for technology unlocks
+		checkTechnologyUnlocks(state)
 
 		// Step 11: Record metrics
 		metrics := &DailyMetrics{
@@ -170,12 +171,13 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 			Births:            births,
 			Deaths:            deaths,
 			HasFireMastery:    state.HasFireMastery,
+			HasStoneKnapping:  state.HasStoneKnapping,
 		}
 		allMetrics = append(allMetrics, metrics)
 
 		// Check for termination conditions
-		if state.HasFireMastery {
-			// Success! Fire Mastery unlocked
+		if state.HasFireMastery && state.HasStoneKnapping {
+			// Success! Both technologies unlocked
 			break
 		}
 		if countAlive(state.Humans) == 0 {
@@ -217,12 +219,15 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 	lastDay := allMetrics[len(allMetrics)-1]
 	daysToNonViable := -1
 
-	// Find day when Fire Mastery was unlocked (if ever)
+	// Find day when technologies were unlocked (if ever)
 	fireMasteryDay := -1
+	stoneKnappingDay := -1
 	for _, m := range allMetrics {
-		if m.HasFireMastery {
+		if m.HasFireMastery && fireMasteryDay == -1 {
 			fireMasteryDay = m.Day
-			break
+		}
+		if m.HasStoneKnapping && stoneKnappingDay == -1 {
+			stoneKnappingDay = m.Day
 		}
 	}
 
@@ -255,16 +260,22 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		}
 	}
 
-	// Criterion 1: Fire Mastery must be unlocked
+	// Criterion 1: Both technologies must be unlocked
 	if !lastDay.HasFireMastery {
 		failures = append(failures, "Fire Mastery not unlocked")
 	}
+	if !lastDay.HasStoneKnapping {
+		failures = append(failures, "Stone Knapping not unlocked")
+	}
 
-	// Criterion 2: Fire Mastery must be unlocked in reasonable time
+	// Criterion 2: Fire Mastery should be unlocked (timing validated separately)
 	if fireMasteryDay < 0 {
 		failures = append(failures, "Fire Mastery never unlocked")
-	} else if fireMasteryDay > maxDays {
-		failures = append(failures, "Fire Mastery took too long")
+	}
+	
+	// Criterion 2b: Stone Knapping should be unlocked (timing validated separately)
+	if stoneKnappingDay < 0 {
+		failures = append(failures, "Stone Knapping never unlocked")
 	}
 
 	// Criterion 3: Population must not go extinct
@@ -292,20 +303,23 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 	}
 
 	return ViabilityResult{
-		IsViable:            len(failures) == 0,
-		FailureReasons:      failures,
-		FinalPopulation:     lastDay.Population,
-		FinalScience:        lastDay.SciencePoints,
-		AverageHealth:       avgHealthOverTime,
-		DaysToFireMastery:   fireMasteryDay,
-		DaysToNonViable:     daysToNonViable,
-		FinalAverageHealth:  lastDay.AverageHealth,
-		PeakPopulation:      peakPopulation,
-		MinimumPopulation:   minimumPopulation,
-		FireMasteryUnlocked: lastDay.HasFireMastery,
-		TotalBirths:         totalBirths,
-		HasFireMastery:      lastDay.HasFireMastery,
-		AllMetrics:          allMetrics,
+		IsViable:              len(failures) == 0,
+		FailureReasons:        failures,
+		FinalPopulation:       lastDay.Population,
+		FinalScience:          lastDay.SciencePoints,
+		AverageHealth:         avgHealthOverTime,
+		DaysToFireMastery:     fireMasteryDay,
+		DaysToStoneKnapping:   stoneKnappingDay,
+		DaysToNonViable:       daysToNonViable,
+		FinalAverageHealth:    lastDay.AverageHealth,
+		PeakPopulation:        peakPopulation,
+		MinimumPopulation:     minimumPopulation,
+		FireMasteryUnlocked:   lastDay.HasFireMastery,
+		StoneKnappingUnlocked: lastDay.HasStoneKnapping,
+		TotalBirths:           totalBirths,
+		HasFireMastery:        lastDay.HasFireMastery,
+		HasStoneKnapping:      lastDay.HasStoneKnapping,
+		AllMetrics:            allMetrics,
 	}
 }
 
