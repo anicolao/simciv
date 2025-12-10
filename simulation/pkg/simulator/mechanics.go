@@ -24,7 +24,7 @@ const (
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production
-	ScienceBaseRate = 0.0088 // Science points per hour (tuned to reach 600 science in ~20 years)
+	ScienceBaseRate = 0.00015 // Science points per hour (tuned for 5-10 year Fire Mastery without pop bonus)
 	ScienceHealthThreshold = 30.0 // Tuned for viability (originally 50 per design, relaxed to reduce pressure)
 	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
 
@@ -64,7 +64,7 @@ const (
 
 	// Technology unlock
 	FireMasteryScienceRequired     = 100.0
-	StoneKnappingScienceRequired   = 600.0 // Total 600 science (500 more than Fire Mastery)
+	StoneKnappingScienceRequired   = 105.0 // Total 105 science (5 more than Fire Mastery, achievable in ~12-20 years total with realistic Fire Mastery timing)
 	StoneKnappingFoodBonus         = 1.20  // +20% from better tools
 )
 
