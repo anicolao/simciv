@@ -561,9 +561,14 @@
       const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
       const delta = currentDistance - lastTouchDistance;
       
+      // Calculate the center point of the pinch gesture
+      const rect = canvas.getBoundingClientRect();
+      const centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+      const centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+      
       // Convert distance change to zoom delta (adjust sensitivity)
       const zoomDelta = delta / 200;
-      updateZoomLevel(zoomDelta);
+      updateZoomLevel(zoomDelta, centerX, centerY);
       
       lastTouchDistance = currentDistance;
     }
@@ -580,10 +585,17 @@
   function handleWheel(e: WheelEvent) {
     e.preventDefault();
     
+    if (!canvas) return;
+    
+    // Get mouse position relative to canvas
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
     // Determine zoom direction (negative deltaY = zoom in)
     // deltaY is typically ~100 per scroll tick
     const zoomDelta = -e.deltaY / 100;
-    updateZoomLevel(zoomDelta);
+    updateZoomLevel(zoomDelta, mouseX, mouseY);
   }
 
   // Utility: Get distance between two touch points
@@ -594,36 +606,43 @@
   }
 
   // Utility: Update zoom level
-  function updateZoomLevel(delta: number) {
-    console.log('[MapView] updateZoomLevel called with delta:', delta);
+  function updateZoomLevel(delta: number, mouseX: number, mouseY: number) {
     const oldZoom = zoomLevel;
+    const oldDisplayTileSize = DISPLAY_TILE_SIZE;
     
     // More granular zoom levels for smoother experience (50% to 200% in 10% increments)
     const zoomLevels = [
       0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0
     ];
     const currentIndex = zoomLevels.findIndex(z => Math.abs(z - zoomLevel) < 0.01);
-    console.log('[MapView] Current zoom index:', currentIndex, 'zoom:', zoomLevel);
     
     let newIndex = currentIndex;
     // Increased threshold to make zoom less sensitive (0.05 instead of 0.01)
     if (delta > 0.05) {
       // Zoom in
       newIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
-      console.log('[MapView] Zooming in, newIndex:', newIndex);
     } else if (delta < -0.05) {
       // Zoom out
       newIndex = Math.max(currentIndex - 1, 0);
-      console.log('[MapView] Zooming out, newIndex:', newIndex);
     }
     
     if (newIndex !== currentIndex) {
-      zoomLevel = zoomLevels[newIndex];
-      console.log('[MapView] Zoom level changed to:', zoomLevel);
+      const newZoom = zoomLevels[newIndex];
+      
+      // Adjust view offset to keep the point under the mouse stationary
+      const newDisplayTileSize = Math.round(BASE_DISPLAY_TILE_SIZE * newZoom);
+      
+      // Calculate tile coordinate at mouse position before zoom
+      // Keep this tile coordinate at the same screen position after zoom
+      const tileX = (viewOffsetX + mouseX) / oldDisplayTileSize;
+      const tileY = (viewOffsetY + mouseY) / oldDisplayTileSize;
+      
+      viewOffsetX = tileX * newDisplayTileSize - mouseX;
+      viewOffsetY = tileY * newDisplayTileSize - mouseY;
+      
+      zoomLevel = newZoom;
       clampViewOffset();
       renderMap();
-    } else {
-      console.log('[MapView] Zoom level not changed');
     }
   }
 
