@@ -110,7 +110,7 @@ test.describe('000-user-authentication', () => {
     readmeContent.push('**Programmatic Verification:**\n\n');
     readmeContent.push(await expectation(
       expect(page.locator('.message.success')).toContainText('Registration successful', {
-        timeout: 30000
+        timeout: 5000
       }),
       '- ✓ Success message is displayed\n'
     ));
@@ -191,7 +191,7 @@ test.describe('000-user-authentication', () => {
     await page.locator('form button[type="submit"]').first().click();
     
     await expect(page.locator('.message.success')).toContainText('Registration successful', {
-      timeout: 30000
+      timeout: 5000
     });
     await expect(page.locator('.authenticated')).toBeVisible();
     
@@ -232,7 +232,7 @@ test.describe('000-user-authentication', () => {
     
     // Should see error about no private key found
     await expect(page2.locator('.message.error')).toContainText('No account found! Register instead.', {
-      timeout: 10000
+      timeout: 2000
     });
     
     // Wait for page to fully stabilize before screenshot
@@ -268,7 +268,7 @@ test.describe('000-user-authentication', () => {
     
     // Wait for registration to complete
     await expect(page.locator('.message.success')).toContainText('Registration successful', {
-      timeout: 30000
+      timeout: 5000
     });
     
     // Verify authenticated
@@ -308,7 +308,7 @@ test.describe('000-user-authentication', () => {
     
     // Should successfully login since the private key is stored in this session's localStorage
     await expect(page.locator('.message.success')).toContainText('Login successful', {
-      timeout: 10000
+      timeout: 2000
     });
     
     // Should be authenticated again
