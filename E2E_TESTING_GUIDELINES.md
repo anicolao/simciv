@@ -368,6 +368,85 @@ await page.evaluate(() => new Promise(resolve => {
 - DOM has been painted after state change
 - Layout reflow has occurred
 
+### Timeout Calibration Methodology
+
+**CRITICAL PRINCIPLE: Timeout values must be based on actual test performance, not guesswork.**
+
+#### Step 1: Measure Actual Test Duration
+
+Before setting timeout values, time the entire test to understand actual performance:
+
+```bash
+# Time the complete test
+time npm run test:e2e -- e2e/your-test/test.spec.ts
+```
+
+#### Step 2: Set Reasonable Timeout Values
+
+**Rule of Thumb**: Individual operation timeouts should be much smaller than total test duration.
+
+```typescript
+// Example: If total test takes 12 seconds for 3 sub-tests
+// Then individual operations should complete in 1-5 seconds
+
+// ❌ BAD: Timeout is longer than entire test could possibly take
+await expect(page.locator('.message')).toContainText('Success', {
+  timeout: 30000 // 30 seconds - way too long!
+});
+
+// ✅ GOOD: Timeout reflects actual expected operation time
+await expect(page.locator('.message')).toContainText('Success', {
+  timeout: 5000 // 5 seconds - reasonable for key generation
+});
+
+await expect(page.locator('.message')).toContainText('Login successful', {
+  timeout: 2000 // 2 seconds - reasonable for simple operations
+});
+```
+
+#### Step 3: Categories of Operations
+
+Different operations have different expected durations:
+
+```typescript
+// Fast operations (100ms-1s): DOM updates, simple form validation
+await expect(page.locator('.error')).toBeVisible({
+  timeout: 1000
+});
+
+// Medium operations (1-3s): Network requests, login, logout  
+await expect(page.locator('.message')).toContainText('Login successful', {
+  timeout: 2000
+});
+
+// Slow operations (3-10s): Cryptographic operations, key generation
+await expect(page.locator('.message')).toContainText('Registration successful', {
+  timeout: 5000
+});
+
+// Very slow operations (10-30s): Only for operations proven to need this
+// Require explicit justification in comments
+await expect(page.locator('.complex-render')).toBeVisible({
+  timeout: 15000 // Justified: Large map generation with 10000+ tiles
+});
+```
+
+#### Step 4: Verify and Iterate
+
+After setting timeouts, verify they work:
+
+```bash
+# Run tests multiple times to ensure stability
+npm run test:e2e -- e2e/your-test/test.spec.ts
+npm run test:e2e -- e2e/your-test/test.spec.ts
+npm run test:e2e -- e2e/your-test/test.spec.ts
+```
+
+If tests occasionally fail due to timeout, investigate why before increasing timeout:
+1. Is there a performance regression?
+2. Is the operation actually slower than expected?
+3. Is there a race condition that needs fixing?
+
 ### Best Practices
 
 1. **Always wait for specific conditions**:
@@ -379,11 +458,12 @@ await page.evaluate(() => new Promise(resolve => {
    await expect(page.locator('.map-canvas')).toBeVisible();
    ```
 
-2. **Use appropriate timeouts for slow operations**:
+2. **Use timeout values based on actual measurement**:
    ```typescript
-   // Key generation can be slow
+   // Measured: Registration completes in 2-4 seconds typically
+   // Set timeout to 5 seconds (25% buffer for CI variability)
    await expect(page.locator('.message.success')).toContainText('Registration successful', {
-     timeout: 30000 // 30 seconds
+     timeout: 5000
    });
    ```
 
@@ -392,6 +472,14 @@ await page.evaluate(() => new Promise(resolve => {
    await page.waitForLoadState('networkidle');
    await expect(page.locator('.content')).toBeVisible();
    await screenshotIfChanged(page, { path: '...' });
+   ```
+
+4. **Document unusual timeout values**:
+   ```typescript
+   // Timeout is 15s because RSA 4096-bit key generation can take 8-12s on CI
+   await expect(page.locator('.success')).toBeVisible({
+     timeout: 15000
+   });
    ```
 
 ## PR Requirements for UI Changes
