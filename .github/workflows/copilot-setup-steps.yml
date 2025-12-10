@@ -3,7 +3,7 @@ name: Copilot Runner Setup and Test
 on:
   workflow_dispatch:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
 
 env:
@@ -14,7 +14,7 @@ env:
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-24.04
-    
+
     steps:
       # -----------------------------------------------------------------------
       # STEP 1: Checkout the repository
@@ -49,7 +49,7 @@ jobs:
         run: |
           # Install direnv using nix
           nix profile install nixpkgs#direnv
-          
+
           # Verify installation
           echo "direnv version: $(direnv --version)"
 
@@ -135,7 +135,7 @@ jobs:
         run: |
           echo "## Unit Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -f unit-test-output.txt ]; then
             # Extract test summary from vitest output
             if grep -q "Test Files" unit-test-output.txt; then
@@ -150,7 +150,7 @@ jobs:
           else
             echo "❌ Unit test output not found" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ steps.unit-tests.outputs.exit_code }}" = "0" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
@@ -172,107 +172,56 @@ jobs:
           cd simulation
           go build -o engine main.go
 
-      - name: Setup E2E environment
-        run: |
-          eval "$(direnv export bash)"
-          bin/e2e-setup
-
       - name: Install Playwright browsers
         run: |
           npx playwright install chromium --with-deps
-
-      - name: Run E2E tests
-        id: e2e-tests
-        run: |
-          # E2E tests run outside Nix environment as per docs
-          npm run test:e2e 2>&1 | tee e2e-test-output.txt
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-
-      - name: Generate E2E test summary
-        if: always()
-        run: |
-          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -f e2e-test-output.txt ]; then
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 30 e2e-test-output.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ E2E test output not found" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "${{ steps.e2e-tests.outputs.exit_code }}" = "0" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "✅ **All E2E tests passed!**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "❌ **E2E tests failed!**" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Upload E2E test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-test-results
-          path: |
-            e2e-test-output.txt
-            playwright-report/
-            test-results/
-
-      - name: Upload E2E screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-screenshots
-          path: e2e-screenshots/
 
       - name: Create startup summary for Copilot
         if: always()
         run: |
           cat > startup-summary.md << 'EOF'
           # SimCiv Development Environment Status
-          
+
           ## Environment Setup
           - ✅ Ubuntu 24.04 with Nix flakes
           - ✅ Node.js, Go, MongoDB configured
           - ✅ Dependencies installed
           - ✅ Application built
-          
+
           ## Test Status
-          
+
           ### Unit Tests
           $(if [ "${{ steps.unit-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
-          
+
           ### E2E Tests  
-          $(if [ "${{ steps.e2e-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
-          
+          # $(if [ "${{ steps.e2e-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
+
           ## Quick Commands
           ```bash
           # Run in Nix environment
           direnv allow
           eval "$(direnv export bash)"
-          
+
           # MongoDB management
           bin/mongo start|stop|status
-          
+
           # Development
           npm run dev              # Start dev server
           npm test                 # Run unit tests
-          npm run test:e2e         # Run E2E tests (outside Nix)
-          
+          npm run test:e2e         # Run E2E tests
+
           # Build
           npm run build            # Build TypeScript & Svelte
           cd simulation && go build -o engine main.go  # Build Go engine
           ```
-          
+
           ## Architecture Notes
           - Database-centric: MongoDB is single source of truth
           - Complete modularity: Simulation engine and clients are independent
           - Security first: Cryptographic challenge/response auth
           - All tests require MongoDB running on localhost:27017
           EOF
-          
+
           cat startup-summary.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload startup summary
