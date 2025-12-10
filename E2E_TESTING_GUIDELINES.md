@@ -90,6 +90,8 @@ This test verifies the complete user registration flow from initial page load th
 ## Screenshots
 
 ### 000-initial-load.png
+![000-initial-load.png](screenshots/000-initial-load.png)
+
 **Programmatic Verification:**
 - ✓ Page title is "SimCiv Authentication"
 - ✓ Registration form is visible
@@ -101,6 +103,8 @@ This test verifies the complete user registration flow from initial page load th
 - Confirm responsive design at viewport size
 
 ### 001-form-filled.png
+![001-form-filled.png](screenshots/001-form-filled.png)
+
 **Programmatic Verification:**
 - ✓ Username field contains "testuser"
 - ✓ Password fields are masked
@@ -112,6 +116,8 @@ This test verifies the complete user registration flow from initial page load th
 - Confirm error message styling (if applicable)
 
 ### 002-registration-complete.png
+![002-registration-complete.png](screenshots/002-registration-complete.png)
+
 **Programmatic Verification:**
 - ✓ Success message is displayed
 - ✓ User is redirected to game lobby
@@ -126,6 +132,8 @@ This test verifies the complete user registration flow from initial page load th
 The README must clearly separate:
 1. **Programmatic Verification**: What the test code actually checks
 2. **Manual Visual Verification**: What a human reviewer should verify in the screenshot
+
+Screenshots are directly linked using markdown image syntax for easy viewing.
 
 ## Programmatic Verification Requirements
 
@@ -475,6 +483,46 @@ export async function createGame(page: Page, maxPlayers: number) {
 }
 ```
 
+### Documentation Helper
+
+To tightly couple programmatic verification with documentation, use the `expectation()` helper:
+
+```typescript
+// e2e/helpers/expectation.ts
+import { expect } from '@playwright/test';
+
+/**
+ * Performs a Playwright expectation and returns documentation string
+ * This ensures that checks and documentation are always synchronized
+ * 
+ * @param assertion - The Playwright expect() promise
+ * @param description - Human-readable description of what was verified
+ * @returns The description string for inclusion in README
+ */
+export async function expectation<T>(
+  assertion: Promise<T>,
+  description: string
+): Promise<string> {
+  await assertion;
+  return description;
+}
+
+/**
+ * Usage example:
+ * const doc = await expectation(
+ *   expect(page.locator('h1')).toContainText('SimCiv Authentication'),
+ *   '- ✓ Page title contains "SimCiv Authentication"\n'
+ * );
+ * readmeContent.push(doc);
+ */
+```
+
+**Benefits of this approach:**
+- **Tight coupling**: Check and documentation are in the same statement
+- **Synchronization**: Documentation is only generated if the check passes
+- **Clarity**: Easy to see exactly what is being verified
+- **Maintainability**: Changes to checks automatically update documentation expectations
+
 ### Test Setup
 
 Each test file should follow this structure:
@@ -509,6 +557,7 @@ import { test, expect } from '@playwright/test';
 import { clearDatabase, enableE2ETestMode, resetUuidCounter } from '../global-setup';
 import { screenshotIfChanged } from '../helpers/screenshot';
 import { mockDateInBrowser } from '../helpers/mock-time';
+import { expectation } from '../helpers/expectation';
 import fs from 'fs';
 
 test.beforeEach(async ({ page }) => {
@@ -532,25 +581,31 @@ test.describe('000-user-registration', () => {
     await page.goto('/');
     await page.waitForURL(/\/id=[a-f0-9-]+/);
     
-    // Verify initial state
-    await expect(page.locator('h1')).toContainText('SimCiv Authentication');
-    await expect(page.locator('.tabs button.active')).toContainText('Register');
-    await expect(page.locator('input#alias')).toBeVisible();
+    // Verify initial state using expectation() helper
+    readmeContent.push('### 000-initial-load.png\n');
+    readmeContent.push('![000-initial-load.png](screenshots/000-initial-load.png)\n\n');
+    readmeContent.push('**Programmatic Verification:**\n');
+    readmeContent.push(await expectation(
+      expect(page.locator('h1')).toContainText('SimCiv Authentication'),
+      '- ✓ Page title contains "SimCiv Authentication"\n'
+    ));
+    readmeContent.push(await expectation(
+      expect(page.locator('.tabs button.active')).toContainText('Register'),
+      '- ✓ Register tab is active\n'
+    ));
+    readmeContent.push(await expectation(
+      expect(page.locator('input#alias')).toBeVisible(),
+      '- ✓ Registration form is visible\n'
+    ));
+    readmeContent.push('\n**Manual Visual Verification:**\n');
+    readmeContent.push('- Verify page styling and layout\n');
+    readmeContent.push('- Check tab styling\n');
+    readmeContent.push('- Confirm form field styling\n\n');
     
     await screenshotIfChanged(page, { 
       path: `${screenshotDir}/000-initial-load.png`,
       fullPage: true 
     });
-    
-    readmeContent.push('### 000-initial-load.png\n');
-    readmeContent.push('**Programmatic Verification:**\n');
-    readmeContent.push('- ✓ Page title contains "SimCiv Authentication"\n');
-    readmeContent.push('- ✓ Register tab is active\n');
-    readmeContent.push('- ✓ Registration form is visible\n\n');
-    readmeContent.push('**Manual Visual Verification:**\n');
-    readmeContent.push('- Verify page styling and layout\n');
-    readmeContent.push('- Check tab styling\n');
-    readmeContent.push('- Confirm form field styling\n\n');
 
     // Step 2: Fill registration form
     const alias = 'testuser';
@@ -560,46 +615,55 @@ test.describe('000-user-registration', () => {
     await page.fill('input#password', password);
     await page.fill('input#passwordConfirm', password);
     
-    // Verify form is filled
-    await expect(page.locator('input#alias')).toHaveValue(alias);
-    await expect(page.locator('button[type="submit"]')).toBeEnabled();
+    // Verify form is filled using expectation() helper
+    readmeContent.push('### 001-form-filled.png\n');
+    readmeContent.push('![001-form-filled.png](screenshots/001-form-filled.png)\n\n');
+    readmeContent.push('**Programmatic Verification:**\n');
+    readmeContent.push(await expectation(
+      expect(page.locator('input#alias')).toHaveValue(alias),
+      '- ✓ Alias field contains "testuser"\n'
+    ));
+    readmeContent.push(await expectation(
+      expect(page.locator('button[type="submit"]')).toBeEnabled(),
+      '- ✓ Submit button is enabled\n'
+    ));
+    readmeContent.push('\n**Manual Visual Verification:**\n');
+    readmeContent.push('- Verify input field styling\n');
+    readmeContent.push('- Check button hover states\n\n');
     
     await screenshotIfChanged(page, { 
       path: `${screenshotDir}/001-form-filled.png`,
       fullPage: true 
     });
-    
-    readmeContent.push('### 001-form-filled.png\n');
-    readmeContent.push('**Programmatic Verification:**\n');
-    readmeContent.push('- ✓ Alias field contains "testuser"\n');
-    readmeContent.push('- ✓ Password fields are filled (masked)\n');
-    readmeContent.push('- ✓ Submit button is enabled\n\n');
-    readmeContent.push('**Manual Visual Verification:**\n');
-    readmeContent.push('- Verify input field styling\n');
-    readmeContent.push('- Check button hover states\n\n');
 
     // Step 3: Submit and verify success
     await page.click('button[type="submit"]');
     
-    await expect(page.locator('.message.success')).toContainText('Registration successful', {
-      timeout: 30000
-    });
-    await expect(page.locator('.authenticated')).toBeVisible();
-    await expect(page.locator('.user-info h2')).toContainText(alias);
+    readmeContent.push('### 002-registration-complete.png\n');
+    readmeContent.push('![002-registration-complete.png](screenshots/002-registration-complete.png)\n\n');
+    readmeContent.push('**Programmatic Verification:**\n');
+    readmeContent.push(await expectation(
+      expect(page.locator('.message.success')).toContainText('Registration successful', {
+        timeout: 30000
+      }),
+      '- ✓ Success message is displayed\n'
+    ));
+    readmeContent.push(await expectation(
+      expect(page.locator('.authenticated')).toBeVisible(),
+      '- ✓ Authenticated section is visible\n'
+    ));
+    readmeContent.push(await expectation(
+      expect(page.locator('.user-info h2')).toContainText(alias),
+      '- ✓ User alias is displayed correctly\n'
+    ));
+    readmeContent.push('\n**Manual Visual Verification:**\n');
+    readmeContent.push('- Verify success message styling\n');
+    readmeContent.push('- Check authenticated user layout\n\n');
     
     await screenshotIfChanged(page, { 
       path: `${screenshotDir}/002-registration-complete.png`,
       fullPage: true 
     });
-    
-    readmeContent.push('### 002-registration-complete.png\n');
-    readmeContent.push('**Programmatic Verification:**\n');
-    readmeContent.push('- ✓ Success message is displayed\n');
-    readmeContent.push('- ✓ Authenticated section is visible\n');
-    readmeContent.push('- ✓ User alias is displayed correctly\n\n');
-    readmeContent.push('**Manual Visual Verification:**\n');
-    readmeContent.push('- Verify success message styling\n');
-    readmeContent.push('- Check authenticated user layout\n\n');
 
     // Generate README.md
     fs.writeFileSync(
