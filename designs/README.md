@@ -99,6 +99,31 @@ The version number indicates the **chronological order** based on the "Last Upda
     - Status: Design Review
     - Purpose: Application-focused progression trees (Military, Cultural, Economic) determining how civilizations apply technological knowledge toward victory. Scientific Victory achieved through unified Technology Tree advancement.
 
+19. **0.0019_MILITARY_TREE_PREHISTORIC.md** - Prehistoric military progression tree
+    - Date: 2025-10-30
+    - Status: Design Review
+    - Purpose: Military development from tribal violence to early armies (200,000 BCE - 4,000 BCE)
+
+20. **0.0020_CULTURAL_TREE_PREHISTORIC.md** - Prehistoric cultural progression tree
+    - Date: 2025-10-30
+    - Status: Design Review
+    - Purpose: Cultural development from oral traditions to organized religion (200,000 BCE - 4,000 BCE)
+
+21. **0.0021_ECONOMIC_TREE_PREHISTORIC.md** - Prehistoric economic progression tree
+    - Date: 2025-10-30
+    - Status: Design Review
+    - Purpose: Economic development from subsistence to trade networks (200,000 BCE - 4,000 BCE)
+
+22. **0.0022_STONE_KNAPPING_EXPANSION.md** - Stone Knapping technology addition
+    - Date: 2025-11-05
+    - Status: Design Proposal
+    - Purpose: Add second technology to minimal simulator with realistic 5-10 year research timeframes
+
+23. **0.0023_PREREQUISITE_TECHNOLOGY.md** - Advanced Tool-Making with prerequisites
+    - Date: 2025-11-05
+    - Status: Design Proposal
+    - Purpose: Add first Level 1 technology with prerequisites to test technology tree progression mechanics
+
 ## Document Structure
 
 Each design document follows a standard structure:
@@ -159,7 +184,8 @@ For understanding the complete system architecture, read documents in numerical 
 7. Review bug fixes and tuning (0.0008-0.0014)
 8. Understand unit systems (0.0015, 0.0016)
 9. Study civilization dimensions (0.0017)
-10. Learn victory progression systems (0.0018)
+10. Learn victory progression systems (0.0018-0.0021)
+11. Follow minimal simulator expansions (0.0022-0.0023)
 
 Bug fix documents (0.0008-0.0014) can be read after their corresponding feature documents to understand implementation challenges and solutions.
 

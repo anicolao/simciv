@@ -102,89 +102,21 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed documentation 
 
 ### Getting Started
 
-#### Using Nix (NixOS/nix-darwin)
+SimCiv uses Nix flakes with direnv for automatic environment activation. When you enter the project directory, direnv loads all required tools automatically.
 
-If you're on NixOS or macOS with nix-darwin, you can use Nix flakes to set up your development environment with all required tools:
-
+**Setup:**
 ```bash
-# Enter the development shell with all tools installed
-nix develop
-
-# This will provide:
-# - Node.js 20.x
-# - Go 1.24.x
-# - MongoDB 7.0
-# - All other development dependencies
-
-# Then follow the standard setup steps below
-```
-
-#### Using nix-bin with direnv (Ubuntu/Debian)
-
-For a lighter-weight alternative on Ubuntu/Debian systems, you can use `nix-bin` from apt with direnv for automatic environment activation:
-
-```bash
-# Run the setup script
-./SETUP_NIX_BIN.sh
-
-# Log out and log back in for group membership to take effect
-
-# Then allow direnv in the project directory
+# Clone and enter the project directory
+git clone https://github.com/anicolao/simciv.git
 cd simciv
+
+# Allow direnv (first time only)
 direnv allow
 
-# The environment will be automatically loaded when you enter the directory
-
-# Inside Nix: Build and test
+# Build and test
 npm install
 npm run build
 npm test
-
-# OUTSIDE Nix: E2E tests (due to Playwright binary compatibility)
-# Exit direnv environment first (e.g., cd /tmp && cd -)
-e2e-setup
-npm run test:e2e
-```
-
-**Important Note:** SimCiv uses a **two-tier development environment** where most work happens in Nix, but Playwright E2E tests must run outside Nix due to binary compatibility. See [docs/ENVIRONMENT_STRUCTURE.md](docs/ENVIRONMENT_STRUCTURE.md) for the complete explanation and [docs/DEVELOPMENT_RECIPES.md](docs/DEVELOPMENT_RECIPES.md) for quick-start commands.
-
-For detailed setup instructions, see [docs/NIX_BIN_SETUP.md](docs/NIX_BIN_SETUP.md).
-
-#### Standard Setup
-
-To run SimCiv locally:
-
-```bash
-# Install dependencies
-npm install
-
-# Build the application
-npm run build
-
-# Start MongoDB (required)
-# Note: If you're using the Nix flake on Linux, native MongoDB will be used automatically
-# Otherwise, Docker will be used (make sure Docker is running)
-./bin/mongo start
-
-# Run development server
-npm run dev
-
-# In a separate terminal, start the Go simulation engine
-cd simulation
-go build -o simciv-sim main.go
-./simciv-sim
-
-# Access the application
-# Navigate to http://localhost:3000
-# Register/login, then create or join games!
-
-# Run tests (requires MongoDB running on localhost:27017)
-npm test
-
-# Run Go tests
-cd simulation && go test ./...
-
-# Run E2E tests (requires running server and simulation engine)
 npm run test:e2e
 ```
 

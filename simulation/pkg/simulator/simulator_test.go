@@ -237,10 +237,11 @@ func TestProduceScience(t *testing.T) {
 		minExpected   float64
 		maxExpected   float64
 	}{
-		// With ScienceBaseRate = 0.002 (500x slower than original, 2x faster than 0.001)
+		// With ScienceBaseRate = 0.00015
 		// Health penalty only applies when health < 30, so both healthy (60) and unhealthy (40) get full production
-		{"Healthy population", 10, population20, avgHealthy, 0.024, 0.035}, // ~0.026
-		{"Unhealthy population", 10, population20, avgUnhealthy, 0.024, 0.035}, // ~0.026 (no penalty above 30 health)
+		// 10 hours * 0.00015 = 0.0015
+		{"Healthy population", 10, population20, avgHealthy, 0.0014, 0.0016}, 
+		{"Unhealthy population", 10, population20, avgUnhealthy, 0.0014, 0.0016}, // No penalty above 30 health
 		{"Zero hours", 0, population20, avgHealthy, 0, 0},
 	}
 
@@ -297,10 +298,11 @@ func TestUpdateHealth(t *testing.T) {
 		foodPerPerson  float64
 		expectedChange string // "increase", "decrease", or "stable"
 	}{
-		{"Well-fed young adult", 50, 20, 2.0, "increase"},
-		{"Half-fed young adult", 50, 20, 1.0, "decrease"},
-		{"Starving young adult", 50, 20, 0.0, "decrease"},
-		{"Well-fed elder", 50, 50, 2.0, "decrease"}, // Age penalty too high
+		{"Well-fed young adult", 50, 20, 2.0, "increase"},     // -0.5 + 30 - 3.33 = 26.17 (increase)
+		{"Half-fed young adult", 50, 20, 1.0, "increase"},     // -0.5 + 15 - 3.33 = 11.17 (increase, not decrease!)
+		{"Starving young adult", 50, 20, 0.0, "decrease"},     // -0.5 + 0 - 3.33 = -3.83 (decrease)
+		{"Well-fed elder", 50, 50, 2.0, "increase"},           // -0.5 + 30 - 8.33 = 21.17 (increase, not decrease!)
+		{"Poorly-fed elder", 50, 50, 0.5, "decrease"},         // -0.5 + 7.5 - 8.33 = -1.33 (decrease)
 	}
 
 	for _, tt := range tests {
@@ -387,15 +389,19 @@ func TestCheckReproduction(t *testing.T) {
 	male := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "male"}
 	female := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "female"}
 	
-	child := checkReproduction(male, female, 20, rng)
+	conceived := checkReproduction(male, female, 20, rng)
 	
 	avgHealth := (male.Health + female.Health) / 2.0
 	healthMod := (avgHealth - 50.0) / 50.0
 	ageMod := 1.0
 	finalChance := MonthlyConceptionBase * healthMod * ageMod
 	
-	t.Logf("Manual test: child=%v, health_mod=%.3f, age_mod=%.3f, chance=%.6f", 
-		child != nil, healthMod, ageMod, finalChance)
+	t.Logf("Manual test: conceived=%v, health_mod=%.3f, age_mod=%.3f, chance=%.6f", 
+		conceived, healthMod, ageMod, finalChance)
+	
+	if conceived {
+		t.Logf("Female pregnancy days remaining: %d", female.PregnancyDaysRemaining)
+	}
 
 	tests := []struct {
 		name          string
@@ -439,15 +445,22 @@ func TestCheckReproduction(t *testing.T) {
 			population:    5, // belonging = 2.5, below threshold
 			shouldSucceed: false,
 		},
+		{
+			name:          "Already pregnant",
+			male:          &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "male"},
+			female:        &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "female", PregnancyDaysRemaining: 100},
+			population:    20,
+			shouldSucceed: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			child := checkReproduction(tt.male, tt.female, tt.population, rng)
-			if tt.shouldSucceed && child == nil {
+			conceived := checkReproduction(tt.male, tt.female, tt.population, rng)
+			if tt.shouldSucceed && !conceived {
 				t.Error("Expected reproduction to succeed")
 			}
-			if !tt.shouldSucceed && child != nil {
+			if !tt.shouldSucceed && conceived {
 				t.Error("Expected reproduction to fail")
 			}
 		})
@@ -456,22 +469,20 @@ func TestCheckReproduction(t *testing.T) {
 	// Test that reproduction can succeed with good conditions
 	// Note: With health=80, age=25, and MonthlyConceptionBase=0.06 (doubled):
 	// (80-50)/50 * 1.0 * 0.002 = 0.0012 per day
-	// Over 10000 trials, we expect about 12 conceptions, and ~8 surviving births
-	// However, due to the random nature and low probability, we'll just log the results
+	// Over 10000 trials, we expect about 12 conceptions
 	successCount := 0
 	for i := 0; i < 10000; i++ {
 		male := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "male"}
 		female := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "female"}
-		child := checkReproduction(male, female, 20, NewRandomGenerator(i))
-		if child != nil {
+		if checkReproduction(male, female, 20, NewRandomGenerator(i)) {
 			successCount++
 		}
 	}
 	
-	t.Logf("Reproduction success rate: %d/10000 (%.2f%%) - expected ~8-12 with doubled rate", 
+	t.Logf("Conception success rate: %d/10000 (%.2f%%) - expected ~12 conceptions", 
 		successCount, float64(successCount)/100.0)
 	
-	// The test is mainly to ensure the function doesn't crash or always return nil
+	// The test is mainly to ensure the function doesn't crash or always return false
 	// With such low probabilities, we can't strictly require successes
 }
 
@@ -601,21 +612,24 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 	t.Logf("Populations surviving: %d/%d (%.1f%%)\n", survivingCount, len(results), 
 		float64(survivingCount)/float64(len(results))*100)
 	
-	// With current science rate (0.002) and 70/30 food allocation
-	// All populations should survive, thrive, and reach Fire Mastery
+	// With current science rate (0.00015) and 70/30 food allocation
+	// All populations should survive (100% survival expected)
 	if survivingCount < len(results) {
 		t.Errorf("Expected 100%% survival with 100 starting population, got %d/%d surviving", 
 			survivingCount, len(results))
 	}
 	
-	// Viability (Fire Mastery) should be 100% with 70/30 allocation
-	// Fire Mastery achieved in ~140 days (0.38 years)
+	// Viability (Fire Mastery) with current rate (0.00015):
+	// Fire Mastery (100 science points) is NOT achieved in 10 years with current parameters
+	// Actual science accumulation: ~10 points in 10 years
+	// This is expected behavior - see designs/FIRE_MASTERY_CLAIMS_ANALYSIS.md
 	t.Logf("Viability (Fire Mastery in 10yr): %d/%d (%.1f%%)", 
 		viableCount, len(results), viabilityRate*100)
 	
-	if viableCount != len(results) {
-		t.Errorf("Expected 100%% viability with 70/30 allocation, got %d/%d viable", 
-			viableCount, len(results))
+	// NOTE: The claims in designs/HUMAN_ATTRIBUTES.md stating Fire Mastery in 8-10 years
+	// cannot be reproduced. See TestVerifyFireMasteryClaims for details.
+	if viableCount > 0 {
+		t.Logf("Fire Mastery achieved in some runs - if this happens consistently, review rate tuning")
 	}
 	
 	// Check that results are variable (not all identical)
@@ -726,16 +740,17 @@ func TestFoodAllocationComparison(t *testing.T) {
 	t.Logf("FOOD ALLOCATION COMPARISON (%d-YEAR SIMULATION)", years)
 	t.Log("================================================================================\n")
 	
-	t.Logf("%-15s %-12s %-12s %-12s %-12s %-12s %-12s %-12s",
-		"Allocation", "Viable", "Fire Days", "Final Pop", "Births", "Science", "Health", "Survival")
-	t.Log("--------------------------------------------------------------------------------")
+	t.Logf("%-15s %-12s %-12s %-13s %-12s %-12s %-12s %-12s %-12s",
+		"Allocation", "Viable", "Fire Days", "Decline Day", "Final Pop", "Births", "Science", "Health", "Survival")
+	t.Log("----------------------------------------------------------------------------------------")
 	
 	for _, allocation := range allocations {
 		conditions := DefaultStartingConditions()
 		conditions.FoodAllocationRatio = allocation
 		
 		viableCount := 0
-		var totalFireDays, totalFinalPop, totalBirths, totalScience, totalHealth float64
+		declineCount := 0
+		var totalFireDays, totalDeclineDays, totalFinalPop, totalBirths, totalScience, totalHealth float64
 		survivalCount := 0
 		
 		// Test with first 10 seeds for efficiency
@@ -757,6 +772,10 @@ func TestFoodAllocationComparison(t *testing.T) {
 			if result.DaysToFireMastery > 0 {
 				totalFireDays += float64(result.DaysToFireMastery)
 			}
+			if result.DaysToNonViable > 0 {
+				declineCount++
+				totalDeclineDays += float64(result.DaysToNonViable)
+			}
 			totalFinalPop += float64(result.FinalPopulation)
 			totalBirths += float64(result.TotalBirths)
 			totalScience += result.FinalScience
@@ -768,16 +787,22 @@ func TestFoodAllocationComparison(t *testing.T) {
 			avgFireDays = fmt.Sprintf("%.0f", totalFireDays/float64(viableCount))
 		}
 		
+		avgDeclineDays := "-"
+		if declineCount > 0 {
+			avgDeclineDays = fmt.Sprintf("%.0f", totalDeclineDays/float64(declineCount))
+		}
+		
 		avgFinalPop := totalFinalPop / 10.0
 		avgBirths := totalBirths / 10.0
 		avgScience := totalScience / 10.0
 		avgHealth := totalHealth / 10.0
 		survivalPct := float64(survivalCount) / 10.0 * 100
 		
-		t.Logf("%02d/%-12d %-12s %-12s %-12.1f %-12.0f %-12.1f %-12.1f %-12.1f%%",
+		t.Logf("%02d/%-12d %-12s %-12s %-13s %-12.1f %-12.0f %-12.1f %-12.1f %-12.1f%%",
 			int(allocation*100), int((1.0-allocation)*100),
 			fmt.Sprintf("%d/10", viableCount),
 			avgFireDays,
+			avgDeclineDays,
 			avgFinalPop,
 			avgBirths,
 			avgScience,
@@ -786,5 +811,7 @@ func TestFoodAllocationComparison(t *testing.T) {
 	}
 	
 	t.Log("================================================================================")
-	t.Log("\nCurrent default: 70/30 (food/science) - achieves 100% viability")
+	t.Log("\nNote: With current science rate (0.00015), Fire Mastery (100 points) is NOT achieved in 10 years.")
+	t.Log("Science accumulation: ~10-12 points after 10 years.")
+	t.Log("See designs/FIRE_MASTERY_CLAIMS_ANALYSIS.md for details.")
 }

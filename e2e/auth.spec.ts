@@ -65,6 +65,9 @@ test.describe('SimCiv Authentication', () => {
     await expect(page.locator('.tabs')).toBeVisible();
     await expect(page.locator('.tabs button').first()).toContainText('Register');
     
+    // Wait for page to fully stabilize (fonts, network, etc.)
+    await page.waitForLoadState('networkidle');
+    
     // Take screenshot of logout state
     await screenshotIfChanged(page, { path: 'e2e-screenshots/04-after-logout.png', fullPage: true });
   });
@@ -111,6 +114,9 @@ test.describe('SimCiv Authentication', () => {
     await page2.fill('input[id="loginAlias"]', alias1);
     await page2.fill('input[id="loginPassword"]', 'WrongPassword');
     
+    // Wait for page to fully stabilize before screenshot
+    await page2.waitForLoadState('networkidle');
+    
     // Take screenshot before attempting login
     await screenshotIfChanged(page2, { path: 'e2e-screenshots/05-login-attempt-different-session.png', fullPage: true });
     
@@ -121,6 +127,9 @@ test.describe('SimCiv Authentication', () => {
     await expect(page2.locator('.message.error')).toContainText('No account found! Register instead.', {
       timeout: 10000
     });
+    
+    // Wait for page to fully stabilize before screenshot
+    await page2.waitForLoadState('networkidle');
     
     // Take screenshot of error message
     await screenshotIfChanged(page2, { path: 'e2e-screenshots/06-login-error-no-key.png', fullPage: true });

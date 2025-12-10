@@ -23,8 +23,6 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
-*-test-output.txt
-startup-summary.md
 
 # Environment
 .env
@@ -60,3 +58,8 @@ simulation/engine
 
 # MongoDB data directory (for native mongod)
 .mongodb-data/
+
+# Test output files
+e2e-test-output.txt
+startup-summary.md
+unit-test-output.txt

@@ -1,5 +1,5 @@
 import { test, expect, Page, Browser } from '@playwright/test';
-import { clearDatabase, enableE2ETestMode, resetUuidCounter } from './global-setup';
+import { clearDatabase, enableE2ETestMode, resetUuidCounter, triggerManualTick } from './global-setup';
 import { screenshotIfChanged } from './helpers/screenshot';
 import { mockDateInBrowser } from './helpers/mock-time';
 
@@ -102,22 +102,21 @@ test.describe('Gameplay UI E2E Tests', () => {
       await gameCard.locator('button:has-text("Join")').click();
       console.log('[E2E] Player 2: Join button clicked');
       
-      // Wait longer for game to transition to started state
+      // Wait for game to start
       console.log('[E2E] Waiting for game to start...');
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
       console.log('[E2E] Game started');
       
-      // Wait for map to be generated (game engine processes first tick)
-      console.log('[E2E] Waiting 10 seconds for map generation...');
-      await page2.waitForTimeout(10000);
+      // Trigger manual tick to generate map in E2E test mode
+      console.log('[E2E] Triggering manual tick to generate map...');
+      await triggerManualTick(gameId || '');
+      
+      // Give game engine a moment to process the tick and generate map data
+      await page2.waitForTimeout(2000);
       
       // Click the View button to navigate to full-page game view
       console.log('[E2E] Navigating to full-page game view...');
       await gameCard.locator('button:has-text("View")').click();
-      
-      // Wait for the game view to load
-      console.log('[E2E] Waiting for game view to load...');
-      await page2.waitForTimeout(2000);
       
       // Verify we're in the full-page game view
       console.log('[E2E] Verifying full-page game view...');
@@ -126,10 +125,7 @@ test.describe('Gameplay UI E2E Tests', () => {
       // Wait for map data to load (MapView loads tiles in its onMount)
       console.log('[E2E] Waiting for map data to load...');
       
-      // Wait a bit for GameView to fetch game data
-      await page2.waitForTimeout(3000);
-      
-      // Check if we have a loading indicator
+      // Check if we have a loading indicator - if so wait for it to disappear
       const loadingGame = await page2.locator('text=Loading game...').isVisible().catch(() => false);
       console.log('[E2E] Loading game visible:', loadingGame);
       
@@ -144,9 +140,6 @@ test.describe('Gameplay UI E2E Tests', () => {
       if (loadingMap) {
         await expect(page2.locator('text=Loading map...')).not.toBeVisible({ timeout: 20000 });
       }
-      
-      // Give a bit more time for rendering
-      await page2.waitForTimeout(2000);
       
       // Verify back button is visible
       await expect(page2.locator('button:has-text("Back to Lobby")')).toBeVisible();
@@ -235,26 +228,40 @@ test.describe('Gameplay UI E2E Tests', () => {
     const { context1, context2, page1, page2 } = await registerTwoUsersParallel(browser, alias1, alias2, password);
     
     try {
+      // Wait for game lobby to be visible for both players
+      await expect(page1.locator('h2:has-text("Game Lobby")')).toBeVisible();
+      await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
+      
       // Create and start game
       await page1.click('button:has-text("Create New Game")');
       await page1.selectOption('select#maxPlayers', '2');
       await page1.click('button:has-text("Create Game")');
       await page1.waitForSelector('.game-card', { timeout: 10000 });
       
+      // Get the game ID
+      const gameIdText = await page1.locator('.game-card').first().locator('.game-id').textContent();
+      const gameId = gameIdText?.replace('Game #', '').trim() || '';
+      
       const gameCard = page2.locator('.game-card').first();
+      await expect(gameCard).toBeVisible({ timeout: 10000 });
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
-      await page2.waitForTimeout(10000); // Wait for map generation
+      
+      // Trigger manual tick to generate map in E2E test mode
+      console.log('[E2E] Triggering manual tick to generate map...');
+      await triggerManualTick(gameId);
+      
+      // Give game engine a moment to process the tick and generate map data
+      await page2.waitForTimeout(2000);
       
       // Set viewport to landscape mode
       await page2.setViewportSize({ width: 1920, height: 1080 });
       
       // Navigate to game view
       await gameCard.locator('button:has-text("View")').click();
-      await page2.waitForTimeout(2000);
       
       // Verify landscape layout
-      await expect(page2.locator('.game-view.landscape')).toBeVisible();
+      await expect(page2.locator('.game-view.landscape')).toBeVisible({ timeout: 10000 });
       
       // Screenshot 28: Landscape layout
       console.log('[E2E] Taking screenshot 28 (landscape layout)...');
@@ -280,26 +287,40 @@ test.describe('Gameplay UI E2E Tests', () => {
     const { context1, context2, page1, page2 } = await registerTwoUsersParallel(browser, alias1, alias2, password);
     
     try {
+      // Wait for game lobby to be visible for both players
+      await expect(page1.locator('h2:has-text("Game Lobby")')).toBeVisible();
+      await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
+      
       // Create and start game
       await page1.click('button:has-text("Create New Game")');
       await page1.selectOption('select#maxPlayers', '2');
       await page1.click('button:has-text("Create Game")');
       await page1.waitForSelector('.game-card', { timeout: 10000 });
       
+      // Get the game ID
+      const gameIdText = await page1.locator('.game-card').first().locator('.game-id').textContent();
+      const gameId = gameIdText?.replace('Game #', '').trim() || '';
+      
       const gameCard = page2.locator('.game-card').first();
+      await expect(gameCard).toBeVisible({ timeout: 10000 });
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
-      await page2.waitForTimeout(10000); // Wait for map generation
+      
+      // Trigger manual tick to generate map in E2E test mode
+      console.log('[E2E] Triggering manual tick to generate map...');
+      await triggerManualTick(gameId);
+      
+      // Give game engine a moment to process the tick and generate map data
+      await page2.waitForTimeout(2000);
       
       // Set viewport to portrait mode
       await page2.setViewportSize({ width: 768, height: 1024 });
       
       // Navigate to game view
       await gameCard.locator('button:has-text("View")').click();
-      await page2.waitForTimeout(2000);
       
       // Verify portrait layout
-      await expect(page2.locator('.game-view.portrait')).toBeVisible();
+      await expect(page2.locator('.game-view.portrait')).toBeVisible({ timeout: 10000 });
       
       // Screenshot 29: Portrait layout
       console.log('[E2E] Taking screenshot 29 (portrait layout)...');
@@ -325,26 +346,40 @@ test.describe('Gameplay UI E2E Tests', () => {
     const { context1, context2, page1, page2 } = await registerTwoUsersParallel(browser, alias1, alias2, password);
     
     try {
+      // Wait for game lobby to be visible for both players
+      await expect(page1.locator('h2:has-text("Game Lobby")')).toBeVisible();
+      await expect(page2.locator('h2:has-text("Game Lobby")')).toBeVisible();
+      
       // Create and start game
       await page1.click('button:has-text("Create New Game")');
       await page1.selectOption('select#maxPlayers', '2');
       await page1.click('button:has-text("Create Game")');
       await page1.waitForSelector('.game-card', { timeout: 10000 });
       
+      // Get the game ID
+      const gameIdText = await page1.locator('.game-card').first().locator('.game-id').textContent();
+      const gameId = gameIdText?.replace('Game #', '').trim() || '';
+      
       const gameCard = page2.locator('.game-card').first();
+      await expect(gameCard).toBeVisible({ timeout: 10000 });
       await gameCard.locator('button:has-text("Join")').click();
       await expect(gameCard.locator('.game-state.started')).toBeVisible({ timeout: 30000 });
-      await page2.waitForTimeout(10000); // Wait for map generation
+      
+      // Trigger manual tick to generate map in E2E test mode
+      console.log('[E2E] Triggering manual tick to generate map...');
+      await triggerManualTick(gameId);
+      
+      // Give game engine a moment to process the tick and generate map data
+      await page2.waitForTimeout(2000);
       
       // Set viewport to square mode
       await page2.setViewportSize({ width: 900, height: 900 });
       
       // Navigate to game view
       await gameCard.locator('button:has-text("View")').click();
-      await page2.waitForTimeout(2000);
       
       // Verify square layout
-      await expect(page2.locator('.game-view.square')).toBeVisible();
+      await expect(page2.locator('.game-view.square')).toBeVisible({ timeout: 10000 });
       
       // Screenshot 30: Square layout
       console.log('[E2E] Taking screenshot 30 (square layout)...');
@@ -376,9 +411,6 @@ test.describe('Gameplay UI E2E Tests', () => {
     
     // Click the View button to navigate to game view
     await page.locator('.game-card').first().locator('button:has-text("View")').click();
-    
-    // Wait for game view to load
-    await page.waitForTimeout(2000);
     
     // Map placeholder should be visible for waiting games
     await expect(page.locator('.map-placeholder')).toBeVisible();

@@ -172,7 +172,7 @@ test.describe('Game Creation and Management', () => {
     await triggerManualTick(gameId);
     
     // Wait for the UI to update (give it a moment to refresh)
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(500); // Keep this as it's under 1s threshold
 
     // Year should now have progressed
     await expect(yearValue).toContainText('4999 BC');
@@ -235,14 +235,8 @@ test.describe('Game Creation and Management', () => {
     // Click view button
     await page.locator('.game-card').first().locator('button:has-text("View")').click();
 
-    // Wait for game view to load
-    await page.waitForTimeout(2000);
-
     // Verify we're in the full-page game view
     await expect(page.locator('.game-view')).toBeVisible({ timeout: 5000 });
-
-    // Take screenshot of game view
-    await screenshotIfChanged(page, { path: 'e2e-screenshots/18-game-details-modal.png', fullPage: true });
 
     // Navigate back to lobby
     await page.click('button:has-text("Back to Lobby")');
