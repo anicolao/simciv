@@ -714,6 +714,87 @@ func TestViabilityWithTwoTechnologies(t *testing.T) {
 		float64(bothTechsCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
 }
 
+// TestTwoTechnologyDetails shows detailed statistics for each seed to help debug viability issues
+func TestTwoTechnologyDetails(t *testing.T) {
+	conditions := DefaultStartingConditions()
+	years := 50
+	
+	t.Log("\n================================================================================")
+	t.Logf("TWO-TECHNOLOGY VIABILITY DETAILS (%d-YEAR SIMULATION)", years)
+	t.Log("================================================================================\n")
+	
+	t.Logf("%-6s %-10s %-10s %-12s %-12s %-12s %-12s %-8s",
+		"Seed#", "Fire Days", "Stone Days", "Final Pop", "Final Sci", "Avg Health", "Births", "Viable")
+	t.Log("----------------------------------------------------------------------------------------")
+	
+	viableCount := 0
+	bothTechsCount := 0
+	fireOnlyCount := 0
+	neitherCount := 0
+	
+	for i, seed := range VIABILITY_TEST_SEEDS {
+		config := SimulationConfig{
+			Seed:               seed,
+			StartingConditions: conditions,
+			MaxDays:            365 * years,
+		}
+		
+		result := RunSimulation(config)
+		
+		if result.IsViable {
+			viableCount++
+		}
+		
+		hasBoth := result.HasFireMastery && result.HasStoneKnapping
+		if hasBoth {
+			bothTechsCount++
+		} else if result.HasFireMastery {
+			fireOnlyCount++
+		} else {
+			neitherCount++
+		}
+		
+		fireDays := "-"
+		if result.DaysToFireMastery > 0 {
+			fireDays = fmt.Sprintf("%d", result.DaysToFireMastery)
+		}
+		
+		stoneDays := "-"
+		if result.DaysToStoneKnapping > 0 {
+			stoneDays = fmt.Sprintf("%d", result.DaysToStoneKnapping)
+		}
+		
+		viable := "NO"
+		if result.IsViable {
+			viable = "YES"
+		}
+		
+		t.Logf("%-6d %-10s %-10s %-12d %-12.1f %-12.1f %-12d %-8s",
+			i+1,
+			fireDays,
+			stoneDays,
+			result.FinalPopulation,
+			result.FinalScience,
+			result.AverageHealth,
+			result.TotalBirths,
+			viable)
+	}
+	
+	t.Log("================================================================================")
+	t.Logf("\nSummary:")
+	t.Logf("  Both technologies: %d/%d (%.1f%%)", bothTechsCount, len(VIABILITY_TEST_SEEDS), 
+		float64(bothTechsCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
+	t.Logf("  Fire Mastery only: %d/%d (%.1f%%)", fireOnlyCount, len(VIABILITY_TEST_SEEDS),
+		float64(fireOnlyCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
+	t.Logf("  Neither technology: %d/%d (%.1f%%)", neitherCount, len(VIABILITY_TEST_SEEDS),
+		float64(neitherCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
+	t.Logf("  Viable (both techs): %d/%d (%.1f%%)", viableCount, len(VIABILITY_TEST_SEEDS),
+		float64(viableCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
+	
+	t.Log("\nNote: With ScienceBaseRate=0.00015, Fire Mastery takes 5-10 years (1825-3650 days).")
+	t.Logf("Stone Knapping requires %d science points total.", int(StoneKnappingScienceRequired))
+}
+
 // TestViabilityStatistics validates aggregate statistics
 func TestViabilityStatistics(t *testing.T) {
 	conditions := DefaultStartingConditions()
