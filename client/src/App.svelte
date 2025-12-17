@@ -4,13 +4,14 @@
   import Login from './lib/Login.svelte';
   import GameLobby from './lib/GameLobby.svelte';
   import GameView from './lib/GameView.svelte';
+  import SimulatorView from './lib/SimulatorView.svelte';
   import { getSessionStatus, logout } from './utils/api';
   import { getSessionGuid } from './utils/storage';
 
   let activeTab: 'register' | 'login' = 'register';
   let isAuthenticated = false;
   let currentUser = '';
-  let currentView: 'lobby' | 'game' = 'lobby';
+  let currentView: 'lobby' | 'game' | 'simulator' = 'lobby';
   let selectedGameId: string | null = null;
 
   onMount(async () => {
@@ -58,10 +59,19 @@
     currentView = 'lobby';
     selectedGameId = null;
   }
+
+  function showSimulator() {
+    currentView = 'simulator';
+  }
 </script>
 
 {#if isAuthenticated && currentView === 'game' && selectedGameId}
   <GameView gameId={selectedGameId} onBack={handleBackToLobby} />
+{:else if isAuthenticated && currentView === 'simulator'}
+  <SimulatorView />
+  <div class="simulator-nav">
+    <button on:click={handleBackToLobby} class="nav-btn">Back to Lobby</button>
+  </div>
 {:else}
   <main>
     <h1>SimCiv Authentication</h1>
@@ -72,7 +82,10 @@
           <div class="user-info">
             <h2>Welcome, {currentUser}!</h2>
           </div>
-          <button on:click={handleLogout} class="logout-btn">Logout</button>
+          <div class="header-actions">
+            <button on:click={showSimulator} class="simulator-btn">Simulator</button>
+            <button on:click={handleLogout} class="logout-btn">Logout</button>
+          </div>
         </div>
         <GameLobby {currentUser} on:viewGame={handleViewGame} />
       </div>
@@ -180,6 +193,25 @@
     font-size: 20px;
   }
 
+  .header-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .simulator-btn {
+    padding: 10px 20px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .simulator-btn:hover {
+    background: #1976D2;
+  }
+
   .logout-btn {
     padding: 10px 20px;
     background: #f44336;
@@ -192,5 +224,26 @@
 
   .logout-btn:hover {
     background: #d32f2f;
+  }
+
+  .simulator-nav {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+  }
+
+  .nav-btn {
+    padding: 10px 20px;
+    background: #666;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .nav-btn:hover {
+    background: #555;
   }
 </style>
