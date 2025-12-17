@@ -2,7 +2,7 @@
 ## Single Command Development Environment Setup
 
 ### Document Status
-**Status:** Design Review  
+**Status:** Implemented  
 **Last Updated:** 2025-12-17  
 **Purpose:** Design specification for simplifying local development environment setup  
 **Related Documents:** 
@@ -17,9 +17,9 @@
 This document specifies the design for a streamlined local development environment setup system that reduces the complexity of starting and managing multiple SimCiv services. The proposed solution introduces a single command interface that launches, monitors, and provides easy access to all required development servers using terminal multiplexing.
 
 **Key Features:**
-- Single command to start all development servers
-- Individual terminal sessions for each service (MongoDB, Node.js server, Go engine)
-- Easy inspection of logs via named tmux/dtach sessions
+- Single command to start all development servers (MongoDB, Node.js server, Go engine, Vite)
+- Individual terminal sessions for each service via tmux windows
+- Easy inspection of logs via subcommand interface
 - Graceful shutdown of all services
 - Health checks and startup verification
 - Clear status reporting
@@ -36,7 +36,7 @@ This design maintains compatibility with the existing Nix-based development envi
    - Start MongoDB: `mongo start`
    - Start Node.js server: `npm run dev`
    - Build and start Go engine: `cd simulation && go build -o engine main.go && ./engine`
-   - Optionally start Vite dev server: `npm run dev:client`
+   - Start Vite dev server: `npm run dev:client`
 
 2. **Terminal Management Overhead**: Each service requires its own terminal window or tab, leading to:
    - Cluttered terminal workspace
@@ -78,12 +78,15 @@ The proposed solution aims to:
 
 ### Architecture Overview
 
-The solution introduces two new scripts in the `bin/` directory:
+The solution introduces a single unified script in the `bin/` directory:
 
-1. **`dev-start`**: Primary developer interface for starting all services
-2. **`dev-stop`**: Graceful shutdown of all development services
-3. **`dev-status`**: Check status of all services
-4. **`dev-attach`**: Attach to a specific service's session for log viewing
+**`dev`**: Single entry point with subcommands (similar to the existing `mongo` script):
+1. **`dev start`**: Start all development services
+2. **`dev stop`**: Graceful shutdown of all development services
+3. **`dev status`**: Check status of all services
+4. **`dev attach <service>`**: Attach to a specific service's session for log viewing
+
+This follows the pattern established by the existing `bin/mongo` script, providing a consistent interface.
 
 ### Terminal Multiplexer Choice: tmux
 
@@ -112,7 +115,7 @@ Session: simciv-dev
 ├── Window 0: mongodb    (runs MongoDB service)
 ├── Window 1: server     (runs Node.js/Express server)
 ├── Window 2: engine     (runs Go simulation engine)
-└── Window 3: vite       (optional: Vite dev server with HMR)
+└── Window 3: vite       (runs Vite dev server with HMR)
 ```
 
 **Benefits of this approach:**
@@ -129,19 +132,25 @@ Session: simciv-dev
 
 ## Technical Design
 
-### Script: `dev-start`
+### Script: `dev`
 
-**Purpose:** Start all development services in a managed tmux session
+**Purpose:** Unified interface for managing all development services
 
 **Signature:**
 ```bash
 #!/usr/bin/env bash
-# Usage: dev-start [--full]
+# Usage: dev <command> [options]
 # 
-# Options:
-#   --full    Also start Vite dev server for client HMR (optional)
-#   --help    Show this help message
+# Commands:
+#   start     Start all development services
+#   stop      Stop all development services
+#   status    Show status of all services
+#   attach    Attach to a service's logs
 ```
+
+### Subcommand: `dev start`
+
+**Purpose:** Start all development services in a managed tmux session
 
 **Behavior:**
 
@@ -176,12 +185,11 @@ Session: simciv-dev
    - Wait for engine to be ready (check process and logs)
    - Display status: "✅ Game engine running"
 
-5. **Optional: Vite Dev Server:**
-   - If `--full` flag provided:
-     - Create window `vite` in session `simciv-dev`
-     - Execute: `npm run dev:client`
-     - Wait for Vite to be ready (poll http://localhost:5173)
-     - Display status: "✅ Vite dev server ready on http://localhost:5173"
+5. **Vite Dev Server:**
+   - Create window `vite` in session `simciv-dev`
+   - Execute: `npm run dev:client`
+   - Wait for Vite to be ready (poll http://localhost:5173)
+   - Display status: "✅ Vite dev server ready on http://localhost:5173"
 
 6. **Final Status Report:**
    ```
@@ -191,22 +199,22 @@ Session: simciv-dev
    ✅ MongoDB       - localhost:27017
    ✅ Server        - http://localhost:3000
    ✅ Game Engine   - Running
-   [✅ Vite         - http://localhost:5173]  # if --full
+   ✅ Vite          - http://localhost:5173
    
    To view logs:
-     dev-attach mongodb   - View MongoDB logs
-     dev-attach server    - View server logs
-     dev-attach engine    - View engine logs
-     dev-attach vite      - View Vite logs
+     dev attach mongodb   - View MongoDB logs
+     dev attach server    - View server logs
+     dev attach engine    - View engine logs
+     dev attach vite      - View Vite logs
    
    To view all services:
      tmux attach -t simciv-dev
    
    To stop all services:
-     dev-stop
+     dev stop
    
    To check status:
-     dev-status
+     dev status
    ```
 
 **Error Handling:**
@@ -269,19 +277,9 @@ wait_for_engine() {
 
 ---
 
-### Script: `dev-stop`
+### Subcommand: `dev stop`
 
 **Purpose:** Gracefully stop all development services
-
-**Signature:**
-```bash
-#!/usr/bin/env bash
-# Usage: dev-stop [--force]
-#
-# Options:
-#   --force   Kill services immediately without graceful shutdown
-#   --help    Show this help message
-```
 
 **Behavior:**
 
@@ -291,20 +289,18 @@ wait_for_engine() {
 
 2. **Graceful Shutdown Sequence:**
    - Send Ctrl+C to each window in reverse startup order:
+     - vite: `tmux send-keys -t simciv-dev:vite C-c`
      - engine: `tmux send-keys -t simciv-dev:engine C-c`
      - server: `tmux send-keys -t simciv-dev:server C-c`
-     - vite (if exists): `tmux send-keys -t simciv-dev:vite C-c`
    - Wait 2 seconds for graceful shutdown
-   - Stop MongoDB: `tmux send-keys -t simciv-dev:mongodb "mongo stop" C-m`
+   - Stop MongoDB: `tmux send-keys -t simciv-dev:mongodb C-c`
 
 3. **Verify Shutdown:**
    - Wait 5 seconds for all processes to exit
    - Check if ports 3000, 27017, 5173 are released
-   - If processes still running and --force provided:
-     - Kill processes by PID
-   - If processes still running and --force not provided:
+   - If processes still running:
      - Report which services didn't stop
-     - Suggest using --force
+     - Suggest manual cleanup if needed
 
 4. **Cleanup:**
    - Kill tmux session: `tmux kill-session -t simciv-dev`
@@ -314,21 +310,12 @@ wait_for_engine() {
 
 - If session doesn't exist: inform user, exit 0 (not an error)
 - If graceful shutdown fails: provide instructions for manual cleanup
-- If --force fails: report PIDs that couldn't be killed, suggest manual intervention
 
 ---
 
-### Script: `dev-status`
+### Subcommand: `dev status`
 
 **Purpose:** Display status of all development services
-
-**Signature:**
-```bash
-#!/usr/bin/env bash
-# Usage: dev-status
-#
-# Shows which services are running and their health
-```
 
 **Behavior:**
 
@@ -348,10 +335,10 @@ wait_for_engine() {
    ✅ MongoDB      - Running on localhost:27017 (PID: 12345)
    ✅ Server       - Running on http://localhost:3000 (PID: 12346)
    ✅ Game Engine  - Running (PID: 12347)
-   ❌ Vite         - Not running
+   ✅ Vite         - Running on http://localhost:5173 (PID: 12348)
    
-   To view logs: dev-attach <service-name>
-   To stop all:  dev-stop
+   To view logs: dev attach <service-name>
+   To stop all:  dev stop
    ```
 
 3. **Health Checks:**
@@ -368,21 +355,12 @@ wait_for_engine() {
 
 ---
 
-### Script: `dev-attach`
+### Subcommand: `dev attach`
 
 **Purpose:** Attach to a specific service's tmux window to view logs
 
-**Signature:**
-```bash
-#!/usr/bin/env bash
-# Usage: dev-attach <service>
-#
-# Arguments:
-#   service    Name of service to attach to (mongodb|server|engine|vite)
-#
-# Attaches to the specified service's tmux window in the simciv-dev session.
-# Press Ctrl+B then D to detach without stopping the service.
-```
+**Arguments:**
+- `service`: Name of service to attach to (mongodb|server|engine|vite)
 
 **Behavior:**
 
@@ -403,7 +381,7 @@ wait_for_engine() {
      ```
 
 3. **Error Handling:**
-   - If session doesn't exist: "Development services not running. Use 'dev-start' first."
+   - If session doesn't exist: "Development services not running. Use 'dev start' first."
    - If service window doesn't exist: "Service '$service' not running. Available: [list]"
    - If invalid service name: "Unknown service '$service'. Available: mongodb, server, engine, vite"
 
@@ -411,16 +389,13 @@ wait_for_engine() {
 
 ## Directory Structure Changes
 
-No changes to repository structure required. All new scripts go in existing `bin/` directory:
+The implementation adds a single unified script in the existing `bin/` directory:
 
 ```
 bin/
 ├── mongo              # Existing: MongoDB management
 ├── e2e-setup          # Existing: E2E test setup
-├── dev-start          # New: Start development environment
-├── dev-stop           # New: Stop development environment
-├── dev-status         # New: Check development status
-└── dev-attach         # New: Attach to service logs
+└── dev                # New: Unified development environment manager
 ```
 
 ---
@@ -437,7 +412,7 @@ The `dev-start` script will use the existing `bin/mongo` script for MongoDB mana
 ### Compatibility with `bin/e2e-setup`
 
 The E2E setup script will remain unchanged and independent:
-- `dev-start` is for human developers in interactive mode
+- `dev start` is for human developers in interactive mode
 - `e2e-setup` is for automated CI/CD and E2E test preparation
 - Both can coexist; `e2e-setup` will detect if services already running
 
@@ -464,7 +439,7 @@ cd simciv
 direnv allow
 
 # Start development environment
-dev-start
+dev start
 
 # That's it! All services are running.
 # Open http://localhost:3000 in browser
@@ -475,35 +450,35 @@ dev-start
 ```bash
 # Morning: start working
 cd simciv
-dev-start
+dev start
 
 # Check everything is running
-dev-status
+dev status
 
 # View server logs
-dev-attach server
+dev attach server
 # (Press Ctrl+B, D to detach)
 
 # Make some changes, server auto-reloads with nodemon
 
 # End of day: clean shutdown
-dev-stop
+dev stop
 ```
 
 ### Debugging a Service
 
 ```bash
 # Start environment
-dev-start
+dev start
 
 # Something not working, check status
-dev-status
+dev status
 
 # Game engine shows as unhealthy, view logs
-dev-attach engine
+dev attach engine
 
 # See error, need to stop and manually debug
-dev-stop
+dev stop
 
 # Run engine manually in foreground
 cd simulation
@@ -511,14 +486,14 @@ cd simulation
 
 # Fix issue, restart managed environment
 cd ..
-dev-start
+dev start
 ```
 
 ### Frontend Development with HMR
 
 ```bash
-# Start with Vite dev server for hot reload
-dev-start --full
+# Start all services including Vite for hot reload
+dev start
 
 # Now can develop client with instant feedback
 # Vite on :5173 proxies API calls to :3000
@@ -544,7 +519,7 @@ The following process is using port 3000:
   
 Suggestions:
   1. Stop the conflicting process
-  2. Run 'dev-stop' if it's a previous SimCiv session
+  2. Run 'dev stop' if it's a previous SimCiv session
   3. Change PORT in .env and restart
 
 Aborting startup to prevent conflicts.
@@ -564,7 +539,7 @@ Checking logs:
 [Last 20 lines of MongoDB logs]
 
 To debug manually:
-  dev-attach mongodb
+  dev attach mongodb
 
 Services started before failure have been stopped.
 ```
@@ -587,7 +562,7 @@ npm install
 
 ### Stale Session Detection
 
-**Scenario:** User runs `dev-start` but session already exists
+**Scenario:** User runs `dev start` but session already exists
 
 **Response:**
 ```
@@ -595,11 +570,10 @@ npm install
 
 Options:
   1. Attach to existing session:  tmux attach -t simciv-dev
-  2. Check status:                dev-status
-  3. Stop and restart:            dev-stop && dev-start
-  4. Force new session:           dev-start --restart
+  2. Check status:                dev status
+  3. Stop and restart:            dev stop && dev start
 
-What would you like to do? (1-4): _
+What would you like to do? (1-3): _
 ```
 
 ---
@@ -619,7 +593,7 @@ When implementing the scripts, verify:
    - [ ] Can access all services
 
 2. **Restart Scenarios:**
-   - [ ] `dev-stop` cleanly shuts down all services
+   - [ ] `dev stop` cleanly shuts down all services
    - [ ] Can restart after stop
    - [ ] Handles Ctrl+C during startup gracefully
 
@@ -630,7 +604,7 @@ When implementing the scripts, verify:
    - [ ] Stale sessions detected
 
 4. **Session Management:**
-   - [ ] `dev-attach` works for all services
+   - [ ] `dev attach` works for all services
    - [ ] Can detach without stopping services
    - [ ] Multiple attach/detach cycles work
 
@@ -647,23 +621,23 @@ When implementing the scripts, verify:
 
 1. **Service-Specific Commands:**
    ```bash
-   dev-restart server   # Restart just the server
-   dev-restart engine   # Restart just the engine
-   dev-logs --follow    # Follow all logs in split-pane view
+   dev restart server   # Restart just the server
+   dev restart engine   # Restart just the engine
+   dev logs --follow    # Follow all logs in split-pane view
    ```
 
 2. **Development Profiles:**
    ```bash
-   dev-start --minimal    # Just MongoDB and server (no engine)
-   dev-start --frontend   # Server + Vite only
-   dev-start --backend    # Server + Engine only
+   dev start --minimal    # Just MongoDB and server (no engine, no Vite)
+   dev start --frontend   # Server + Vite only
+   dev start --backend    # Server + Engine only
    ```
 
 3. **Interactive Dashboard:**
    - Use tmux panes to show all services at once
    - Real-time status updates
    - Color-coded health indicators
-   - Single command: `dev-dashboard`
+   - Single command: `dev dashboard`
 
 4. **Automatic Restart on Crash:**
    - Monitor processes within tmux
@@ -673,16 +647,16 @@ When implementing the scripts, verify:
 
 5. **Log Aggregation:**
    ```bash
-   dev-logs --search "error"     # Search across all logs
-   dev-logs --since "5m ago"     # Recent logs
-   dev-logs --service server     # Filter by service
+   dev logs --search "error"     # Search across all logs
+   dev logs --since "5m ago"     # Recent logs
+   dev logs --service server     # Filter by service
    ```
 
 6. **Integration with Test Runners:**
    ```bash
-   dev-test unit          # Run unit tests (keep services running)
-   dev-test e2e           # Run E2E tests (manage services automatically)
-   dev-test watch         # Watch mode for tests
+   dev test unit          # Run unit tests (keep services running)
+   dev test e2e           # Run E2E tests (manage services automatically)
+   dev test watch         # Watch mode for tests
    ```
 
 ### Phase 3: Developer Experience
@@ -719,20 +693,20 @@ Existing workflows continue to work unchanged:
 - No breaking changes to existing scripts
 
 New workflows are additive:
-- Can gradually adopt `dev-start` at own pace
+- Can gradually adopt `dev start` at own pace
 - Both approaches can coexist
 - Documentation updated to show both options
 
 ### Documentation Updates
 
 Update `docs/DEVELOPMENT.md` to:
-1. Feature `dev-start` as recommended quick-start
+1. Feature `dev start` as recommended quick-start
 2. Keep detailed manual setup for understanding
-3. Add troubleshooting section for `dev-*` commands
+3. Add troubleshooting section for `dev` commands
 4. Include tmux basics for developers unfamiliar
 
 Update README.md to:
-1. Add `dev-start` to Getting Started section
+1. Add `dev start` to Getting Started section
 2. Simplify quick-start instructions
 3. Link to detailed development docs
 
@@ -767,7 +741,7 @@ Update README.md to:
 
 After implementation, success measured by:
 
-1. **Startup Time:** From `dev-start` to all services ready < 60 seconds
+1. **Startup Time:** From `dev start` to all services ready < 60 seconds
 2. **Reliability:** Services start successfully on first try > 95% of time
 3. **Developer Satisfaction:** Subjective feedback from team
 4. **Documentation Quality:** New developers can start without help
@@ -810,7 +784,7 @@ After implementation, success measured by:
 - PM2 requires Node.js (circular dependency)
 - Less flexible than direct tmux access
 - Another tool to learn
-- **REJECTED:** tmux more universal and flexible
+- **REJECTED:** tmux more universal and flexible, single `dev` script simpler
 
 ### Alternative 3: Custom Shell Script with Background Jobs
 
@@ -847,7 +821,7 @@ After implementation, success measured by:
 
 ## Conclusion
 
-The proposed `dev-start` / `dev-stop` / `dev-status` / `dev-attach` script suite provides a significant improvement to the SimCiv developer experience by:
+The implemented `dev` script with its `start`, `stop`, `status`, and `attach` subcommands provides a significant improvement to the SimCiv developer experience by:
 
 1. Reducing cognitive load (single command vs. multiple)
 2. Preventing common mistakes (forgot to start a service)
@@ -855,9 +829,11 @@ The proposed `dev-start` / `dev-stop` / `dev-status` / `dev-attach` script suite
 4. Maintaining flexibility (can still run services manually)
 5. Leveraging existing tools (tmux, bash, existing scripts)
 
-The tmux-based approach is lightweight, doesn't add new dependencies, and provides excellent developer ergonomics for local development. The scripts integrate cleanly with the existing Nix environment and respect the database-centric architecture of SimCiv.
+The tmux-based approach is lightweight, doesn't add new dependencies, and provides excellent developer ergonomics for local development. The script integrates cleanly with the existing Nix environment and respects the database-centric architecture of SimCiv.
 
-**Implementation Priority: High**  
+All four services (MongoDB, Node.js server, Go engine, and Vite) are now started automatically, providing a complete development environment with a single command.
+
+**Implementation Status: Complete**  
 This improvement directly addresses pain points experienced daily by all developers and significantly lowers the barrier to entry for new contributors.
 
 ---
@@ -898,38 +874,41 @@ tmux kill-session -t simciv-dev
 
 ## Appendix B: Implementation Checklist
 
-When implementing this design:
+Implementation completed:
 
-- [ ] Create `bin/dev-start` script
-  - [ ] Implement pre-flight checks
-  - [ ] Implement session creation
-  - [ ] Implement MongoDB startup
-  - [ ] Implement server startup
-  - [ ] Implement engine startup
-  - [ ] Implement optional Vite startup
-  - [ ] Implement health checks
-  - [ ] Implement error handling
-  - [ ] Add comprehensive comments
+- [x] Create `bin/dev` script
+  - [x] Implement pre-flight checks
+  - [x] Implement session creation
+  - [x] Implement MongoDB startup
+  - [x] Implement server startup
+  - [x] Implement engine startup
+  - [x] Implement Vite startup
+  - [x] Implement health checks
+  - [x] Implement error handling
+  - [x] Add comprehensive comments
 
-- [ ] Create `bin/dev-stop` script
-  - [ ] Implement session check
-  - [ ] Implement graceful shutdown
-  - [ ] Implement --force option
-  - [ ] Implement cleanup
-  - [ ] Add comprehensive comments
+- [x] Implement `dev stop` subcommand
+  - [x] Implement session check
+  - [x] Implement graceful shutdown
+  - [x] Implement cleanup
+  - [x] Add comprehensive comments
 
-- [ ] Create `bin/dev-status` script
-  - [ ] Implement session status check
-  - [ ] Implement service health checks
-  - [ ] Implement status reporting
-  - [ ] Add comprehensive comments
+- [x] Implement `dev status` subcommand
+  - [x] Implement session status check
+  - [x] Implement service health checks
+  - [x] Implement status reporting
+  - [x] Add comprehensive comments
 
-- [ ] Create `bin/dev-attach` script
-  - [ ] Implement argument validation
-  - [ ] Implement session/window checks
-  - [ ] Implement attach logic
-  - [ ] Add help messages
-  - [ ] Add comprehensive comments
+- [x] Implement `dev attach` subcommand
+  - [x] Implement argument validation
+  - [x] Implement session/window checks
+  - [x] Implement attach logic
+  - [x] Add help messages
+  - [x] Add comprehensive comments
+
+- [x] Fix `bin/mongo` Colima check
+  - [x] Check return code before grepping output
+  - [x] Avoid false positives from error messages
 
 - [ ] Update documentation
   - [ ] Update `docs/DEVELOPMENT.md`
@@ -946,8 +925,8 @@ When implementing this design:
 
 - [ ] Update `.envrc` if needed
   - [ ] Consider adding helpful aliases
-  - [ ] Consider showing dev-start hint on cd
+  - [ ] Consider showing dev start hint on cd
 
 ---
 
-*This design provides a foundation for significantly improved local development experience while maintaining full compatibility with existing workflows and tools.*
+*This design has been implemented as a single unified `dev` script in `bin/dev`, providing significantly improved local development experience while maintaining full compatibility with existing workflows and tools.*
