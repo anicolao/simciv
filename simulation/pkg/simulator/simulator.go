@@ -104,6 +104,9 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 		HasStoneKnapping:    false,
 		CurrentDay:          0,
 	}
+	
+	// Initialize the new per-technology research system
+	state.InitializeTechnologyResearch()
 
 	// Track metrics
 	allMetrics := make([]*DailyMetrics, 0, config.MaxDays)
@@ -126,7 +129,13 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 		scienceProduced := produceScience(scienceHours, population, avgHealth)
 
 		state.FoodStockpile += foodProduced
-		state.SciencePoints += scienceProduced
+		state.SciencePoints += scienceProduced // Keep for backward compatibility
+		
+		// Add science to currently focused technology (new research system)
+		if err := state.AddResearchPoints(scienceProduced); err != nil {
+			// If research system not initialized or focus not set, fall back to legacy system
+			// This maintains backward compatibility
+		}
 
 		// Step 4: Consume food
 		remainingFood, foodPerPerson := consumeFood(state.Humans, state.FoodStockpile)

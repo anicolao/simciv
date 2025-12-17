@@ -1,5 +1,7 @@
 package simulator
 
+import "fmt"
+
 // MinimalHuman represents a single human in the minimal simulation
 type MinimalHuman struct {
 	ID                     string  // Unique identifier
@@ -10,6 +12,15 @@ type MinimalHuman struct {
 	PregnancyDaysRemaining int     // Days remaining in pregnancy (0 if not pregnant, only for females)
 }
 
+// TechnologyProgress tracks research progress for a single technology
+type TechnologyProgress struct {
+	Name              string  // Technology name
+	ProgressPoints    float64 // Points accumulated toward this technology
+	RequiredPoints    float64 // Points needed to unlock
+	IsUnlocked        bool    // Whether this technology is unlocked
+	FoodBonus         float64 // Food production multiplier (1.0 = no bonus)
+}
+
 // MinimalCivilizationState represents the complete state of a civilization
 type MinimalCivilizationState struct {
 	// Population
@@ -17,12 +28,16 @@ type MinimalCivilizationState struct {
 
 	// Resources
 	FoodStockpile float64 // Available food units
-	SciencePoints float64 // Accumulated science
+	SciencePoints float64 // Accumulated science (deprecated - use TechnologyResearch)
 
 	// Configuration
 	FoodAllocationRatio float64 // 0.0 to 1.0 (default 0.8 = 80%)
 
-	// Technology
+	// Technology Research (new per-tech tracking system)
+	TechnologyResearch map[string]*TechnologyProgress // Research progress per technology
+	ResearchFocus      string                         // Currently focused technology for research
+
+	// Technology (deprecated - maintained for backward compatibility)
 	HasFireMastery   bool // Research goal 1 (unlocks at 100 science, 5-10 years)
 	HasStoneKnapping bool // Research goal 2 (unlocks at 600 science, 12-17 years)
 
@@ -78,6 +93,123 @@ type ViabilityResult struct {
 
 	// All daily metrics for analysis
 	AllMetrics []*DailyMetrics
+}
+
+// Technology Research API Methods
+
+// InitializeTechnologyResearch sets up the technology research system with default technologies
+func (s *MinimalCivilizationState) InitializeTechnologyResearch() {
+	s.TechnologyResearch = make(map[string]*TechnologyProgress)
+	
+	// Fire Mastery
+	s.TechnologyResearch["Fire Mastery"] = &TechnologyProgress{
+		Name:           "Fire Mastery",
+		ProgressPoints: 0,
+		RequiredPoints: FireMasteryScienceRequired,
+		IsUnlocked:     false,
+		FoodBonus:      FireMasteryFoodBonus,
+	}
+	
+	// Stone Knapping
+	s.TechnologyResearch["Stone Knapping"] = &TechnologyProgress{
+		Name:           "Stone Knapping",
+		ProgressPoints: 0,
+		RequiredPoints: StoneKnappingScienceRequired - FireMasteryScienceRequired, // 50 points (independent cost)
+		IsUnlocked:     false,
+		FoodBonus:      StoneKnappingFoodBonus,
+	}
+	
+	// Set default research focus to Fire Mastery
+	s.ResearchFocus = "Fire Mastery"
+}
+
+// SetResearchFocus changes which technology is currently being researched
+func (s *MinimalCivilizationState) SetResearchFocus(technologyName string) error {
+	if s.TechnologyResearch == nil {
+		return fmt.Errorf("technology research not initialized")
+	}
+	if _, exists := s.TechnologyResearch[technologyName]; !exists {
+		return fmt.Errorf("unknown technology: %s", technologyName)
+	}
+	s.ResearchFocus = technologyName
+	return nil
+}
+
+// GetResearchFocus returns the currently focused technology
+func (s *MinimalCivilizationState) GetResearchFocus() string {
+	return s.ResearchFocus
+}
+
+// GetTechnologyProgress returns the progress for a specific technology
+func (s *MinimalCivilizationState) GetTechnologyProgress(technologyName string) (*TechnologyProgress, error) {
+	if s.TechnologyResearch == nil {
+		return nil, fmt.Errorf("technology research not initialized")
+	}
+	tech, exists := s.TechnologyResearch[technologyName]
+	if !exists {
+		return nil, fmt.Errorf("unknown technology: %s", technologyName)
+	}
+	// Return a copy to prevent external modification
+	return &TechnologyProgress{
+		Name:           tech.Name,
+		ProgressPoints: tech.ProgressPoints,
+		RequiredPoints: tech.RequiredPoints,
+		IsUnlocked:     tech.IsUnlocked,
+		FoodBonus:      tech.FoodBonus,
+	}, nil
+}
+
+// GetAllTechnologyProgress returns progress for all technologies
+func (s *MinimalCivilizationState) GetAllTechnologyProgress() map[string]*TechnologyProgress {
+	if s.TechnologyResearch == nil {
+		return make(map[string]*TechnologyProgress)
+	}
+	// Return copies to prevent external modification
+	result := make(map[string]*TechnologyProgress)
+	for name, tech := range s.TechnologyResearch {
+		result[name] = &TechnologyProgress{
+			Name:           tech.Name,
+			ProgressPoints: tech.ProgressPoints,
+			RequiredPoints: tech.RequiredPoints,
+			IsUnlocked:     tech.IsUnlocked,
+			FoodBonus:      tech.FoodBonus,
+		}
+	}
+	return result
+}
+
+// AddResearchPoints adds science points to the currently focused technology
+func (s *MinimalCivilizationState) AddResearchPoints(points float64) error {
+	if s.TechnologyResearch == nil {
+		return fmt.Errorf("technology research not initialized")
+	}
+	if s.ResearchFocus == "" {
+		return fmt.Errorf("no research focus set")
+	}
+	tech, exists := s.TechnologyResearch[s.ResearchFocus]
+	if !exists {
+		return fmt.Errorf("unknown technology: %s", s.ResearchFocus)
+	}
+	
+	// Don't add points to already unlocked technologies
+	if tech.IsUnlocked {
+		return nil
+	}
+	
+	tech.ProgressPoints += points
+	
+	// Check if technology unlocked
+	if tech.ProgressPoints >= tech.RequiredPoints {
+		tech.IsUnlocked = true
+		// Update legacy flags for backward compatibility
+		if tech.Name == "Fire Mastery" {
+			s.HasFireMastery = true
+		} else if tech.Name == "Stone Knapping" {
+			s.HasStoneKnapping = true
+		}
+	}
+	
+	return nil
 }
 
 // SimulationConfig contains all configuration for a simulation run
