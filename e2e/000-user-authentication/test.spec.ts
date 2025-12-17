@@ -110,7 +110,7 @@ test.describe('000-user-authentication', () => {
     readmeContent.push('**Programmatic Verification:**\n\n');
     readmeContent.push(await expectation(
       expect(page.locator('.message.success')).toContainText('Registration successful', {
-        timeout: 3000
+        timeout: 500
       }),
       '- ✓ Success message is displayed\n'
     ));
@@ -138,9 +138,6 @@ test.describe('000-user-authentication', () => {
     
     // Should be redirected to root and get new session
     await page.waitForURL(/\/id=[a-f0-9-]+/);
-    
-    // Wait for page to fully stabilize
-    await page.waitForLoadState('networkidle');
     
     readmeContent.push('### 003-after-logout.png\n\n');
     readmeContent.push('![003-after-logout.png](screenshots/003-after-logout.png)\n\n');
@@ -191,7 +188,7 @@ test.describe('000-user-authentication', () => {
     await page.locator('form button[type="submit"]').first().click();
     
     await expect(page.locator('.message.success')).toContainText('Registration successful', {
-      timeout: 3000
+      timeout: 500
     });
     await expect(page.locator('.authenticated')).toBeVisible();
     
@@ -218,9 +215,6 @@ test.describe('000-user-authentication', () => {
     await page2.fill('input#loginAlias', alias1);
     await page2.fill('input#loginPassword', 'WrongPassword');
     
-    // Wait for page to fully stabilize before screenshot
-    await page2.waitForLoadState('networkidle');
-    
     // Take screenshot before attempting login
     await screenshotIfChanged(page2, { 
       path: `${screenshotDir}/004-login-attempt-different-session.png`,
@@ -234,9 +228,6 @@ test.describe('000-user-authentication', () => {
     await expect(page2.locator('.message.error')).toContainText('No account found! Register instead.', {
       timeout: 1000
     });
-    
-    // Wait for page to fully stabilize before screenshot
-    await page2.waitForLoadState('networkidle');
     
     // Take screenshot of error message
     await screenshotIfChanged(page2, { 
@@ -268,7 +259,7 @@ test.describe('000-user-authentication', () => {
     
     // Wait for registration to complete
     await expect(page.locator('.message.success')).toContainText('Registration successful', {
-      timeout: 3000
+      timeout: 500
     });
     
     // Verify authenticated
@@ -285,9 +276,6 @@ test.describe('000-user-authentication', () => {
     // In this new session, we don't have the private key, so we need to go back
     // Go back in browser history to return to the previous session
     await page.goBack();
-    
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle');
     
     // We should be back at the original session, but now logged out
     // Switch to Login tab
@@ -308,7 +296,7 @@ test.describe('000-user-authentication', () => {
     
     // Should successfully login since the private key is stored in this session's localStorage
     await expect(page.locator('.message.success')).toContainText('Login successful', {
-      timeout: 1500
+      timeout: 300
     });
     
     // Should be authenticated again
