@@ -157,7 +157,7 @@ test.describe('000-user-authentication', () => {
     readmeContent.push(await timer.measure('Step 3: Verify authenticated section', () =>
       expectation(
         expect(page.locator('.authenticated')).toBeVisible({
-          timeout: 500
+          timeout: 400
         }),
         '- ✓ Authenticated section is visible\n'
       )
@@ -264,7 +264,7 @@ test.describe('000-user-authentication', () => {
     await timer.measure('Click submit', () => page.locator('form button[type="submit"]').first().click());
     
     await timer.measure('Verify authenticated', () => expect(page.locator('.authenticated')).toBeVisible({
-      timeout: 500
+      timeout: 400
     }));
     
     // Get the session GUID
@@ -304,7 +304,7 @@ test.describe('000-user-authentication', () => {
     // Should see error about no private key found
     await timer.measure('Verify error message', async () => {
       await expect(page2.locator('.message.error')).toContainText('No account found! Register instead.', {
-        timeout: 1000
+        timeout: 300
       });
     });
     
@@ -344,7 +344,7 @@ test.describe('000-user-authentication', () => {
     
     // Wait for registration to complete
     await timer.measure('Verify authenticated', () => expect(page.locator('.authenticated')).toBeVisible({
-      timeout: 500
+      timeout: 400
     }));
     await timer.measure('Verify user alias', () => expect(page.locator('.user-info h2')).toContainText(alias));
     
@@ -380,7 +380,7 @@ test.describe('000-user-authentication', () => {
     
     // Should successfully login since the private key is stored in this session's localStorage
     await timer.measure('Verify authenticated again', () => expect(page.locator('.authenticated')).toBeVisible({
-      timeout: 500
+      timeout: 400
     }));
     await timer.measure('Verify user alias again', () => expect(page.locator('.user-info h2')).toContainText(alias));
     

@@ -406,30 +406,44 @@ await expect(page.locator('.message')).toContainText('Login successful', {
 
 #### Step 3: Categories of Operations
 
-Different operations have different expected durations:
+Different operations have different expected durations. **These values are based on actual measured performance in the 000-user-authentication test suite after removing artificial delays.**
 
 ```typescript
-// Fast operations (100ms-1s): DOM updates, simple form validation
+// Very fast operations (50-150ms): Simple DOM queries, element visibility
+// Actual measured: 50-120ms, timeout allows 2-3x buffer
 await expect(page.locator('.error')).toBeVisible({
-  timeout: 1000
+  timeout: 200 // Measured: ~100ms for simple visibility checks
 });
 
-// Medium operations (1-3s): Network requests, login, logout  
-await expect(page.locator('.message')).toContainText('Login successful', {
-  timeout: 2000
+// Fast operations (100-400ms): DOM updates with rendering, form validation, authentication state changes
+// Actual measured: 107-360ms for authentication verification, timeout allows ~2x buffer
+await expect(page.locator('.authenticated')).toBeVisible({
+  timeout: 500 // Measured: 107-360ms for auth state + DOM update
 });
 
-// Slow operations (3-10s): Cryptographic operations, key generation
-await expect(page.locator('.message')).toContainText('Registration successful', {
-  timeout: 5000
+await expect(page.locator('.tabs')).toBeVisible({
+  timeout: 300 // Measured: ~117ms for tab visibility
 });
 
-// Very slow operations (10-30s): Only for operations proven to need this
-// Require explicit justification in comments
+// Medium operations (400ms-1s): Network requests with cryptographic operations
+// Note: With optimized code, even crypto operations (RSA key gen, PBKDF2) complete in <200ms
+// If your operations take longer, investigate for performance issues first
+await expect(page.locator('.message')).toContainText('Error message', {
+  timeout: 300 // Measured: ~106ms for error message display
+});
+
+// Slow operations (1-3s): Only use for operations proven to need this time
+// Require explicit justification and measurement data in comments
 await expect(page.locator('.complex-render')).toBeVisible({
-  timeout: 15000 // Justified: Large map generation with 10000+ tiles
+  timeout: 2000 // Justified: Measured at 1.5s for large map generation with 1000+ tiles
 });
+
+// Very slow operations (>3s): Should be extremely rare
+// Require explicit justification, measurement data, and investigation of alternatives
+// Consider breaking into smaller operations or optimizing the underlying code
 ```
+
+**Key Principle**: If an operation consistently takes more than 500ms, investigate the root cause before increasing the timeout. Often this indicates a performance issue in the application code, not a need for a longer timeout.
 
 #### Step 4: Verify and Iterate
 
