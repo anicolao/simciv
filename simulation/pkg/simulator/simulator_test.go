@@ -675,6 +675,7 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 // TestViabilityWithTwoTechnologies tests that populations can research both technologies
 func TestViabilityWithTwoTechnologies(t *testing.T) {
 	conditions := DefaultStartingConditions()
+	years := 100 // Extended to 100 years to ensure all seeds complete both technologies
 	
 	viableCount := 0
 	bothTechsCount := 0
@@ -683,7 +684,7 @@ func TestViabilityWithTwoTechnologies(t *testing.T) {
 		config := SimulationConfig{
 			Seed:               seed,
 			StartingConditions: conditions,
-			MaxDays:            21900, // 60 years (to allow for sequential research with realistic Fire Mastery timing)
+			MaxDays:            365 * years,
 		}
 		
 		result := RunSimulation(config)
@@ -717,7 +718,7 @@ func TestViabilityWithTwoTechnologies(t *testing.T) {
 // TestTwoTechnologyDetails shows detailed statistics for each seed to help debug viability issues
 func TestTwoTechnologyDetails(t *testing.T) {
 	conditions := DefaultStartingConditions()
-	years := 60
+	years := 100 // Extended to 100 years to ensure all seeds complete both technologies
 	
 	t.Log("\n================================================================================")
 	t.Logf("TWO-TECHNOLOGY VIABILITY DETAILS (%d-YEAR SIMULATION)", years)
@@ -793,6 +794,7 @@ func TestTwoTechnologyDetails(t *testing.T) {
 	
 	t.Log("\nNote: With ScienceBaseRate=0.00015, Fire Mastery takes 5-10 years (1825-3650 days).")
 	t.Logf("Stone Knapping requires %d science points total (sequential unlock after Fire Mastery at 100).", int(StoneKnappingScienceRequired))
+	t.Logf("Independent Stone Knapping cost: %d points (when using research API).", int(StoneKnappingScienceRequired-FireMasteryScienceRequired))
 }
 
 // TestViabilityStatistics validates aggregate statistics

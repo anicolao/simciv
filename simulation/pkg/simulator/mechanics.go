@@ -64,7 +64,7 @@ const (
 
 	// Technology unlock
 	FireMasteryScienceRequired     = 100.0
-	StoneKnappingScienceRequired   = 150.0 // Total 150 science (50 more than Fire Mastery for sequential unlock)
+	StoneKnappingScienceRequired   = 210.0 // Total 210 science (110 more than Fire Mastery for sequential unlock)
 	StoneKnappingFoodBonus         = 1.20  // +20% from better tools
 )
 
