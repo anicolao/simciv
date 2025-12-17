@@ -48,7 +48,6 @@ This test verifies the complete user authentication flow including registration,
 
 **Programmatic Verification:**
 
-- ✓ Success message is displayed
 - ✓ Authenticated section is visible
 - ✓ User alias "testuser" is displayed correctly
 

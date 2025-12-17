@@ -64,9 +64,7 @@
         messageType = 'success';
         message = 'Login successful!';
         storeAlias(guid, alias);
-        setTimeout(() => {
-          dispatch('loggedIn', { alias });
-        }, 1000);
+        dispatch('loggedIn', { alias });
       } else {
         messageType = 'error';
         message = result.error || 'Login failed';

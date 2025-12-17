@@ -70,9 +70,7 @@
       if (result.success) {
         messageType = 'success';
         message = 'Registration successful!';
-        setTimeout(() => {
-          dispatch('registered', { alias });
-        }, 1000);
+        dispatch('registered', { alias });
       } else {
         messageType = 'error';
         message = result.error || 'Registration failed';

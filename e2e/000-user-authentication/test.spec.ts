@@ -154,17 +154,11 @@ test.describe('000-user-authentication', () => {
       readmeContent.push('**Programmatic Verification:**\n\n');
     });
     
-    readmeContent.push(await timer.measure('Step 3: Verify success message', () =>
-      expectation(
-        expect(page.locator('.message.success')).toContainText('Registration successful', {
-          timeout: 500
-        }),
-        '- ✓ Success message is displayed\n'
-      )
-    ));
     readmeContent.push(await timer.measure('Step 3: Verify authenticated section', () =>
       expectation(
-        expect(page.locator('.authenticated')).toBeVisible(),
+        expect(page.locator('.authenticated')).toBeVisible({
+          timeout: 500
+        }),
         '- ✓ Authenticated section is visible\n'
       )
     ));
@@ -269,12 +263,9 @@ test.describe('000-user-authentication', () => {
     await timer.measure('Fill confirm', () => page.fill('input#passwordConfirm', password1));
     await timer.measure('Click submit', () => page.locator('form button[type="submit"]').first().click());
     
-    await timer.measure('Verify registration success', async () => {
-      await expect(page.locator('.message.success')).toContainText('Registration successful', {
-        timeout: 500
-      });
-    });
-    await timer.measure('Verify authenticated', () => expect(page.locator('.authenticated')).toBeVisible());
+    await timer.measure('Verify authenticated', () => expect(page.locator('.authenticated')).toBeVisible({
+      timeout: 500
+    }));
     
     // Get the session GUID
     const url1 = timer.measureSync('Get URL 1', () => page.url());
@@ -352,14 +343,9 @@ test.describe('000-user-authentication', () => {
     await timer.measure('Click submit', () => page.locator('form button[type="submit"]').first().click());
     
     // Wait for registration to complete
-    await timer.measure('Verify registration success', async () => {
-      await expect(page.locator('.message.success')).toContainText('Registration successful', {
-        timeout: 500
-      });
-    });
-    
-    // Verify authenticated
-    await timer.measure('Verify authenticated', () => expect(page.locator('.authenticated')).toBeVisible());
+    await timer.measure('Verify authenticated', () => expect(page.locator('.authenticated')).toBeVisible({
+      timeout: 500
+    }));
     await timer.measure('Verify user alias', () => expect(page.locator('.user-info h2')).toContainText(alias));
     
     // Logout - this will redirect to a NEW session
@@ -393,14 +379,9 @@ test.describe('000-user-authentication', () => {
     await timer.measure('Click login submit', () => page.locator('form button[type="submit"]').first().click());
     
     // Should successfully login since the private key is stored in this session's localStorage
-    await timer.measure('Verify login success', async () => {
-      await expect(page.locator('.message.success')).toContainText('Login successful', {
-        timeout: 300
-      });
-    });
-    
-    // Should be authenticated again
-    await timer.measure('Verify authenticated again', () => expect(page.locator('.authenticated')).toBeVisible());
+    await timer.measure('Verify authenticated again', () => expect(page.locator('.authenticated')).toBeVisible({
+      timeout: 500
+    }));
     await timer.measure('Verify user alias again', () => expect(page.locator('.user-info h2')).toContainText(alias));
     
     // Take screenshot of successful login
