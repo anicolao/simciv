@@ -1,9 +1,6 @@
 package simulator
 
-import (
-	"fmt"
-	"math"
-)
+import "math"
 
 // DefaultStartingConditions returns the default starting conditions from the design document
 func DefaultStartingConditions() StartingConditions {
@@ -12,7 +9,7 @@ func DefaultStartingConditions() StartingConditions {
 		StartingHealthMin:   30.0,
 		StartingHealthMax:   50.0,
 		FoodStockpile:       100.0,
-		FoodAllocationRatio: 0.7, // 70/30 allocation for balanced progression
+		FoodAllocationRatio: 0.5, // Equal food/science allocation meets the research timing targets
 		TerrainMultiplier:   1.0,
 	}
 }
@@ -104,7 +101,7 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 		HasStoneKnapping:    false,
 		CurrentDay:          0,
 	}
-	
+
 	// Initialize the new per-technology research system
 	state.InitializeTechnologyResearch()
 
@@ -130,11 +127,17 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 
 		state.FoodStockpile += foodProduced
 		state.SciencePoints += scienceProduced // Keep for backward compatibility
-		
-		// Add science to currently focused technology (new research system)
+
+		// Add science only to the focused technology. The autonomous simulator
+		// researches Fire Mastery first, then advances to Stone Knapping.
+		researchFocus := state.GetResearchFocus()
 		if err := state.AddResearchPoints(scienceProduced); err != nil {
-			// If research system not initialized or focus not set, fall back to legacy system
-			// This maintains backward compatibility
+			panic(err) // The simulator always initializes a valid research focus.
+		}
+		if researchFocus == "Fire Mastery" && state.HasFireMastery {
+			if err := state.SetResearchFocus("Stone Knapping"); err != nil {
+				panic(err)
+			}
 		}
 
 		// Step 4: Consume food
@@ -165,10 +168,7 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 		// Step 9: Attempt new conceptions
 		attemptReproduction(state.Humans, rng)
 
-		// Step 9: Check for technology unlocks
-		checkTechnologyUnlocks(state)
-
-		// Step 11: Record metrics
+		// Step 10: Record metrics
 		metrics := &DailyMetrics{
 			Day:               state.CurrentDay,
 			Population:        countAlive(state.Humans),
@@ -193,34 +193,20 @@ func RunSimulation(config SimulationConfig) ViabilityResult {
 			// Extinction
 			break
 		}
-		
-		// Check for population decline over past year (365 days)
-		// If population has declined or stayed same, halt as non-viable
-		if state.CurrentDay >= 365 {
-			yearAgoIdx := state.CurrentDay - 365 - 1 // -1 for 0-indexing
-			if yearAgoIdx >= 0 && yearAgoIdx < len(allMetrics) {
-				yearAgoPop := allMetrics[yearAgoIdx].Population
-				currentPop := metrics.Population
-				if currentPop <= yearAgoPop {
-					// Population not growing - halt simulation
-					break
-				}
-			}
-		}
 	}
 
 	// Assess viability
-	return assessViability(config.StartingConditions.Population, allMetrics, config.MaxDays)
+	return assessViability(config.StartingConditions.Population, allMetrics)
 }
 
 // assessViability evaluates whether a starting position is viable
-func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays int) ViabilityResult {
+func assessViability(startingPopulation int, allMetrics []*DailyMetrics) ViabilityResult {
 	if len(allMetrics) == 0 {
 		return ViabilityResult{
-			IsViable:         false,
-			FailureReasons:   []string{"No metrics recorded"},
-			DaysToNonViable:  -1,
-			AllMetrics:       allMetrics,
+			IsViable:        false,
+			FailureReasons:  []string{"No metrics recorded"},
+			DaysToNonViable: -1,
+			AllMetrics:      allMetrics,
 		}
 	}
 
@@ -240,13 +226,13 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		}
 	}
 
-	// Calculate population metrics and check for 1-year decline
+	// Calculate population metrics. A surviving, healthy, stable population is
+	// viable; a temporary year without growth is not a terminal condition.
 	peakPopulation := 0
 	minimumPopulation := startingPopulation
 	totalBirths := 0
-	
-	// Check for population decline in any 1-year (365-day) period
-	for i, m := range allMetrics {
+
+	for _, m := range allMetrics {
 		if m.Population > peakPopulation {
 			peakPopulation = m.Population
 		}
@@ -254,22 +240,9 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 			minimumPopulation = m.Population
 		}
 		totalBirths += m.Births
-		
-		// Check if we have a full year of data from this point
-		if i >= 365 {
-			yearAgoPop := allMetrics[i-365].Population
-			currentPop := m.Population
-			
-			// If population declined or stayed same over the past year, mark as non-viable
-			if currentPop <= yearAgoPop && daysToNonViable == -1 {
-				daysToNonViable = m.Day
-				failures = append(failures, fmt.Sprintf("Population declined/stagnated over 1-year period (day %d: %d -> day %d: %d)", 
-					allMetrics[i-365].Day, yearAgoPop, m.Day, currentPop))
-			}
-		}
 	}
 
-	// Criterion 1: Both technologies must be unlocked
+	// Criterion 1: Both technologies must be unlocked.
 	if !lastDay.HasFireMastery {
 		failures = append(failures, "Fire Mastery not unlocked")
 	}
@@ -277,17 +250,7 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		failures = append(failures, "Stone Knapping not unlocked")
 	}
 
-	// Criterion 2: Fire Mastery should be unlocked (timing validated separately)
-	if fireMasteryDay < 0 {
-		failures = append(failures, "Fire Mastery never unlocked")
-	}
-	
-	// Criterion 2b: Stone Knapping should be unlocked (timing validated separately)
-	if stoneKnappingDay < 0 {
-		failures = append(failures, "Stone Knapping never unlocked")
-	}
-
-	// Criterion 3: Population must not go extinct
+	// Criterion 2: Population must not go extinct.
 	if lastDay.Population == 0 {
 		failures = append(failures, "Population extinct")
 		if daysToNonViable == -1 {
@@ -301,7 +264,7 @@ func assessViability(startingPopulation int, allMetrics []*DailyMetrics, maxDays
 		}
 	}
 
-	// Criterion 4: Average health must remain viable
+	// Criterion 3: Average health must remain viable.
 	totalHealth := 0.0
 	for _, m := range allMetrics {
 		totalHealth += m.AverageHealth
@@ -345,7 +308,7 @@ func GetStatistics(results []ViabilityResult) map[string]interface{} {
 	totalScience := 0.0
 	totalBirths := 0
 	totalHealth := 0.0
-	
+
 	// For variance calculations
 	populations := make([]float64, len(results))
 	sciences := make([]float64, len(results))
@@ -364,7 +327,7 @@ func GetStatistics(results []ViabilityResult) map[string]interface{} {
 		totalScience += r.FinalScience
 		totalBirths += r.TotalBirths
 		totalHealth += r.AverageHealth
-		
+
 		populations[i] = float64(r.FinalPopulation)
 		sciences[i] = r.FinalScience
 	}
@@ -386,7 +349,7 @@ func GetStatistics(results []ViabilityResult) map[string]interface{} {
 		stats["avg_years_to_fire_mastery"] = avgDays / 365.0
 		stats["stddev_days_to_fire_mastery"] = calculateStdDev(daysToFire)
 	}
-	
+
 	// Calculate standard deviations
 	stats["stddev_population"] = calculateStdDev(populations)
 	stats["stddev_science"] = calculateStdDev(sciences)
@@ -399,21 +362,21 @@ func calculateStdDev(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
 	}
-	
+
 	// Calculate mean
 	sum := 0.0
 	for _, v := range values {
 		sum += v
 	}
 	mean := sum / float64(len(values))
-	
+
 	// Calculate variance
 	varianceSum := 0.0
 	for _, v := range values {
 		diff := v - mean
 		varianceSum += diff * diff
 	}
-	
+
 	return math.Sqrt(varianceSum / float64(len(values)))
 }
 

@@ -77,7 +77,7 @@ func TestInitializePopulation(t *testing.T) {
 			t.Errorf("Human %d should be alive", i)
 		}
 		if h.Health < conditions.StartingHealthMin || h.Health > conditions.StartingHealthMax {
-			t.Errorf("Human %d health %f out of range [%f, %f]", i, h.Health, 
+			t.Errorf("Human %d health %f out of range [%f, %f]", i, h.Health,
 				conditions.StartingHealthMin, conditions.StartingHealthMax)
 		}
 		if h.Gender != "male" && h.Gender != "female" {
@@ -171,11 +171,11 @@ func TestCalculateAvailableLabor(t *testing.T) {
 // TestAllocateLabor tests labor allocation
 func TestAllocateLabor(t *testing.T) {
 	tests := []struct {
-		name          string
-		totalHours    float64
-		foodRatio     float64
-		expectedFood  float64
-		expectedSci   float64
+		name         string
+		totalHours   float64
+		foodRatio    float64
+		expectedFood float64
+		expectedSci  float64
 	}{
 		{"80/20 split", 100, 0.8, 80, 20},
 		{"50/50 split", 100, 0.5, 50, 50},
@@ -207,12 +207,12 @@ func TestProduceFood(t *testing.T) {
 		terrainMultiplier float64
 		expected          float64
 	}{
-		{"Base production", 100, false, false, 1.0, 100.0}, // 100 * 1.0 * 1.0 * 1.0
-		{"With Fire Mastery", 100, true, false, 1.0, 115.0}, // 100 * 1.0 * 1.15 * 1.0
-		{"With Stone Knapping", 100, false, true, 1.0, 120.0}, // 100 * 1.0 * 1.20 * 1.0
-		{"With both technologies", 100, true, true, 1.0, 138.0}, // 100 * 1.0 * 1.15 * 1.20 = 138
-		{"Harsh terrain", 100, false, false, 0.6, 60.0}, // 100 * 1.0 * 1.0 * 0.6
-		{"Good terrain", 100, false, false, 1.5, 150.0}, // 100 * 1.0 * 1.0 * 1.5
+		{"Base production", 100, false, false, 1.0, 100 * FoodBaseRate},
+		{"With Fire Mastery", 100, true, false, 1.0, 100 * FoodBaseRate * FireMasteryFoodBonus},
+		{"With Stone Knapping", 100, false, true, 1.0, 100 * FoodBaseRate * StoneKnappingFoodBonus},
+		{"With both technologies", 100, true, true, 1.0, 100 * FoodBaseRate * FireMasteryFoodBonus * StoneKnappingFoodBonus},
+		{"Harsh terrain", 100, false, false, 0.6, 100 * FoodBaseRate * 0.6},
+		{"Good terrain", 100, false, false, 1.5, 100 * FoodBaseRate * 1.5},
 	}
 
 	for _, tt := range tests {
@@ -238,15 +238,15 @@ func TestTechnologyBonusStacking(t *testing.T) {
 		expectedMultiplier float64
 	}{
 		{"No technologies", false, false, 1.0},
-		{"Fire Mastery only", true, false, 1.15},
-		{"Stone Knapping only", false, true, 1.20},
-		{"Both technologies", true, true, 1.38}, // 1.15 * 1.20 = 1.38
+		{"Fire Mastery only", true, false, FireMasteryFoodBonus},
+		{"Stone Knapping only", false, true, StoneKnappingFoodBonus},
+		{"Both technologies", true, true, FireMasteryFoodBonus * StoneKnappingFoodBonus},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := produceFood(baseFood, tt.hasFireMastery, tt.hasStoneKnapping, terrain)
-			expected := baseFood * tt.expectedMultiplier
+			expected := baseFood * FoodBaseRate * tt.expectedMultiplier
 
 			epsilon := 0.01
 			if result < expected-epsilon || result > expected+epsilon {
@@ -273,7 +273,7 @@ func TestProduceScience(t *testing.T) {
 		// With ScienceBaseRate = 0.00015
 		// Health penalty only applies when health < 30, so both healthy (60) and unhealthy (40) get full production
 		// 10 hours * 0.00015 = 0.0015
-		{"Healthy population", 10, population20, avgHealthy, 0.0014, 0.0016}, 
+		{"Healthy population", 10, population20, avgHealthy, 0.0014, 0.0016},
 		{"Unhealthy population", 10, population20, avgUnhealthy, 0.0014, 0.0016}, // No penalty above 30 health
 		{"Zero hours", 0, population20, avgHealthy, 0, 0},
 	}
@@ -282,7 +282,7 @@ func TestProduceScience(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := produceScience(tt.scienceHours, tt.population, tt.averageHealth)
 			if result < tt.minExpected || result > tt.maxExpected {
-				t.Errorf("Expected science in range [%f, %f], got %f", 
+				t.Errorf("Expected science in range [%f, %f], got %f",
 					tt.minExpected, tt.maxExpected, result)
 			}
 		})
@@ -292,11 +292,11 @@ func TestProduceScience(t *testing.T) {
 // TestConsumeFood tests food consumption
 func TestConsumeFood(t *testing.T) {
 	tests := []struct {
-		name               string
-		population         int
-		foodStockpile      float64
-		expectedRemaining  float64
-		expectedPerPerson  float64
+		name              string
+		population        int
+		foodStockpile     float64
+		expectedRemaining float64
+		expectedPerPerson float64
 	}{
 		{"Plenty of food", 10, 100, 80, 2.0}, // Need 20, have 100, consume 20
 		{"Exact food", 10, 20, 0, 2.0},       // Need 20, have 20, consume 20
@@ -331,11 +331,11 @@ func TestUpdateHealth(t *testing.T) {
 		foodPerPerson  float64
 		expectedChange string // "increase", "decrease", or "stable"
 	}{
-		{"Well-fed young adult", 50, 20, 2.0, "increase"},     // -0.5 + 30 - 3.33 = 26.17 (increase)
-		{"Half-fed young adult", 50, 20, 1.0, "increase"},     // -0.5 + 15 - 3.33 = 11.17 (increase, not decrease!)
-		{"Starving young adult", 50, 20, 0.0, "decrease"},     // -0.5 + 0 - 3.33 = -3.83 (decrease)
-		{"Well-fed elder", 50, 50, 2.0, "increase"},           // -0.5 + 30 - 8.33 = 21.17 (increase, not decrease!)
-		{"Poorly-fed elder", 50, 50, 0.5, "decrease"},         // -0.5 + 7.5 - 8.33 = -1.33 (decrease)
+		{"Well-fed young adult", 50, 20, 2.0, "increase"}, // -0.5 + 30 - 3.33 = 26.17 (increase)
+		{"Half-fed young adult", 50, 20, 1.0, "increase"}, // -0.5 + 15 - 3.33 = 11.17 (increase, not decrease!)
+		{"Starving young adult", 50, 20, 0.0, "decrease"}, // -0.5 + 0 - 3.33 = -3.83 (decrease)
+		{"Well-fed elder", 50, 50, 2.0, "increase"},       // -0.5 + 30 - 8.33 = 21.17 (increase, not decrease!)
+		{"Poorly-fed elder", 50, 50, 0.5, "decrease"},     // -0.5 + 7.5 - 8.33 = -1.33 (decrease)
 	}
 
 	for _, tt := range tests {
@@ -351,12 +351,12 @@ func TestUpdateHealth(t *testing.T) {
 			switch tt.expectedChange {
 			case "increase":
 				if human.Health <= tt.initialHealth {
-					t.Errorf("Expected health to increase from %f, got %f", 
+					t.Errorf("Expected health to increase from %f, got %f",
 						tt.initialHealth, human.Health)
 				}
 			case "decrease":
 				if human.Health >= tt.initialHealth {
-					t.Errorf("Expected health to decrease from %f, got %f", 
+					t.Errorf("Expected health to decrease from %f, got %f",
 						tt.initialHealth, human.Health)
 				}
 			}
@@ -421,17 +421,17 @@ func TestCheckReproduction(t *testing.T) {
 	rng := NewRandomGenerator(12345)
 	male := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "male"}
 	female := &MinimalHuman{Age: 25, Health: 80, IsAlive: true, Gender: "female"}
-	
+
 	conceived := checkReproduction(male, female, 20, rng)
-	
+
 	avgHealth := (male.Health + female.Health) / 2.0
 	healthMod := (avgHealth - 50.0) / 50.0
 	ageMod := 1.0
 	finalChance := MonthlyConceptionBase * healthMod * ageMod
-	
-	t.Logf("Manual test: conceived=%v, health_mod=%.3f, age_mod=%.3f, chance=%.6f", 
+
+	t.Logf("Manual test: conceived=%v, health_mod=%.3f, age_mod=%.3f, chance=%.6f",
 		conceived, healthMod, ageMod, finalChance)
-	
+
 	if conceived {
 		t.Logf("Female pregnancy days remaining: %d", female.PregnancyDaysRemaining)
 	}
@@ -511,10 +511,10 @@ func TestCheckReproduction(t *testing.T) {
 			successCount++
 		}
 	}
-	
-	t.Logf("Conception success rate: %d/10000 (%.2f%%) - expected ~12 conceptions", 
+
+	t.Logf("Conception success rate: %d/10000 (%.2f%%) - expected ~12 conceptions",
 		successCount, float64(successCount)/100.0)
-	
+
 	// The test is mainly to ensure the function doesn't crash or always return false
 	// With such low probabilities, we can't strictly require successes
 }
@@ -549,29 +549,51 @@ func TestSimulation_BasicRun(t *testing.T) {
 	}
 }
 
+func TestStablePopulationIsViable(t *testing.T) {
+	metrics := make([]*DailyMetrics, 0, 730)
+	for day := 1; day <= 730; day++ {
+		metrics = append(metrics, &DailyMetrics{
+			Day:              day,
+			Population:       100,
+			AverageHealth:    80,
+			SciencePoints:    FireMasteryScienceRequired + StoneKnappingScienceRequired,
+			HasFireMastery:   true,
+			HasStoneKnapping: true,
+		})
+	}
+
+	result := assessViability(100, metrics)
+	if !result.IsViable {
+		t.Fatalf("Expected a stable, healthy population to be viable, got failures: %v", result.FailureReasons)
+	}
+	if result.DaysToNonViable != -1 {
+		t.Errorf("Expected no non-viable day for a stable population, got %d", result.DaysToNonViable)
+	}
+}
+
 // TestViabilityWithMultipleSeeds tests viability across all predefined seeds
 func TestViabilityWithMultipleSeeds(t *testing.T) {
 	conditions := DefaultStartingConditions()
-	
+
 	results := make([]ViabilityResult, 0, len(VIABILITY_TEST_SEEDS))
-	
+
 	for _, seed := range VIABILITY_TEST_SEEDS {
 		config := SimulationConfig{
 			Seed:               seed,
 			StartingConditions: conditions,
 			MaxDays:            3650, // 10 years
 		}
-		
+
 		result := RunSimulation(config)
 		results = append(results, result)
 	}
 
 	// Calculate statistics
 	stats := GetStatistics(results)
-	
+
 	viableCount := stats["viable_count"].(int)
 	viabilityRate := stats["viability_rate"].(float64)
-	
+
 	// Print comprehensive statistics table
 	separator := strings.Repeat("=", 80)
 	dashedLine := strings.Repeat("-", 80)
@@ -580,16 +602,16 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 	t.Logf("%s", separator)
 	t.Logf("\n%-40s %10s %15s", "Metric", "Average", "Std Dev")
 	t.Logf("%s", dashedLine)
-	
+
 	// Viability metrics
-	t.Logf("%-40s %10d / %d (%.1f%%)", "Viable Seeds", 
+	t.Logf("%-40s %10d / %d (%.1f%%)", "Viable Seeds",
 		viableCount, len(results), viabilityRate*100)
-	
+
 	if fireMasteryCount, ok := stats["fire_mastery_count"].(int); ok {
-		t.Logf("%-40s %10d / %d (%.1f%%)", "Fire Mastery Unlocked", 
-			fireMasteryCount, len(results), 
+		t.Logf("%-40s %10d / %d (%.1f%%)", "Fire Mastery Unlocked",
+			fireMasteryCount, len(results),
 			float64(fireMasteryCount)/float64(len(results))*100)
-		
+
 		if avgDays, ok := stats["avg_days_to_fire_mastery"].(float64); ok {
 			stdDays := 0.0
 			if sd, ok := stats["stddev_days_to_fire_mastery"].(float64); ok {
@@ -601,9 +623,9 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 			}
 		}
 	}
-	
+
 	t.Logf("")
-	
+
 	// Population metrics
 	if avgPop, ok := stats["avg_population"].(float64); ok {
 		stdPop := 0.0
@@ -612,13 +634,13 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 		}
 		t.Logf("%-40s %10.1f %15.1f", "Final Population", avgPop, stdPop)
 	}
-	
+
 	if avgBirths, ok := stats["avg_births"].(float64); ok {
 		t.Logf("%-40s %10.1f", "Total Births", avgBirths)
 	}
-	
+
 	t.Logf("")
-	
+
 	// Science and health metrics
 	if avgScience, ok := stats["avg_science"].(float64); ok {
 		stdScience := 0.0
@@ -628,13 +650,13 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 		t.Logf("%-40s %10.1f %15.1f", "Final Science Points", avgScience, stdScience)
 		t.Logf("%-40s %10.1f%%", "Science Progress (% of 100)", avgScience)
 	}
-	
+
 	if avgHealth, ok := stats["avg_health"].(float64); ok {
 		t.Logf("%-40s %10.1f", "Average Health", avgHealth)
 	}
-	
+
 	t.Logf("%s\n", separator)
-	
+
 	// Check survival count
 	survivingCount := 0
 	for _, r := range results {
@@ -642,29 +664,25 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 			survivingCount++
 		}
 	}
-	t.Logf("Populations surviving: %d/%d (%.1f%%)\n", survivingCount, len(results), 
+	t.Logf("Populations surviving: %d/%d (%.1f%%)\n", survivingCount, len(results),
 		float64(survivingCount)/float64(len(results))*100)
-	
-	// With current science rate (0.00015) and 70/30 food allocation
+
+	// With current science rate (0.00015) and the default 50/50 allocation
 	// All populations should survive (100% survival expected)
 	if survivingCount < len(results) {
-		t.Errorf("Expected 100%% survival with 100 starting population, got %d/%d surviving", 
+		t.Errorf("Expected 100%% survival with 100 starting population, got %d/%d surviving",
 			survivingCount, len(results))
 	}
-	
-	// Viability (Fire Mastery) with current rate (0.00015):
-	// Fire Mastery (100 science points) is NOT achieved in 10 years with current parameters
-	// Actual science accumulation: ~10 points in 10 years
-	// This is expected behavior - see designs/FIRE_MASTERY_CLAIMS_ANALYSIS.md
-	t.Logf("Viability (Fire Mastery in 10yr): %d/%d (%.1f%%)", 
+
+	// Full viability now requires both technologies, so a 10-year run is a
+	// progress and survival diagnostic rather than the full viability contract.
+	t.Logf("Viability (Fire Mastery in 10yr): %d/%d (%.1f%%)",
 		viableCount, len(results), viabilityRate*100)
-	
-	// NOTE: The claims in designs/HUMAN_ATTRIBUTES.md stating Fire Mastery in 8-10 years
-	// cannot be reproduced. See TestVerifyFireMasteryClaims for details.
+
 	if viableCount > 0 {
-		t.Logf("Fire Mastery achieved in some runs - if this happens consistently, review rate tuning")
+		t.Logf("Both technologies completed within the 10-year diagnostic window")
 	}
-	
+
 	// Check that results are variable (not all identical)
 	variance := CalculatePopulationVariance(results)
 	if variance < 0.1 {
@@ -676,42 +694,54 @@ func TestViabilityWithMultipleSeeds(t *testing.T) {
 func TestViabilityWithTwoTechnologies(t *testing.T) {
 	conditions := DefaultStartingConditions()
 	years := 100 // Extended to 100 years to ensure all seeds complete both technologies
-	
+
 	viableCount := 0
 	bothTechsCount := 0
-	
+
 	for _, seed := range VIABILITY_TEST_SEEDS {
 		config := SimulationConfig{
 			Seed:               seed,
 			StartingConditions: conditions,
 			MaxDays:            365 * years,
 		}
-		
+
 		result := RunSimulation(config)
-		
+		stoneResearchDays := result.DaysToStoneKnapping - result.DaysToFireMastery
+
 		if result.IsViable {
 			viableCount++
 		}
-		
+
 		if result.HasFireMastery && result.HasStoneKnapping {
 			bothTechsCount++
 		}
+
+		if result.DaysToFireMastery < 5*365 || result.DaysToFireMastery > 10*365 {
+			t.Errorf("Seed %d: Fire Mastery took %d days; expected 5-10 years", seed, result.DaysToFireMastery)
+		}
+		if stoneResearchDays < 5*365 || stoneResearchDays > 10*365 {
+			t.Errorf("Seed %d: Stone Knapping took %d days; expected 5-10 years", seed, stoneResearchDays)
+		}
+		if stoneResearchDays <= result.DaysToFireMastery {
+			t.Errorf("Seed %d: Stone Knapping (%d days) should take longer than Fire Mastery (%d days)",
+				seed, stoneResearchDays, result.DaysToFireMastery)
+		}
 	}
-	
+
 	// Both technologies should be researched in 100% of viable runs
 	if bothTechsCount != len(VIABILITY_TEST_SEEDS) {
-		t.Errorf("Expected all %d seeds to unlock both technologies, got %d/%d", 
+		t.Errorf("Expected all %d seeds to unlock both technologies, got %d/%d",
 			len(VIABILITY_TEST_SEEDS), bothTechsCount, len(VIABILITY_TEST_SEEDS))
 	}
-	
+
 	// Viability rate should remain 100% with two technologies
 	if viableCount != len(VIABILITY_TEST_SEEDS) {
 		t.Errorf("Expected 100%% viability with two technologies, got %d/%d viable",
 			viableCount, len(VIABILITY_TEST_SEEDS))
 	}
-	
+
 	t.Logf("Two-technology viability: %d/%d (%.1f%%) unlocked both Fire Mastery and Stone Knapping",
-		bothTechsCount, len(VIABILITY_TEST_SEEDS), 
+		bothTechsCount, len(VIABILITY_TEST_SEEDS),
 		float64(bothTechsCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
 }
 
@@ -719,33 +749,33 @@ func TestViabilityWithTwoTechnologies(t *testing.T) {
 func TestTwoTechnologyDetails(t *testing.T) {
 	conditions := DefaultStartingConditions()
 	years := 100 // Extended to 100 years to ensure all seeds complete both technologies
-	
+
 	t.Log("\n================================================================================")
 	t.Logf("TWO-TECHNOLOGY VIABILITY DETAILS (%d-YEAR SIMULATION)", years)
 	t.Log("================================================================================\n")
-	
+
 	t.Logf("%-6s %-10s %-10s %-12s %-12s %-12s %-12s %-8s",
-		"Seed#", "Fire Days", "Stone Days", "Final Pop", "Final Sci", "Avg Health", "Births", "Viable")
+		"Seed#", "Fire Time", "Stone Time", "Final Pop", "Final Sci", "Avg Health", "Births", "Viable")
 	t.Log("----------------------------------------------------------------------------------------")
-	
+
 	viableCount := 0
 	bothTechsCount := 0
 	fireOnlyCount := 0
 	neitherCount := 0
-	
+
 	for i, seed := range VIABILITY_TEST_SEEDS {
 		config := SimulationConfig{
 			Seed:               seed,
 			StartingConditions: conditions,
 			MaxDays:            365 * years,
 		}
-		
+
 		result := RunSimulation(config)
-		
+
 		if result.IsViable {
 			viableCount++
 		}
-		
+
 		hasBoth := result.HasFireMastery && result.HasStoneKnapping
 		if hasBoth {
 			bothTechsCount++
@@ -754,22 +784,22 @@ func TestTwoTechnologyDetails(t *testing.T) {
 		} else {
 			neitherCount++
 		}
-		
+
 		fireDays := "-"
 		if result.DaysToFireMastery > 0 {
 			fireDays = fmt.Sprintf("%d", result.DaysToFireMastery)
 		}
-		
+
 		stoneDays := "-"
 		if result.DaysToStoneKnapping > 0 {
-			stoneDays = fmt.Sprintf("%d", result.DaysToStoneKnapping)
+			stoneDays = fmt.Sprintf("%d", result.DaysToStoneKnapping-result.DaysToFireMastery)
 		}
-		
+
 		viable := "NO"
 		if result.IsViable {
 			viable = "YES"
 		}
-		
+
 		t.Logf("%-6d %-10s %-10s %-12d %-12.1f %-12.1f %-12d %-8s",
 			i+1,
 			fireDays,
@@ -780,10 +810,10 @@ func TestTwoTechnologyDetails(t *testing.T) {
 			result.TotalBirths,
 			viable)
 	}
-	
+
 	t.Log("================================================================================")
 	t.Logf("\nSummary:")
-	t.Logf("  Both technologies: %d/%d (%.1f%%)", bothTechsCount, len(VIABILITY_TEST_SEEDS), 
+	t.Logf("  Both technologies: %d/%d (%.1f%%)", bothTechsCount, len(VIABILITY_TEST_SEEDS),
 		float64(bothTechsCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
 	t.Logf("  Fire Mastery only: %d/%d (%.1f%%)", fireOnlyCount, len(VIABILITY_TEST_SEEDS),
 		float64(fireOnlyCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
@@ -791,16 +821,16 @@ func TestTwoTechnologyDetails(t *testing.T) {
 		float64(neitherCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
 	t.Logf("  Viable (both techs): %d/%d (%.1f%%)", viableCount, len(VIABILITY_TEST_SEEDS),
 		float64(viableCount)/float64(len(VIABILITY_TEST_SEEDS))*100)
-	
-	t.Log("\nNote: With ScienceBaseRate=0.00015, Fire Mastery takes 5-10 years (1825-3650 days).")
-	t.Logf("Stone Knapping requires %d science points total (sequential unlock after Fire Mastery at 100).", int(StoneKnappingScienceRequired))
-	t.Logf("Independent Stone Knapping cost: %d points (when using research API).", int(StoneKnappingScienceRequired-FireMasteryScienceRequired))
+
+	t.Log("\nFire Time and Stone Time are per-technology durations, not cumulative unlock days.")
+	t.Log("With ScienceBaseRate=0.00015, each technology takes 5-10 years (1825-3650 days).")
+	t.Logf("Stone Knapping requires %d independent science points after Fire Mastery completes.", int(StoneKnappingScienceRequired))
 }
 
 // TestViabilityStatistics validates aggregate statistics
 func TestViabilityStatistics(t *testing.T) {
 	conditions := DefaultStartingConditions()
-	
+
 	// Run with first 10 seeds for faster testing
 	results := make([]ViabilityResult, 0, 10)
 	for i := 0; i < 10; i++ {
@@ -811,9 +841,9 @@ func TestViabilityStatistics(t *testing.T) {
 		}
 		results = append(results, RunSimulation(config))
 	}
-	
+
 	stats := GetStatistics(results)
-	
+
 	// Verify statistics structure
 	if _, ok := stats["total_runs"]; !ok {
 		t.Error("Expected total_runs in statistics")
@@ -824,7 +854,7 @@ func TestViabilityStatistics(t *testing.T) {
 	if _, ok := stats["viability_rate"]; !ok {
 		t.Error("Expected viability_rate in statistics")
 	}
-	
+
 	totalRuns := stats["total_runs"].(int)
 	if totalRuns != 10 {
 		t.Errorf("Expected 10 total runs, got %d", totalRuns)
@@ -835,7 +865,7 @@ func TestViabilityStatistics(t *testing.T) {
 func TestHarshTerrain(t *testing.T) {
 	conditions := DefaultStartingConditions()
 	conditions.TerrainMultiplier = 0.6 // Harsh terrain
-	
+
 	// Test with just a few seeds to verify populations survive but don't achieve Fire Mastery
 	survivalCount := 0
 	for i := 0; i < 5; i++ {
@@ -844,13 +874,13 @@ func TestHarshTerrain(t *testing.T) {
 			StartingConditions: conditions,
 			MaxDays:            3650, // 10 years
 		}
-		
+
 		result := RunSimulation(config)
 		if result.FinalPopulation > 0 {
 			survivalCount++
 		}
 	}
-	
+
 	// With 100 starting population and harsh terrain:
 	// 1. More workers producing food (despite 60% multiplier)
 	// 2. Belonging threshold (40) satisfied (pop/2 = 50)
@@ -864,7 +894,7 @@ func TestHarshTerrain(t *testing.T) {
 func TestGoodTerrain(t *testing.T) {
 	conditions := DefaultStartingConditions()
 	conditions.TerrainMultiplier = 1.5 // Good terrain
-	
+
 	// With slower science, even good terrain will need the full 10 years for Fire Mastery
 	// But more populations should survive
 	survivingCount := 0
@@ -874,13 +904,13 @@ func TestGoodTerrain(t *testing.T) {
 			StartingConditions: conditions,
 			MaxDays:            3650, // 10 years
 		}
-		
+
 		result := RunSimulation(config)
 		if result.FinalPopulation > 0 {
 			survivingCount++
 		}
 	}
-	
+
 	// Most good terrain runs should survive
 	if survivingCount < 4 {
 		t.Logf("Good terrain survival: %d/5 (with slower science, Fire Mastery may take several years)", survivingCount)
@@ -891,36 +921,36 @@ func TestGoodTerrain(t *testing.T) {
 func TestFoodAllocationComparison(t *testing.T) {
 	// Test allocations from 10/90 to 90/10 in increments of 10
 	allocations := []float64{0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90}
-        samples := 10
-        years := 10
-	
+	samples := 10
+	years := 10
+
 	t.Log("\n================================================================================")
 	t.Logf("FOOD ALLOCATION COMPARISON (%d-YEAR SIMULATION)", years)
 	t.Log("================================================================================\n")
-	
+
 	t.Logf("%-15s %-12s %-12s %-13s %-12s %-12s %-12s %-12s %-12s",
 		"Allocation", "Viable", "Fire Days", "Decline Day", "Final Pop", "Births", "Science", "Health", "Survival")
 	t.Log("----------------------------------------------------------------------------------------")
-	
+
 	for _, allocation := range allocations {
 		conditions := DefaultStartingConditions()
 		conditions.FoodAllocationRatio = allocation
-		
+
 		viableCount := 0
 		declineCount := 0
 		var totalFireDays, totalDeclineDays, totalFinalPop, totalBirths, totalScience, totalHealth float64
 		survivalCount := 0
-		
+
 		// Test with first 10 seeds for efficiency
 		for i := 0; i < samples; i++ {
 			config := SimulationConfig{
 				Seed:               VIABILITY_TEST_SEEDS[i],
 				StartingConditions: conditions,
-				MaxDays:            365*years,
+				MaxDays:            365 * years,
 			}
-			
+
 			result := RunSimulation(config)
-			
+
 			if result.IsViable {
 				viableCount++
 			}
@@ -939,23 +969,23 @@ func TestFoodAllocationComparison(t *testing.T) {
 			totalScience += result.FinalScience
 			totalHealth += result.AverageHealth
 		}
-		
+
 		avgFireDays := "-"
 		if viableCount > 0 {
 			avgFireDays = fmt.Sprintf("%.0f", totalFireDays/float64(viableCount))
 		}
-		
+
 		avgDeclineDays := "-"
 		if declineCount > 0 {
 			avgDeclineDays = fmt.Sprintf("%.0f", totalDeclineDays/float64(declineCount))
 		}
-		
+
 		avgFinalPop := totalFinalPop / 10.0
 		avgBirths := totalBirths / 10.0
 		avgScience := totalScience / 10.0
 		avgHealth := totalHealth / 10.0
 		survivalPct := float64(survivalCount) / 10.0 * 100
-		
+
 		t.Logf("%02d/%-12d %-12s %-12s %-13s %-12.1f %-12.0f %-12.1f %-12.1f %-12.1f%%",
 			int(allocation*100), int((1.0-allocation)*100),
 			fmt.Sprintf("%d/10", viableCount),
@@ -967,7 +997,7 @@ func TestFoodAllocationComparison(t *testing.T) {
 			avgHealth,
 			survivalPct)
 	}
-	
+
 	t.Log("================================================================================")
 	t.Log("\nNote: With current science rate (0.00015), Fire Mastery (100 points) is NOT achieved in 10 years.")
 	t.Log("Science accumulation: ~10-12 points after 10 years.")

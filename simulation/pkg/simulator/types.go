@@ -14,11 +14,11 @@ type MinimalHuman struct {
 
 // TechnologyProgress tracks research progress for a single technology
 type TechnologyProgress struct {
-	Name              string  // Technology name
-	ProgressPoints    float64 // Points accumulated toward this technology
-	RequiredPoints    float64 // Points needed to unlock
-	IsUnlocked        bool    // Whether this technology is unlocked
-	FoodBonus         float64 // Food production multiplier (1.0 = no bonus)
+	Name           string  // Technology name
+	ProgressPoints float64 // Points accumulated toward this technology
+	RequiredPoints float64 // Points needed to unlock
+	IsUnlocked     bool    // Whether this technology is unlocked
+	FoodBonus      float64 // Food production multiplier (1.0 = no bonus)
 }
 
 // MinimalCivilizationState represents the complete state of a civilization
@@ -31,15 +31,15 @@ type MinimalCivilizationState struct {
 	SciencePoints float64 // Accumulated science (deprecated - use TechnologyResearch)
 
 	// Configuration
-	FoodAllocationRatio float64 // 0.0 to 1.0 (default 0.8 = 80%)
+	FoodAllocationRatio float64 // 0.0 to 1.0 (default 0.5 = 50%)
 
 	// Technology Research (new per-tech tracking system)
 	TechnologyResearch map[string]*TechnologyProgress // Research progress per technology
 	ResearchFocus      string                         // Currently focused technology for research
 
 	// Technology (deprecated - maintained for backward compatibility)
-	HasFireMastery   bool // Research goal 1 (unlocks at 100 science, 5-10 years)
-	HasStoneKnapping bool // Research goal 2 (unlocks at 600 science, 12-17 years)
+	HasFireMastery   bool // Research goal 1 (100 independent science points)
+	HasStoneKnapping bool // Research goal 2 (120 independent science points)
 
 	// Simulation State
 	CurrentDay int // Day counter (increments until completion or failure)
@@ -47,12 +47,12 @@ type MinimalCivilizationState struct {
 
 // StartingConditions defines the initial conditions for a simulation
 type StartingConditions struct {
-	Population            int     // Number of humans to create
-	StartingHealthMin     float64 // Minimum starting health
-	StartingHealthMax     float64 // Maximum starting health
-	FoodStockpile         float64 // Starting food units
-	FoodAllocationRatio   float64 // Default food allocation ratio
-	TerrainMultiplier     float64 // Terrain food production multiplier (1.0 = normal)
+	Population          int     // Number of humans to create
+	StartingHealthMin   float64 // Minimum starting health
+	StartingHealthMax   float64 // Maximum starting health
+	FoodStockpile       float64 // Starting food units
+	FoodAllocationRatio float64 // Default food allocation ratio
+	TerrainMultiplier   float64 // Terrain food production multiplier (1.0 = normal)
 }
 
 // DailyMetrics tracks statistics for a single day
@@ -76,20 +76,20 @@ type ViabilityResult struct {
 	FailureReasons []string // List of failure reasons if not viable
 
 	// Metrics
-	FinalPopulation        int     // Final population
-	FinalScience           float64 // Final science points
-	AverageHealth          float64 // Average health across entire simulation
-	DaysToFireMastery      int     // Days until Fire Mastery was unlocked (-1 if never)
-	DaysToStoneKnapping    int     // Days until Stone Knapping was unlocked (-1 if never)
-	DaysToNonViable        int     // Days until population became non-viable (-1 if never)
-	FinalAverageHealth     float64 // Final average health
-	PeakPopulation         int     // Peak population during simulation
-	MinimumPopulation      int     // Minimum population during simulation
-	FireMasteryUnlocked    bool    // Whether Fire Mastery was unlocked
-	StoneKnappingUnlocked  bool    // Whether Stone Knapping was unlocked
-	TotalBirths            int     // Total births during simulation
-	HasFireMastery         bool    // Final Fire Mastery status
-	HasStoneKnapping       bool    // Final Stone Knapping status
+	FinalPopulation       int     // Final population
+	FinalScience          float64 // Final science points
+	AverageHealth         float64 // Average health across entire simulation
+	DaysToFireMastery     int     // Days until Fire Mastery was unlocked (-1 if never)
+	DaysToStoneKnapping   int     // Days until Stone Knapping was unlocked (-1 if never)
+	DaysToNonViable       int     // Days until population became non-viable (-1 if never)
+	FinalAverageHealth    float64 // Final average health
+	PeakPopulation        int     // Peak population during simulation
+	MinimumPopulation     int     // Minimum population during simulation
+	FireMasteryUnlocked   bool    // Whether Fire Mastery was unlocked
+	StoneKnappingUnlocked bool    // Whether Stone Knapping was unlocked
+	TotalBirths           int     // Total births during simulation
+	HasFireMastery        bool    // Final Fire Mastery status
+	HasStoneKnapping      bool    // Final Stone Knapping status
 
 	// All daily metrics for analysis
 	AllMetrics []*DailyMetrics
@@ -100,7 +100,7 @@ type ViabilityResult struct {
 // InitializeTechnologyResearch sets up the technology research system with default technologies
 func (s *MinimalCivilizationState) InitializeTechnologyResearch() {
 	s.TechnologyResearch = make(map[string]*TechnologyProgress)
-	
+
 	// Fire Mastery
 	s.TechnologyResearch["Fire Mastery"] = &TechnologyProgress{
 		Name:           "Fire Mastery",
@@ -109,16 +109,16 @@ func (s *MinimalCivilizationState) InitializeTechnologyResearch() {
 		IsUnlocked:     false,
 		FoodBonus:      FireMasteryFoodBonus,
 	}
-	
+
 	// Stone Knapping
 	s.TechnologyResearch["Stone Knapping"] = &TechnologyProgress{
 		Name:           "Stone Knapping",
 		ProgressPoints: 0,
-		RequiredPoints: StoneKnappingScienceRequired - FireMasteryScienceRequired, // 50 points (independent cost)
+		RequiredPoints: StoneKnappingScienceRequired,
 		IsUnlocked:     false,
 		FoodBonus:      StoneKnappingFoodBonus,
 	}
-	
+
 	// Set default research focus to Fire Mastery
 	s.ResearchFocus = "Fire Mastery"
 }
@@ -190,16 +190,20 @@ func (s *MinimalCivilizationState) AddResearchPoints(points float64) error {
 	if !exists {
 		return fmt.Errorf("unknown technology: %s", s.ResearchFocus)
 	}
-	
+	if points < 0 {
+		return fmt.Errorf("research points cannot be negative")
+	}
+
 	// Don't add points to already unlocked technologies
 	if tech.IsUnlocked {
 		return nil
 	}
-	
+
 	tech.ProgressPoints += points
-	
+
 	// Check if technology unlocked
 	if tech.ProgressPoints >= tech.RequiredPoints {
+		tech.ProgressPoints = tech.RequiredPoints
 		tech.IsUnlocked = true
 		// Update legacy flags for backward compatibility
 		if tech.Name == "Fire Mastery" {
@@ -208,13 +212,13 @@ func (s *MinimalCivilizationState) AddResearchPoints(points float64) error {
 			s.HasStoneKnapping = true
 		}
 	}
-	
+
 	return nil
 }
 
 // SimulationConfig contains all configuration for a simulation run
 type SimulationConfig struct {
-	Seed                int                 // Random seed for deterministic simulation
-	StartingConditions  StartingConditions  // Initial conditions
-	MaxDays             int                 // Maximum days to simulate (default 1825 = 5 years)
+	Seed               int                // Random seed for deterministic simulation
+	StartingConditions StartingConditions // Initial conditions
+	MaxDays            int                // Maximum days to simulate (default 36500 = 100 years)
 }
