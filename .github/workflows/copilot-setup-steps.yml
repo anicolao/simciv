@@ -123,8 +123,8 @@ jobs:
           eval "$(direnv export bash)"
           npm run build
 
-      - name: Run unit tests
-        id: unit-tests
+      - name: Run Node.js unit and integration tests
+        id: node-tests
         run: |
           eval "$(direnv export bash)"
           npm test 2>&1 | tee unit-test-output.txt
@@ -151,12 +151,12 @@ jobs:
             echo "❌ Unit test output not found" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ steps.unit-tests.outputs.exit_code }}" = "0" ]; then
+          if [ "${{ steps.node-tests.outputs.exit_code }}" = "0" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "✅ **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All Node.js unit and integration tests passed!**" >> $GITHUB_STEP_SUMMARY
           else
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "❌ **Unit tests failed!**" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Node.js tests failed!**" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Upload unit test results
@@ -172,9 +172,31 @@ jobs:
           cd simulation
           go build -o engine main.go
 
+      - name: Run Go tests
+        run: |
+          eval "$(direnv export bash)"
+          cd simulation
+          go test ./...
+
       - name: Install Playwright browsers
         run: |
           npx playwright install chromium --with-deps
+
+      - name: Run authentication E2E smoke test
+        run: |
+          eval "$(direnv export bash)"
+          npm start > /tmp/simciv-server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://localhost:3000/ > /dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat /tmp/simciv-server.log
+              exit 1
+            fi
+            sleep 1
+          done
+          npm run test:e2e:smoke
 
       - name: Create startup summary for Copilot
         if: always()
@@ -191,7 +213,7 @@ jobs:
           ## Test Status
 
           ### Unit Tests
-          $(if [ "${{ steps.unit-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
+          $(if [ "${{ steps.node-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)
 
           ### E2E Tests  
           # $(if [ "${{ steps.e2e-tests.outputs.exit_code }}" = "0" ]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)

@@ -16,6 +16,8 @@ type MockRepository struct {
 	mapMetadata       map[string]*models.MapMetadata
 	mapTiles          map[string][]*models.MapTile
 	startingPositions map[string][]*models.StartingPosition
+	units             map[string]*models.Unit
+	settlements       map[string]*models.Settlement
 }
 
 func NewMockRepository() *MockRepository {
@@ -24,6 +26,8 @@ func NewMockRepository() *MockRepository {
 		mapMetadata:       make(map[string]*models.MapMetadata),
 		mapTiles:          make(map[string][]*models.MapTile),
 		startingPositions: make(map[string][]*models.StartingPosition),
+		units:             make(map[string]*models.Unit),
+		settlements:       make(map[string]*models.Settlement),
 	}
 }
 
@@ -88,6 +92,80 @@ func (m *MockRepository) GetStartingPosition(ctx context.Context, gameID string,
 	for _, pos := range positions {
 		if pos.PlayerID == playerID {
 			return pos, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *MockRepository) CreateUnit(ctx context.Context, unit *models.Unit) error {
+	m.units[unit.UnitID] = unit
+	return nil
+}
+
+func (m *MockRepository) GetUnits(ctx context.Context, gameID string) ([]*models.Unit, error) {
+	var units []*models.Unit
+	for _, unit := range m.units {
+		if unit.GameID == gameID {
+			units = append(units, unit)
+		}
+	}
+	return units, nil
+}
+
+func (m *MockRepository) GetUnitsByPlayer(ctx context.Context, gameID string, playerID string) ([]*models.Unit, error) {
+	var units []*models.Unit
+	for _, unit := range m.units {
+		if unit.GameID == gameID && unit.PlayerID == playerID {
+			units = append(units, unit)
+		}
+	}
+	return units, nil
+}
+
+func (m *MockRepository) UpdateUnit(ctx context.Context, unit *models.Unit) error {
+	m.units[unit.UnitID] = unit
+	return nil
+}
+
+func (m *MockRepository) DeleteUnit(ctx context.Context, unitID string) error {
+	delete(m.units, unitID)
+	return nil
+}
+
+func (m *MockRepository) CreateSettlement(ctx context.Context, settlement *models.Settlement) error {
+	m.settlements[settlement.SettlementID] = settlement
+	return nil
+}
+
+func (m *MockRepository) GetSettlements(ctx context.Context, gameID string) ([]*models.Settlement, error) {
+	var settlements []*models.Settlement
+	for _, settlement := range m.settlements {
+		if settlement.GameID == gameID {
+			settlements = append(settlements, settlement)
+		}
+	}
+	return settlements, nil
+}
+
+func (m *MockRepository) GetSettlementsByPlayer(ctx context.Context, gameID string, playerID string) ([]*models.Settlement, error) {
+	var settlements []*models.Settlement
+	for _, settlement := range m.settlements {
+		if settlement.GameID == gameID && settlement.PlayerID == playerID {
+			settlements = append(settlements, settlement)
+		}
+	}
+	return settlements, nil
+}
+
+func (m *MockRepository) UpdateSettlement(ctx context.Context, settlement *models.Settlement) error {
+	m.settlements[settlement.SettlementID] = settlement
+	return nil
+}
+
+func (m *MockRepository) GetMapTile(ctx context.Context, gameID string, x int, y int) (*models.MapTile, error) {
+	for _, tile := range m.mapTiles[gameID] {
+		if tile.X == x && tile.Y == y {
+			return tile, nil
 		}
 	}
 	return nil, nil
@@ -202,8 +280,8 @@ func TestGameEngine_MultipleGames(t *testing.T) {
 func TestGameEngine_YearProgression(t *testing.T) {
 	// Add a game at different year ranges
 	tests := []struct {
-		name        string
-		startYear   int
+		name         string
+		startYear    int
 		expectedYear int
 	}{
 		{"Ancient", -5000, -4999},
@@ -354,4 +432,3 @@ func TestGameEngine_MapGenerationOnlyOnFirstTick(t *testing.T) {
 		t.Error("Map should not be generated on subsequent ticks")
 	}
 }
-
