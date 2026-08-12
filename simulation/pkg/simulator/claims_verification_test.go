@@ -134,7 +134,7 @@ func TestCompareWithHigherScienceRate(t *testing.T) {
 	t.Log("")
 
 	conditions := DefaultStartingConditions()
-	conditions.FoodAllocationRatio = 0.7 // 70/30 default
+	conditions.FoodAllocationRatio = 0.7 // Explicit 70/30 comparison baseline
 
 	config := SimulationConfig{
 		Seed:               VIABILITY_TEST_SEEDS[0],

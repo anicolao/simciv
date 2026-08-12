@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { connectToDatabase, closeDatabase, getGamesCollection, getUsersCollection, getSessionsCollection } from '../../db/connection';
 import { Game, User, Session } from '../../models/types';
 
-describe('Game Creation and Management', () => {
+describe('Game Repository Integration', () => {
   beforeEach(async () => {
     // Always use external MongoDB for testing
     const mongoUri = process.env.TEST_MONGO_URI || 'mongodb://localhost:27017';

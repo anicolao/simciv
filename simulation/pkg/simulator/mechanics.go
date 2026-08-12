@@ -8,62 +8,64 @@ import (
 // Constants from the design document
 const (
 	// Age thresholds
-	AgeChild  = 15.0
-	AgeAdult  = 15.0
-	AgeFertileMin = 13.0  // Per design doc (HUMAN_ATTRIBUTES.md line 611)
+	AgeChild      = 15.0
+	AgeAdult      = 15.0
+	AgeFertileMin = 13.0 // Per design doc (HUMAN_ATTRIBUTES.md line 611)
 	AgeFertileMax = 45.0
 
 	// Work capacity
-	WorkHoursFull = 8.0
-	WorkHoursHalf = 4.0
+	WorkHoursFull  = 8.0
+	WorkHoursHalf  = 4.0
 	HealthFullWork = 50.0
 	HealthHalfWork = 30.0
 
 	// Food production
-	FoodBaseRate = 1.0 // Food units per hour (viability threshold found via testing)
+	FoodBaseRate         = 1.25 // Food units per hour (tuned to sustain the default population)
 	FireMasteryFoodBonus = 1.15 // +15% from cooking
 
 	// Science production
-	ScienceBaseRate = 0.00015 // Science points per hour (tuned for 5-10 year Fire Mastery without pop bonus)
-	ScienceHealthThreshold = 30.0 // Tuned for viability (originally 50 per design, relaxed to reduce pressure)
-	ScienceHealthPenalty = 0.5 // Half effectiveness when malnourished
+	ScienceBaseRate        = 0.00015 // Science points per hour (tuned for 5-10 year Fire Mastery without pop bonus)
+	ScienceHealthThreshold = 30.0    // Tuned for viability (originally 50 per design, relaxed to reduce pressure)
+	ScienceHealthPenalty   = 0.5     // Half effectiveness when malnourished
 
 	// Food consumption
 	FoodRequiredPerPerson = 2.0 // Units per day
 
 	// Health changes
-	HealthBaseDecline = -0.5
+	HealthBaseDecline    = -0.5
 	HealthFoodMultiplier = 15.0
-	HealthAgeDivisor = 30.0
-	HealthAgeMultiplier = 5.0
+	HealthAgeDivisor     = 30.0
+	HealthAgeMultiplier  = 5.0
 
 	// Age progression
 	AgeIncrementPerDay = 1.0 / 365.0 // 1 year / 365 days
 
 	// Mortality rates (monthly to daily conversion)
-	DaysPerMonth = 30.0
-	MortalityInfant = 0.025 / DaysPerMonth  // < 1 year
-	MortalityToddler = 0.012 / DaysPerMonth // 1-5 years
-	MortalityChild = 0.003 / DaysPerMonth   // 5-15 years
+	DaysPerMonth        = 30.0
+	MortalityInfant     = 0.025 / DaysPerMonth // < 1 year
+	MortalityToddler    = 0.012 / DaysPerMonth // 1-5 years
+	MortalityChild      = 0.003 / DaysPerMonth // 5-15 years
 	MortalityYoungAdult = 0.002 / DaysPerMonth // 15-30 years
-	MortalityAdult = 0.004 / DaysPerMonth   // 30-45 years
-	MortalityMiddleAge = 0.010 / DaysPerMonth // 45-60 years
-	MortalityElder = 0.020 / DaysPerMonth   // 60+ years
+	MortalityAdult      = 0.004 / DaysPerMonth // 30-45 years
+	MortalityMiddleAge  = 0.010 / DaysPerMonth // 45-60 years
+	MortalityElder      = 0.020 / DaysPerMonth // 60+ years
 
 	// Health modifiers for mortality
 	HealthExcellent = 80.0
-	HealthGood = 60.0
-	HealthPoor = 40.0
-	HealthCritical = 20.0
+	HealthGood      = 60.0
+	HealthPoor      = 40.0
+	HealthCritical  = 20.0
 
 	// Reproduction
 	MonthlyConceptionBase = 0.06 / DaysPerMonth // 6% monthly -> daily (2x increase per testing)
-	BelongingThreshold = 40.0
-	InfantSurvivalRate = 0.7 // 70% survival at birth
-	GestationPeriod = 280 // Approximately 9 months in days
+	BelongingThreshold    = 40.0
+	InfantSurvivalRate    = 0.7 // 70% survival at birth
+	GestationPeriod       = 280 // Approximately 9 months in days
 
 	// Technology unlock
-	FireMasteryScienceRequired = 100.0
+	FireMasteryScienceRequired   = 100.0
+	StoneKnappingScienceRequired = 120.0 // Independent cost; researched after Fire Mastery by default
+	StoneKnappingFoodBonus       = 1.20  // +20% from better tools
 )
 
 // calculateAvailableLabor calculates total work hours available from the population
@@ -100,10 +102,15 @@ func allocateLabor(totalWorkHours, foodRatio float64) (foodHours, scienceHours f
 }
 
 // produceFood calculates food production for the day
-func produceFood(foodHours float64, hasFireMastery bool, terrainMultiplier float64) float64 {
+func produceFood(foodHours float64, hasFireMastery bool, hasStoneKnapping bool, terrainMultiplier float64) float64 {
 	multiplier := 1.0
+
 	if hasFireMastery {
-		multiplier = FireMasteryFoodBonus
+		multiplier *= FireMasteryFoodBonus // +15% from cooking
+	}
+
+	if hasStoneKnapping {
+		multiplier *= StoneKnappingFoodBonus // +20% from better tools
 	}
 
 	return foodHours * FoodBaseRate * multiplier * terrainMultiplier
@@ -131,6 +138,7 @@ func produceScience(scienceHours float64, population int, averageHealth float64)
 
 	return scienceHours * ScienceBaseRate * multiplier
 }
+
 // consumeFood distributes available food among the population
 func consumeFood(humans []*MinimalHuman, foodStockpile float64) (remainingFood, foodPerPerson float64) {
 	aliveHumans := 0
@@ -244,7 +252,7 @@ func checkReproduction(male, female *MinimalHuman, population int, rng *RandomGe
 	if male.Health < HealthFullWork || female.Health < HealthFullWork {
 		return false
 	}
-	
+
 	// Check if female is already pregnant
 	if female.PregnancyDaysRemaining > 0 {
 		return false
@@ -364,15 +372,6 @@ func processPregnancies(humans []*MinimalHuman, rng *RandomGenerator) []*Minimal
 	}
 
 	return newborns
-}
-
-// checkTechnologyUnlock checks if Fire Mastery should be unlocked
-func checkTechnologyUnlock(state *MinimalCivilizationState) bool {
-	if !state.HasFireMastery && state.SciencePoints >= FireMasteryScienceRequired {
-		state.HasFireMastery = true
-		return true
-	}
-	return false
 }
 
 // calculateAverageHealth calculates the average health of alive humans
